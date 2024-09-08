@@ -1,6 +1,6 @@
 # WsjtxWatcher
 
-![Static Badge](https://img.shields.io/badge/.NET-6-purple?style=for-the-badge)
+![Static Badge](https://img.shields.io/badge/.NET-8-purple?style=for-the-badge)
 
 [Read it in English](./readme_en.md)
 
@@ -30,7 +30,7 @@
 
 ## Todos
 
-+ 增加更多的信息支持
++ 增加更多的信息支持（ft4/wspr）
 + 其他...
 
 ## 致谢
