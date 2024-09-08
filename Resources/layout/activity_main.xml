@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+    <RelativeLayout
+            android:id="@+id/container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="visible">
+
+        <RelativeLayout
+                android:id="@+id/transmittingLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="@color/transmitLayout_background"
+                android:visibility="visible">
+
+            <ImageView
+                    android:id="@+id/imageView2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="2dp"
+                    android:src="@drawable/ic_baseline_campaign_transmitting_red_24"/>
+
+            <TextView
+                    android:id="@+id/transmittingMessageTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="2dp"
+                    android:layout_toRightOf="@id/imageView2"
+                    android:layout_marginBottom="2dp"
+                    android:stateListAnimator="@anim/view_blink"
+                    android:textColor="@color/bar_text_view_color"
+                    android:visibility="visible"
+                    android:text=""/>
+        </RelativeLayout>
+    </RelativeLayout>
+
+
+    <ListView
+            android:id="@+id/calllist_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:stackFromBottom="false"
+            android:layout_above="@id/control_panel"
+            android:transcriptMode="alwaysScroll"/>
+
+    <RelativeLayout
+            android:id="@+id/control_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:orientation="horizontal"
+            android:padding="10dp">
+        <LinearLayout android:id="@+id/status_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="10dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/total_record" android:text="@string/total_record" />
+            <TextView android:layout_marginLeft="20dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/about_me"  android:text="@string/about_me" />
+        </LinearLayout>
+        <LinearLayout android:layout_below="@id/status_layout" android:id="@+id/button_layout" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/halt_tx" android:text="@string/halt_tx" />
+            <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/replay" android:text="@string/re_decode" />
+            <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/clear" android:text="@string/clear_record" />
+        </LinearLayout>
+    </RelativeLayout>
+
+</RelativeLayout>

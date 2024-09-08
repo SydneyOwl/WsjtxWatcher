@@ -1,0 +1,129 @@
+﻿<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/callListHolderConstraintLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="1dp"
+                android:background="@drawable/calling_list_cell_style"
+                android:clickable="true"
+                android:focusable="true">
+
+    <!-- Containing layout for the text views -->
+    <RelativeLayout
+            android:id="@+id/topView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp">
+
+        <!-- Existing LinearLayout with text views -->
+        <LinearLayout
+                android:id="@+id/textViewsLinearLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true">
+
+            <TextView
+                    android:id="@+id/callingListIdBTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:layout_marginEnd="15dp"
+                    android:text="-12"/>
+
+            <TextView
+                    android:id="@+id/callListDtTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="15dp"
+                    android:textSize="12sp"
+                    android:text="-1.2"/>
+
+            <TextView
+                    android:id="@+id/callingListFreqTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="15dp"
+                    android:textSize="12sp"
+                    android:text="1234Hz"/>
+
+            <TextView
+                    android:id="@+id/callListMessageTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:textSize="13sp"
+                    android:text="CQ DX AB1CDE AB12"/>
+        </LinearLayout>
+
+        <!-- bandItemTextView aligned to the right and centered vertically -->
+        <TextView
+                android:id="@+id/bandItemTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="5dp"
+                android:layout_centerVertical="true"
+                android:layout_toEndOf="@id/callListMessageTextView"
+                android:textSize="9sp"
+                android:text="14.074MHz"/>
+    </RelativeLayout>
+
+    <!-- Below layout (for additional views) -->
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/topView"
+            android:orientation="horizontal"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp">
+
+        <TextView
+                android:id="@+id/callingUtcTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="10sp"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
+                android:text="123456"/>
+
+        <TextView
+                android:id="@+id/lowTrustTextview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="10sp"
+                android:layout_marginStart="10dp"
+                android:textColor="@color/ruler_text_color"
+                android:text="@string/low_reliability"/>
+
+        <TextView
+                android:id="@+id/callToItemTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textAlignment="textStart"
+                android:textSize="10sp"
+                android:layout_marginStart="10dp"
+                android:text="TOOOOO"/>
+
+        <TextView
+                android:id="@+id/CallFromItemTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textAlignment="textStart"
+                android:textSize="10sp"
+                android:textStyle="normal"
+                android:text="FROMMMMM"/>
+
+        <TextView
+                android:id="@+id/callingListDistTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="20dp"
+                android:textSize="9sp"
+                android:text="12345km"/>
+    </LinearLayout>
+
+</RelativeLayout>

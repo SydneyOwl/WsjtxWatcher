@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net8.0-android</TargetFramework>
+        <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+        <OutputType>Exe</OutputType>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <ApplicationId>com.sydneyowl.WsjtxWatcher</ApplicationId>
+        <ApplicationVersion>1</ApplicationVersion>
+        <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <AndroidUseSharedRuntime>true</AndroidUseSharedRuntime>
+        <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="DebounceThrottle" Version="3.0.1" />
+        <PackageReference Include="sqlite-net-pcl" Version="1.9.172"/>
+        <PackageReference Include="WsjtxUtils.WsjtxMessages" Version="1.0.0.67"/>
+        <PackageReference Include="WsjtxUtils.WsjtxUdpServer" Version="1.0.0.67"/>
+    </ItemGroup>
+</Project>

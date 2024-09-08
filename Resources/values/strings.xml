@@ -1,0 +1,38 @@
+<resources>
+    <string name="app_name">Wsjtx Watcher</string>
+    <string name="settings">Settings</string>
+    <string name="lan_ip_addr">LAN IP</string>
+    <string name="no_wifi">Wifi not connected!</string>
+    <string name="unknown_ip">Unknown IP</string>
+    <string name="server_port">Server Port</string>
+    <string name="save_settings">Save</string>
+    <string name="start_server">Start Service</string>
+    <string name="stop_server">Stop Service</string>
+    <string name="loading">Loading...</string>
+    <string name="test_conf">TEST</string>
+    <string name="storage_key" translatable="false">8fdad8ad</string>
+    <string name="txing">Transmitting...</string>
+    <string name="wait_conn">Waiting for connection...</string>
+    <string name="open_service">Please start service!</string>
+    <string name="receving">Receiving...</string>
+    <string name="recv_timeout">Recv Timeout!</string>
+    <string name="my_location">Location(four-character Maidenhead grid square, e.g. OL31)</string>
+    <string name="my_callsign">Callsign</string>
+    <string name="low_reliability">Low Reliability</string>
+    <string name="user_tx_period">User Tx Period</string>
+    <string name="language">Language</string>
+    <string name="simplified_chinese">Simplified Chinese</string>
+    <string name="english">English</string>
+    <string name="version">Version</string>
+    <string name="when_callsign_included">When my callsign is included in the message:</string>
+    <string name="send_notification">Send notification</string>
+    <string name="vibration">Vibration</string>
+    <string name="user_ft8_msg_available">There\'s an ft8 msg mentioned you!</string>
+    <string name="reset_database">Reset Database</string>
+    <string name="reset_all">Reset All</string>
+    <string name="total_record">Total record:</string>
+    <string name="about_me">About me:</string>
+    <string name="halt_tx">Halt Tx</string>
+    <string name="re_decode">Decode Again</string>
+    <string name="clear_record">Clear Record</string>
+</resources>
