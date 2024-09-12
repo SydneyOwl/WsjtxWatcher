@@ -38,4 +38,11 @@
     <string name="when_call_all">当收到信息时（适用于VHF DX）</string>
     <string name="denied_notification">请在设置中启用“通知”权限！</string>
     <string name="denied_vibrate">请在设置中启用“振动”权限！</string>
+    <string name="explain_settings">为了软件更好的运行，建议执行以下设置：</string>
+    <string name="no_power_save">1. 请勿开启省电模式：如开启省电模式，可能造成收到ft8消息时无法向您推送等问题</string>
+    <string name="white_list">2. 将应用加入电池优化白名单： 系统为省电，可能会误杀后台UDP服务器，造成无法正常接收信息。</string>
+    <string name="add_to_whitelist">加入白名单</string>
+    <string name="background">后台运行权限：如未开启后台运行权限，可能将导致软件进入后台时收到信息无法及时推送
+    </string>
+    <string name="add_to_background">后台运行权限</string>
 </resources>

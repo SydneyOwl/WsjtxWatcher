@@ -1,8 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="10dp">
+<RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:padding="16dp">
+                android:padding="10dp">
 
     <TextView
             android:id="@+id/textViewIp"
@@ -151,17 +155,60 @@
                 android:textSize="15dp"/>
     </LinearLayout>
     
-    <LinearLayout android:layout_width="wrap_content" android:layout_height="match_parent" android:layout_below="@id/cboxLayout_all"
+    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                  android:layout_below="@id/cboxLayout_all"
+                  android:id="@+id/db_op"
                   android:layout_marginTop="20dp">
-
         <Button android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:text="@string/reset_database"
                 android:id="@+id/reset_database"/>
-
         <Button android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:text="@string/reset_all"
                 android:id="@+id/reset_all"/>
     </LinearLayout>
     
+    <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_below="@id/db_op"
+                    android:id="@+id/battery_opti"
+                    android:background="@color/calling_list1_end_color">
+        <TextView android:id="@+id/explain"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:textSize="16dp"
+                   android:layout_marginTop="20dp"
+                   android:text="@string/explain_settings" />
+        <TextView android:id="@+id/no_pwr_save"
+                  android:layout_width="wrap_content"
+                  android:layout_below="@id/explain"
+                  android:layout_height="wrap_content"
+                  android:textSize="16dp"
+                  android:layout_marginTop="10dp"
+                  android:text="@string/no_power_save" />
+        
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:textSize="16dp"
+                  android:layout_marginTop="10dp"
+                  android:text="@string/white_list"
+                  android:layout_below="@id/no_pwr_save"
+                  android:id="@+id/explain_wl"/>
     
+        <Button android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/add_to_whitelist"
+                android:id="@+id/add_white_list"
+                android:layout_below="@id/explain_wl"/>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:textSize="16dp"
+                  android:layout_marginTop="10dp"
+                  android:text="@string/background"
+                  android:layout_below="@id/add_white_list"
+                  android:id="@+id/explain_background"/>
+
+        <Button android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/add_to_background"
+                android:id="@+id/add_background"
+                android:layout_below="@id/explain_background"/>
+        
+    </RelativeLayout>
 </RelativeLayout>
+</ScrollView>

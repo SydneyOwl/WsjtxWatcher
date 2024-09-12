@@ -38,4 +38,10 @@
     <string name="when_call_all">When ft8 message is received(for VHF DX)</string>
     <string name="denied_notification">Please enable notification access in settings!</string>
     <string name="denied_vibrate">Please enable vibrate access in settings!</string>
+    <string name="explain_settings">It\'s recommanded to execute those settings to make app run well:</string>
+    <string name="no_power_save">1. Do not open power saving mode</string>
+    <string name="white_list">2. Add app into white list</string>
+    <string name="add_to_whitelist">Add to whitelist</string>
+    <string name="background">Background Running</string>
+    <string name="add_to_background">Add background</string>
 </resources>

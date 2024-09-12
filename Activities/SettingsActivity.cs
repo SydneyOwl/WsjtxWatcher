@@ -1,4 +1,7 @@
 ﻿using _Microsoft.Android.Resource.Designer;
+using Android.Content;
+using Android.Health.Connect.DataTypes;
+using Android.OS;
 using Android.Util;
 using WsjtxWatcher.Behaviors.Watchers;
 using WsjtxWatcher.Utils.Network;
@@ -20,6 +23,8 @@ public class SettingsActivity : Activity
     private CheckBox vibrationAllCheckbox;
     private Button resetDbButton;
     private Button resetAllButton;
+    private Button addWhiteListButton;
+    private Button addBrandButton;
 
     private OnPortChanged portChanged;
     private OnCallsignChanged callsignChanged;
@@ -92,6 +97,22 @@ public class SettingsActivity : Activity
         oras = new OnResetAllListener();
         resetAllButton = FindViewById<Button>(ResourceConstant.Id.reset_all);
         resetAllButton.SetOnClickListener(oras);
+        
+        addWhiteListButton = FindViewById<Button>(ResourceConstant.Id.add_white_list);
+        addWhiteListButton.SetOnClickListener(new OnAddWhiteListListener());
+        if (Build.VERSION.SdkInt >=  BuildVersionCodes.M)
+        {
+            Intent intent = new Intent();
+            string packageName = PackageName;
+            PowerManager pm = (PowerManager)GetSystemService(Service.PowerService);
+            if (pm.IsIgnoringBatteryOptimizations(packageName))
+            {
+                addWhiteListButton.Enabled = false;
+            }
+        }
+        
+        addWhiteListButton = FindViewById<Button>(ResourceConstant.Id.add_background);
+        addWhiteListButton.SetOnClickListener(new OnAddBackgroundListener());
     }
 
     protected override void OnDestroy()
@@ -103,4 +124,5 @@ public class SettingsActivity : Activity
         sendNotificationCheckbox.CheckedChange -= onChkChg.SendNotificationCheckboxChanged;
         vibrationCheckbox.CheckedChange -= onChkChg.VibrateCheckboxChanged;
     }
+    
 }
