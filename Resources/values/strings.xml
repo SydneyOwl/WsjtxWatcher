@@ -27,7 +27,7 @@
     <string name="when_callsign_included">When my callsign is included in the message:</string>
     <string name="send_notification">Send notification</string>
     <string name="vibration">Vibration</string>
-    <string name="user_ft8_msg_available">There\'s an ft8 msg mentioned you!</string>
+    <string name="user_ft8_msg_available">There\'s an important ft8 msg!</string>
     <string name="reset_database">Reset Database</string>
     <string name="reset_all">Reset All</string>
     <string name="total_record">Total record:</string>
@@ -35,4 +35,7 @@
     <string name="halt_tx">Halt Tx</string>
     <string name="re_decode">Decode Again</string>
     <string name="clear_record">Clear Record</string>
+    <string name="when_call_all">When ft8 message is received(for VHF DX)</string>
+    <string name="denied_notification">Please enable notification access in settings!</string>
+    <string name="denied_vibrate">Please enable vibrate access in settings!</string>
 </resources>

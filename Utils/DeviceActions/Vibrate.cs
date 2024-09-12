@@ -7,7 +7,7 @@ namespace WsjtxWatcher.Utils.DeviceActions;
 
 public class Vibrate
 {
-    private static ThrottleDispatcher throttleDispatcher = new (TimeSpan.FromMilliseconds(12));
+    private static ThrottleDispatcher throttleDispatcher = new (TimeSpan.FromMilliseconds(12000));
     public static void DoVibrate(Context ctx)
     {
         throttleDispatcher.Throttle(() =>

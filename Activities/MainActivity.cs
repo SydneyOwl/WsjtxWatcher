@@ -1,5 +1,7 @@
 using _Microsoft.Android.Resource.Designer;
+using Android;
 using Android.Content;
+using Android.Content.PM;
 using Android.Util;
 using Android.Views;
 using Android.Views.Animations;
@@ -54,6 +56,20 @@ public class MainActivity : Activity
         OverrideSettings();
         Task.Run(() => { DatabaseHandler.GetInstance(this); });
         // Set our view from the "main" layout resource
+        
+        // 权限检查
+        RequestPermissions(new []{Manifest.Permission.Vibrate,Manifest.Permission.PostNotifications}, 645);
+        
+        if (CheckSelfPermission(Manifest.Permission.Vibrate) != Permission.Granted)
+        {
+            Toast.MakeText(this, ResourceConstant.String.denied_vibrate,ToastLength.Short);
+        }
+
+        if (CheckSelfPermission(Manifest.Permission.PostNotifications) != Permission.Granted)
+        {
+            
+            Toast.MakeText(this, ResourceConstant.String.denied_notification,ToastLength.Short);
+        }
 
         txmsg = FindViewById<TextView>(ResourceConstant.Id.transmittingMessageTextView);
         txLayout = FindViewById<RelativeLayout>(ResourceConstant.Id.transmittingLayout);
@@ -234,6 +250,8 @@ public class MainActivity : Activity
         SettingsVariables.myCallsign = sharedPref.GetString("callsign", "");
         SettingsVariables.myLocation = sharedPref.GetString("location", "");
         SettingsVariables.send_notification_on_call = sharedPref.GetBoolean("send_notification_on_call", false);
+        SettingsVariables.send_notification_on_all = sharedPref.GetBoolean("send_notification_on_all", false);
         SettingsVariables.vibrate_on_call = sharedPref.GetBoolean("vibrate_on_call", false);
+        SettingsVariables.vibrate_on_all = sharedPref.GetBoolean("vibrate_on_all", false);
     }
 }

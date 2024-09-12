@@ -15,7 +15,9 @@ public class SettingsActivity : Activity
     private TextView callsignTextEdit;
     private TextView locationTextEdit;
     private CheckBox sendNotificationCheckbox;
+    private CheckBox sendNotificationAllCheckbox;
     private CheckBox vibrationCheckbox;
+    private CheckBox vibrationAllCheckbox;
     private Button resetDbButton;
     private Button resetAllButton;
 
@@ -71,6 +73,16 @@ public class SettingsActivity : Activity
         vibrationCheckbox = FindViewById<CheckBox>(ResourceConstant.Id.vibration_checkbox);
         vibrationCheckbox.Checked = SettingsVariables.vibrate_on_call;
         vibrationCheckbox.CheckedChange += onChkChg.VibrateCheckboxChanged;
+        
+        // 设定全部通知
+        sendNotificationAllCheckbox = FindViewById<CheckBox>(ResourceConstant.Id.send_notification_all_checkbox);
+        sendNotificationAllCheckbox.Checked = SettingsVariables.send_notification_on_all;
+        sendNotificationAllCheckbox.CheckedChange += onChkChg.SendNotificationAllCheckboxChanged;
+        
+        // 设定全部振动
+        vibrationAllCheckbox = FindViewById<CheckBox>(ResourceConstant.Id.vibration_all_checkbox);
+        vibrationAllCheckbox.Checked = SettingsVariables.vibrate_on_all;
+        vibrationAllCheckbox.CheckedChange += onChkChg.VibrateAllCheckboxChanged;
 
         
         ords = new OnResetDBListener();

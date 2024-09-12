@@ -12,5 +12,9 @@ public class SettingsVariables
 
     public static bool vibrate_on_call = false;
     
+    public static bool vibrate_on_all = false;
+    
     public static bool send_notification_on_call = false;
+    
+    public static bool send_notification_on_all = false;
 }

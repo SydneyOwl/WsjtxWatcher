@@ -174,4 +174,8 @@
     <color name="char_bar_16">#61024D</color>
 
 
+    <color name="odd_period">#d9e1eb</color>
+    <color name="even_period">#f9f6ef</color>
+
+
 </resources>

@@ -108,6 +108,13 @@ public class CallItemAdapter : ArrayAdapter<DecodedMsg>
             callListMessageTextView.SetTextColor(Context.Resources.GetColor(Resource.Color.text_view_color));
             callListMessageTextView.PaintFlags = PaintFlags.LinearText;
         }
+        
+        new Task(() =>
+        {
+            if (SettingsVariables.vibrate_on_all) Vibrate.DoVibrate(ctx);
+            if (SettingsVariables.send_notification_on_all)
+                Notifications.getInstance(ctx).PopNotification(msg.Message);
+        }).Start();
         // 有我的话就标红
         if (!string.IsNullOrEmpty(SettingsVariables.myCallsign) && msg.Message.Contains(SettingsVariables.myCallsign))
         {
@@ -119,6 +126,21 @@ public class CallItemAdapter : ArrayAdapter<DecodedMsg>
                     Notifications.getInstance(ctx).PopNotification(msg.Message);
             }).Start();
         }
+        
+        // 发射周期背景色设定
+        // 计算逻辑： +-5s
+        var sec = int.Parse(msg.DecodeTime.Split(":").Last());
+        if (((sec is > 55 and <60)|| sec < 5)|| (sec is >25 and <35))
+        {
+            // 偶数周期6
+            //_____|_____0_______________15_____|_____
+            convertView.SetBackgroundColor(Context.Resources.GetColor(Resource.Color.odd_period));
+        }
+        else
+        {
+            convertView.SetBackgroundColor(Context.Resources.GetColor(Resource.Color.even_period));
+        }
+        
         return convertView;
     }
 }

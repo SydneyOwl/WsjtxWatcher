@@ -9,7 +9,7 @@ public class Notifications
     private Context ctx;
     private NotificationManager notificationManager;
     private static Notifications _instance;
-    private static ThrottleDispatcher throttleDispatcher = new (TimeSpan.FromMilliseconds(10));
+    private static ThrottleDispatcher throttleDispatcher = new (TimeSpan.FromMilliseconds(10000));
 
 
     private Notifications(Context ctx)
@@ -17,7 +17,7 @@ public class Notifications
         this.ctx = ctx;
         notificationManager  = (NotificationManager)this.ctx.GetSystemService(Context.NotificationService);
         NotificationChannel channel = new NotificationChannel(this.ctx.GetString(Resource.String.app_name),ctx.GetString(Resource.String.app_name),
-            NotificationImportance.Default);
+            NotificationImportance.High);
         notificationManager.CreateNotificationChannel(channel);
     }
 

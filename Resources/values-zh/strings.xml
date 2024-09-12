@@ -27,7 +27,7 @@
     <string name="when_callsign_included">当信息中包含我的呼号时：</string>
     <string name="send_notification">发送通知</string>
     <string name="vibration">振动</string>
-    <string name="user_ft8_msg_available">有一条关于您的FT8信息！</string>
+    <string name="user_ft8_msg_available">有一条重要FT8信息！</string>
     <string name="reset_database">重置数据库</string>
     <string name="reset_all">重置应用</string>
     <string name="total_record">总记录数：</string>
@@ -35,4 +35,7 @@
     <string name="halt_tx">终止发射</string>
     <string name="re_decode">重新解码</string>
     <string name="clear_record">清空记录</string>
+    <string name="when_call_all">当收到信息时（适用于VHF DX）</string>
+    <string name="denied_notification">请在设置中启用“通知”权限！</string>
+    <string name="denied_vibrate">请在设置中启用“振动”权限！</string>
 </resources>

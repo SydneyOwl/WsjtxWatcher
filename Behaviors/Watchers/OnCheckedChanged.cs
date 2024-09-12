@@ -21,16 +21,8 @@ public class OnCheckedChanged
       var edit = sharedPref.Edit();
       edit.PutBoolean("send_notification_on_call", args.IsChecked);
       edit.Apply();
-      // if (args.IsChecked)
-      // {
-      //        NotificationManager manager = NotificationManager.FromContext(ctx);
-      //        var isNotifycationEnabled = manager.AreNotificationsEnabled();
-      //        if (!isNotifycationEnabled)
-      //        {
-      //           Intent intent = new Intent(Android.Provider.Settings.ActionNotificationPolicyAccessSettings);
-      //           ctx.StartActivity(intent);
-      //        }
-      // }
+      
+      NotificationManager.FromContext(ctx).AreNotificationsEnabled();
    }
    public void VibrateCheckboxChanged(object? o, CompoundButton.CheckedChangeEventArgs args)
    {
@@ -40,6 +32,28 @@ public class OnCheckedChanged
          ctx.GetSharedPreferences(ctx.GetString(ResourceConstant.String.storage_key), FileCreationMode.Private);
       var edit = sharedPref.Edit();
       edit.PutBoolean("vibrate_on_call", args.IsChecked);
+      edit.Apply();
+   }
+   
+   public void SendNotificationAllCheckboxChanged(object? o, CompoundButton.CheckedChangeEventArgs args)
+   {
+      SettingsVariables.send_notification_on_all = args.IsChecked;
+      // save conf
+      var sharedPref =
+         ctx.GetSharedPreferences(ctx.GetString(ResourceConstant.String.storage_key), FileCreationMode.Private);
+      var edit = sharedPref.Edit();
+      edit.PutBoolean("send_notification_on_all", args.IsChecked);
+      edit.Apply();
+   }
+   
+   public void VibrateAllCheckboxChanged(object? o, CompoundButton.CheckedChangeEventArgs args)
+   {
+      SettingsVariables.vibrate_on_all = args.IsChecked;
+      // save conf
+      var sharedPref =
+         ctx.GetSharedPreferences(ctx.GetString(ResourceConstant.String.storage_key), FileCreationMode.Private);
+      var edit = sharedPref.Edit();
+      edit.PutBoolean("vibrate_on_all", args.IsChecked);
       edit.Apply();
    }
 }
