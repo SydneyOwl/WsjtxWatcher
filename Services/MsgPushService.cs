@@ -20,10 +20,19 @@ public class MsgPushService : Service
     }
     
     public override StartCommandResult OnStartCommand(Intent intent, StartCommandFlags flags, int startId)
-    {
-        Log.Info("MyService", "Service Started");
-        var conf = MainViewModel.GetInstance().udpConf;
-        UdpServer.getInstance().startServer(conf);
+    { 
+        if (intent?.Action == "STOP_SERVICE")
+        {
+            MainViewModel.GetInstance().IsMsgServiceRunning = false;
+            StopSelf();
+        }
+        else
+        {
+            Log.Info("MyService", "Service Started");
+            var conf = MainViewModel.GetInstance().udpConf;
+            UdpServer.getInstance().startServer(conf);
+            MainViewModel.GetInstance().IsMsgServiceRunning = true;
+        }
         return StartCommandResult.Sticky;
     }
     
@@ -43,11 +52,15 @@ public class MsgPushService : Service
             NotificationImportance.Default);
         notificationManager.CreateNotificationChannel(channel_serviceStart);
         
+        var stopIntent = new Intent(this, GetType());
+        stopIntent.SetAction("STOP_SERVICE");
+        var pendingIntent = PendingIntent.GetService(this, 0, stopIntent, PendingIntentFlags.UpdateCurrent);
 
         var notification = new Notification.Builder(this, GetString(ResourceConstant.String.notification_channel_id2))
             .SetContentTitle(GetString(ResourceConstant.String.service_running))
             .SetContentText(GetString(ResourceConstant.String.listening_msg))
             .SetSmallIcon(ResourceConstant.Mipmap.appicon)
+            .SetContentIntent(pendingIntent)
             .Build();
 
         StartForeground(int.Parse(GetString(ResourceConstant.String.notify_id2)), notification);

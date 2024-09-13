@@ -128,6 +128,23 @@ public class MainActivity : Activity
                             setTxLayoutConf(null, ViewStates.Invisible);
                     });
                     break;
+                case "IsMsgServiceRunning":
+                    RunOnUiThread(() =>
+                    {
+                        if (model.IsMsgServiceRunning)
+                        {
+                            startServer.SetEnabled(false);
+                            stopServer.SetEnabled(true);
+                        }
+                        else
+                        {
+                            startServer.SetEnabled(true);
+                            stopServer.SetEnabled(false);
+                            setTxLayoutConf(GetString(ResourceConstant.String.open_service), ViewStates.Visible);
+                            setTitle(GetString(ResourceConstant.String.app_name));
+                        }
+                    });
+                    break;
             }
         };
         
@@ -263,6 +280,12 @@ public class MainActivity : Activity
         mutex.ReleaseMutex();
     }
 
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        var serviceIntent1 = new Intent(this, typeof(MsgPushService));
+        StopService(serviceIntent1);
+    }
 
     // 读出设置
     private void OverrideSettings()

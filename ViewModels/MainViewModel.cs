@@ -29,6 +29,7 @@ public class MainViewModel : ViewBase
 
     private bool _IsWaitingForConn = true;
     private string _TransmittingMessage = "";
+    private bool _IsMsgServiceRunning = false;
 
     public Watchdog RecvWatchdog;
 
@@ -58,6 +59,16 @@ public class MainViewModel : ViewBase
         set
         {
             _IsWaitingForConn = value;
+            OnPropertyChanged();
+        }
+    }
+    
+    public bool IsMsgServiceRunning
+    {
+        get => _IsMsgServiceRunning;
+        set
+        {
+            _IsMsgServiceRunning = value;
             OnPropertyChanged();
         }
     }
