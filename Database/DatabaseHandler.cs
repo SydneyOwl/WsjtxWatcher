@@ -18,8 +18,10 @@ public class DatabaseHandler
     private bool dbExists;
     private string dbPath;
 
-    private DatabaseHandler()
-    { 
+    private DatabaseHandler(Context ctx)
+    {
+        this.ctx = ctx;
+        var isSameVersion = Utils.AppPackage.ChkInstallTime.IsSameVersion(ctx);
         dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wsjtx-watcher-database.db");
         var connectionString = new SQLiteConnectionString(dbPath,
             SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.ProtectionComplete |
@@ -30,23 +32,40 @@ public class DatabaseHandler
         //     // 测试用，记得删掉！！！
         //     File.Delete(dbPath);
         // }
-        _db = new SQLiteAsyncConnection(connectionString);
-        if (dbExists){return;}
-        Log.Debug(TAG, "Creating db..");
-        _db.CreateTableAsync<CallsignDatabase>().ContinueWith((_) =>
+        if (!(dbExists && isSameVersion))
         {
-            Log.Debug(TAG, "CallsignDatabase Created!");
-        });
-        _db.CreateTableAsync<CountryDatabase>().ContinueWith((_) =>
-        {
-            Log.Debug(TAG, "CountryDatabase Created!");
+            Log.Debug(TAG, "Different version.");
+            try
+            {
+                File.Delete(dbPath);
+            }
+            catch
+            {
+                // ignored
+            }
+            Log.Debug(TAG, "Creating db..");
+            _db = new SQLiteAsyncConnection(connectionString);
+            _db.CreateTableAsync<CallsignDatabase>().ContinueWith((_) =>
+            {
+                Log.Debug(TAG, "CallsignDatabase Created!");
+            });
+            _db.CreateTableAsync<CountryDatabase>().ContinueWith((_) =>
+            {
+                Log.Debug(TAG, "CountryDatabase Created!");
                 
-        });
-        _db.CreateTableAsync<CallsignGridDatabase>().ContinueWith((_) =>
+            });
+            _db.CreateTableAsync<CallsignGridDatabase>().ContinueWith((_) =>
+            {
+                Log.Debug(TAG, "CallsignGridDatabase Created!");
+            });
+            InitTableData();
+            dbExists = true;
+        }
+        else
         {
-            Log.Debug(TAG, "CallsignGridDatabase Created!");
-        });
-        dbExists = true;
+            Log.Debug(TAG, "Same version. Skipping..");
+            _db = new SQLiteAsyncConnection(connectionString);
+        }
     }
 
     public void resetDatabase()
@@ -81,6 +100,7 @@ public class DatabaseHandler
         {
             Log.Debug(TAG, "CallsignGridDatabase Created!");
         });
+        InitTableData();
         dbExists = true;
     }
  
@@ -88,9 +108,7 @@ public class DatabaseHandler
     {
         if (_instance == null)
         {
-            _instance = new DatabaseHandler();
-            _instance.ctx = ctx;
-            _instance.InitTableData();
+            _instance = new DatabaseHandler(ctx);
         }
 
         return _instance;

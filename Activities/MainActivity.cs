@@ -55,7 +55,7 @@ public class MainActivity : Activity
             , WindowManagerFlags.KeepScreenOn);
 
         OverrideSettings();
-        Task.Run(() => { DatabaseHandler.GetInstance(this); });
+        DatabaseHandler.GetInstance(this);
         // Set our view from the "main" layout resource
         
         // 权限检查
@@ -157,6 +157,7 @@ public class MainActivity : Activity
         var tgAni = AnimationUtils.LoadAnimation(this
             , ResourceConstant.Animation.view_blink);
         txmsg.StartAnimation(tgAni);
+        Utils.AppPackage.ChkInstallTime.SetCurrentTag(this);
     }
 
     public override bool OnCreateOptionsMenu(IMenu? menu)

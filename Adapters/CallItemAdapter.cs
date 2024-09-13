@@ -121,8 +121,8 @@ public class CallItemAdapter : ArrayAdapter<DecodedMsg>
             callListMessageTextView.SetTextColor(Context.Resources.GetColor(Resource.Color.message_in_my_call_text_color));
             // new Task(() =>
             // {
-            //     if (SettingsVariables.vibrate_on_call) Vibrate.DoVibrate(ctx);
-            //     if (SettingsVariables.send_notification_on_call)
+            //     if (SettingsVariables.vibrate_on_all) Vibrate.DoVibrate(ctx);
+            //     if (SettingsVariables.send_notification_on_all)
             //         Notifications.getInstance(ctx).PopNotification(msg.Message);
             // }).Start();
         }

@@ -66,8 +66,7 @@ public sealed class UdpServer
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
-                Console.WriteLine("qqqqqqqqqqqqqqqqqq");
+                
             }
         });
     }

@@ -2,8 +2,9 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using WsjtxUtils.WsjtxMessages.Messages;
+using WsjtxUtils.WsjtxUdpServer;
 
-namespace WsjtxUtils.WsjtxUdpServer.Example.WriteJsonToConsole;
+namespace WsjtxWatcher.Utils.UdpServer;
 
 /// <summary>
 ///     A simple example of a WSJT-X UDP server message handler that outputs the

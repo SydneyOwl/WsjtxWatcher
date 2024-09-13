@@ -2,5 +2,5 @@
 
 public class GlobalVariables
 {
-    public static string version_tag = "v0.0.1";
+    public static string version_tag = "v0.1.0";
 }
