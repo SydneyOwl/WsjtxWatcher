@@ -10,6 +10,7 @@ using WsjtxWatcher.Behaviors.Watchers;
 using WsjtxWatcher.Database;
 using WsjtxWatcher.Dialogs;
 using WsjtxWatcher.Ft8Transmit;
+using WsjtxWatcher.Utils.DeviceActions;
 using WsjtxWatcher.Utils.Network;
 using WsjtxWatcher.Utils.UdpServer;
 using WsjtxWatcher.Utils.UTCTimer;
@@ -176,6 +177,16 @@ public class MainActivity : Activity
 
                             totalRecord.Text = $"总记录数：{++model.totalRecord}";
                         });
+                        // 发送提醒
+                        if (SettingsVariables.vibrate_on_all) Vibrate.DoVibrate(this);
+                        if (SettingsVariables.send_notification_on_all)
+                            Notifications.getInstance(this).PopCommonNotification(message.Message);
+                        if (!string.IsNullOrEmpty(SettingsVariables.myCallsign) && message.Message.Contains(SettingsVariables.myCallsign))
+                        {
+                            if (SettingsVariables.vibrate_on_call) Vibrate.DoVibrate(this);
+                            if (SettingsVariables.send_notification_on_call)
+                                Notifications.getInstance(this).PopCommonNotification(message.Message);
+                        }
                     }).Start();
                 };
                 handler.OnStatusMessageReceived += message =>
@@ -194,13 +205,22 @@ public class MainActivity : Activity
                         model.LastTxStatus = message.Transmitting;
                     });
                 };
-                UdpServer.getInstance().startServer(new UdpServerConf
+                // UdpServer.getInstance().startServer(new UdpServerConf
+                // {
+                //     handler = handler,
+                //     port = SettingsVariables.port,
+                //     ip = Wifi.getLocalIPAddress(this)
+                //     // ip = IPAddress.Any.ToString()
+                // });
+                model.udpConf = new UdpServerConf
                 {
                     handler = handler,
                     port = SettingsVariables.port,
                     ip = Wifi.getLocalIPAddress(this)
                     // ip = IPAddress.Any.ToString()
-                });
+                };
+                var serviceIntent = new Intent(this, typeof(MsgPushService));
+                StartService(serviceIntent);
                 model.RecvWatchdog.Start();
                 Log.Debug(TAG, "Server started!");
                 setTitle(GetString(ResourceConstant.String.receving));
@@ -212,7 +232,9 @@ public class MainActivity : Activity
                 // ProgDialog prog = new ProgDialog(this);
                 Log.Debug(TAG, "Server stopping");
                 // prog.startAni();
-                UdpServer.getInstance().stopServer();
+                // UdpServer.getInstance().stopServer();
+                var serviceIntent1 = new Intent(this, typeof(MsgPushService));
+                StopService(serviceIntent1);
                 Log.Debug(TAG, "Server stopped!");
                 model.RecvWatchdog.Stop();
                 setTitle(GetString(ResourceConstant.String.app_name));

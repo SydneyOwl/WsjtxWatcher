@@ -1,4 +1,5 @@
-﻿using Android.Content;
+﻿using _Microsoft.Android.Resource.Designer;
+using Android.Content;
 using DebounceThrottle;
 using Microsoft.VisualBasic;
 
@@ -16,14 +17,14 @@ public class Notifications
     {
         this.ctx = ctx;
         notificationManager  = (NotificationManager)this.ctx.GetSystemService(Context.NotificationService);
-        NotificationChannel channel = new NotificationChannel(this.ctx.GetString(Resource.String.app_name),ctx.GetString(Resource.String.app_name),
+        NotificationChannel channel_msgRecv = new NotificationChannel(ctx.GetString(ResourceConstant.String.notification_channel_id1),ctx.GetString(Resource.String.app_name),
             NotificationImportance.High);
-        notificationManager.CreateNotificationChannel(channel);
+        notificationManager.CreateNotificationChannel(channel_msgRecv);
     }
 
-    public void PopNotification(string msg)
+    public void PopCommonNotification(string msg)
     {
-        Notification notifications = new Notification.Builder(ctx,ctx.GetString(Resource.String.app_name))
+        Notification notifications = new Notification.Builder(ctx,ctx.GetString(ResourceConstant.String.notification_channel_id1))
             .SetContentTitle(ctx.GetString(Resource.String.user_ft8_msg_available))
             .SetContentText(msg)
             .SetWhen(DateAndTime.Now.Millisecond)
@@ -32,9 +33,10 @@ public class Notifications
             .Build();
         throttleDispatcher.Throttle(() =>
         {
-            notificationManager.Notify(9342, notifications);
+            notificationManager.Notify(int.Parse(ctx.GetString(ResourceConstant.String.notify_id1)), notifications);
         });
     }
+
 
     public static Notifications getInstance(Context ctx)
     {

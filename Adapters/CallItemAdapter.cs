@@ -109,22 +109,22 @@ public class CallItemAdapter : ArrayAdapter<DecodedMsg>
             callListMessageTextView.PaintFlags = PaintFlags.LinearText;
         }
         
-        new Task(() =>
-        {
-            if (SettingsVariables.vibrate_on_all) Vibrate.DoVibrate(ctx);
-            if (SettingsVariables.send_notification_on_all)
-                Notifications.getInstance(ctx).PopNotification(msg.Message);
-        }).Start();
+        // new Task(() =>
+        // {
+        //     if (SettingsVariables.vibrate_on_all) Vibrate.DoVibrate(ctx);
+        //     if (SettingsVariables.send_notification_on_all)
+        //         Notifications.getInstance(ctx).PopNotification(msg.Message);
+        // }).Start();
         // 有我的话就标红
         if (!string.IsNullOrEmpty(SettingsVariables.myCallsign) && msg.Message.Contains(SettingsVariables.myCallsign))
         {
             callListMessageTextView.SetTextColor(Context.Resources.GetColor(Resource.Color.message_in_my_call_text_color));
-            new Task(() =>
-            {
-                if (SettingsVariables.vibrate_on_call) Vibrate.DoVibrate(ctx);
-                if (SettingsVariables.send_notification_on_call)
-                    Notifications.getInstance(ctx).PopNotification(msg.Message);
-            }).Start();
+            // new Task(() =>
+            // {
+            //     if (SettingsVariables.vibrate_on_call) Vibrate.DoVibrate(ctx);
+            //     if (SettingsVariables.send_notification_on_call)
+            //         Notifications.getInstance(ctx).PopNotification(msg.Message);
+            // }).Start();
         }
         
         // 发射周期背景色设定

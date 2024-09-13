@@ -43,7 +43,7 @@ public sealed class UdpServer
         this.conf = conf;
         try
         {
-            tokenSource?.Cancel();
+            stopServer();
         }
         catch
         {

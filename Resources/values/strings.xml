@@ -44,4 +44,10 @@
     <string name="add_to_whitelist">Add to whitelist</string>
     <string name="background">Background Running</string>
     <string name="add_to_background">Add background</string>
+    <string name="service_running">Service Running</string>
+    <string name="listening_msg">Listening ft8 message, click to shutdown</string>
+    <string name="notify_id1" translatable="false">9232</string>
+    <string name="notification_channel_id1" translatable="false">2341</string>
+    <string name="notification_channel_id2" translatable="false">4214</string>
+    <string name="notify_id2" translatable="false">6311</string>
 </resources>

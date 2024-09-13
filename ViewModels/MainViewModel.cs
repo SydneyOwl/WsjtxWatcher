@@ -4,6 +4,7 @@ using _Microsoft.Android.Resource.Designer;
 using WsjtxUtils.WsjtxUdpServer;
 using WsjtxWatcher.Adapters;
 using WsjtxWatcher.Ft8Transmit;
+using WsjtxWatcher.Utils.UdpServer;
 
 namespace WsjtxWatcher.ViewModels;
 
@@ -36,10 +37,14 @@ public class MainViewModel : ViewBase
     public double currentFreq = 0;
 
     public EndPoint sessionEndPoint;
+    
     public string clientId;
 
     public int aboutMe = 0;
+    
     public int totalRecord = 0;
+
+    public UdpServerConf udpConf;
 
 
     private MainViewModel()
