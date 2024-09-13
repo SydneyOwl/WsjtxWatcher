@@ -1,5 +1,7 @@
 ﻿using Android.Content;
+using Android.OS;
 using Android.Views;
+using WsjtxWatcher.Activities;
 using WsjtxWatcher.Database;
 using WsjtxWatcher.Dialogs;
 using Object = Java.Lang.Object;
@@ -25,21 +27,25 @@ public class OnResetDBListener : Object,View.IOnClickListener
         {
             try
             {
-                // 执行数据库重置操作
                 DatabaseHandler.GetInstance(null).ResetDatabase();
             }
             catch (Exception ex)
             {
-                // 处理异常（如果有必要）
                 Console.WriteLine(ex.Message);
             }
             finally
             {
-                // 确保在主线程中隐藏动画
                 ((Activity)ctx).RunOnUiThread(() =>
                 {
                     progDialog.StopAni();
                 });
+                // 重启
+                Intent intent = new Intent(Application.Context, typeof(MainActivity)); // 替换为你的启动活动
+                intent.AddFlags(ActivityFlags.ClearTop | ActivityFlags.NewTask);
+                PendingIntent pendingIntent = PendingIntent.GetActivity(Application.Context, 0, intent, PendingIntentFlags.CancelCurrent);
+                AlarmManager alarmManager = (AlarmManager)Application.Context.GetSystemService(Context.AlarmService);
+                alarmManager.Set(AlarmType.Rtc, DateTime.Now.Millisecond + 600, pendingIntent); // 100 毫秒后重启
+                Process.KillProcess(Process.MyPid()); // 结束当前进程
             }
         });
     }

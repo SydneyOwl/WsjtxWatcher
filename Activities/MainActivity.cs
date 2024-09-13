@@ -143,6 +143,7 @@ public class MainActivity : Activity
                         {
                             startServer.SetEnabled(true);
                             stopServer.SetEnabled(false);
+                            model.RecvWatchdog.Stop();
                             setTxLayoutConf(GetString(ResourceConstant.String.open_service), ViewStates.Visible);
                             setTitle(GetString(ResourceConstant.String.app_name));
                         }

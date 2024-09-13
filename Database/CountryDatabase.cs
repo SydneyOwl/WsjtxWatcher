@@ -24,7 +24,7 @@ public class CountryDatabase
     }
 
     [PrimaryKey]
-    [AutoIncrement]
+    // [AutoIncrement]
     [Column("id")]
     public int Id { get; set; }
 

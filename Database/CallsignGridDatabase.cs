@@ -10,7 +10,8 @@ public class CallsignGridDatabase
     [Column("id")]
     public int Id { get; set; }
 
-    [Column("callsign")] public string Callsign { get; set; }
+   
+    [Unique] [Column("callsign")] public string Callsign { get; set; }
 
     [Column("grid")] public string Grid { get; set; }
 }

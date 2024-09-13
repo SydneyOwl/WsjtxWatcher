@@ -24,8 +24,8 @@ public class DatabaseHandler
         var isSameVersion = Utils.AppPackage.ChkInstallTime.IsSameVersion(ctx);
         dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wsjtx-watcher-database.db");
         var connectionString = new SQLiteConnectionString(dbPath,
-            SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.ProtectionComplete |
-            SQLiteOpenFlags.SharedCache | SQLiteOpenFlags.FullMutex, true);
+            SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite  |
+            SQLiteOpenFlags.SharedCache, true);
         dbExists = File.Exists(dbPath);
         // if (dbExists)
         // {
@@ -48,16 +48,15 @@ public class DatabaseHandler
             _db.CreateTableAsync<CallsignDatabase>().ContinueWith((_) =>
             {
                 Log.Debug(TAG, "CallsignDatabase Created!");
-            }).GetAwaiter().GetResult();
+            }).ConfigureAwait(false).GetAwaiter().GetResult();
             _db.CreateTableAsync<CountryDatabase>().ContinueWith((_) =>
             {
                 Log.Debug(TAG, "CountryDatabase Created!");
-                
-            }).GetAwaiter().GetResult();
+            }).ConfigureAwait(false).GetAwaiter().GetResult();
             _db.CreateTableAsync<CallsignGridDatabase>().ContinueWith((_) =>
             {
                 Log.Debug(TAG, "CallsignGridDatabase Created!");
-            }).GetAwaiter().GetResult();
+            }).ConfigureAwait(false).GetAwaiter().GetResult();
             InitTableData();
             dbExists = true;
         }
@@ -66,11 +65,12 @@ public class DatabaseHandler
             Log.Debug(TAG, "Same version. Skipping..");
             _db = new SQLiteAsyncConnection(connectionString);
         }
+        _db.EnableWriteAheadLoggingAsync().ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
     public void ResetDatabase()
     {
-        _db.CloseAsync().GetAwaiter().GetResult();
+        _db.CloseAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         try
         {
             UdpServer.getInstance().stopServer();
@@ -91,15 +91,15 @@ public class DatabaseHandler
         _db.CreateTableAsync<CallsignDatabase>().ContinueWith((_) =>
         {
             Log.Debug(TAG, "RST-CallsignDatabase Created!");
-        }).GetAwaiter().GetResult();
+        }).ConfigureAwait(false).GetAwaiter().GetResult();
         _db.CreateTableAsync<CountryDatabase>().ContinueWith((_) =>
         {
             Log.Debug(TAG, "RST-CountryDatabase Created!");
-        }).GetAwaiter().GetResult();
+        }).ConfigureAwait(false).GetAwaiter().GetResult();
         _db.CreateTableAsync<CallsignGridDatabase>().ContinueWith((_) =>
         {
             Log.Debug(TAG, "RST-CallsignGridDatabase Created!");
-        }).GetAwaiter().GetResult();
+        }).ConfigureAwait(false).GetAwaiter().GetResult();
         InitTableData();
         Log.Debug(TAG, "RST-Done!");
         dbExists = true;
@@ -129,20 +129,25 @@ public class DatabaseHandler
         //         }
         //     }
         // });
-        _db.ExecuteAsync("DELETE FROM callsign_grid WHERE callsign=?", callsign).GetAwaiter().GetResult();
-        _db.InsertAsync(new CallsignGridDatabase
+        _db.InsertOrReplaceAsync(new CallsignGridDatabase
         {
             Callsign = callsign,
             Grid = grid
-        });
+        }).ConfigureAwait(false);
+        // _db.ExecuteAsync("DELETE FROM callsign_grid WHERE callsign=?", callsign).ConfigureAwait(false).GetAwaiter().GetResult();
+        // _db.InsertAsync(new CallsignGridDatabase
+        // {
+        //     Callsign = callsign,
+        //     Grid = grid
+        // }).ConfigureAwait(false);
     }
 
     // 查找呼号对应的坐标
     public string QueryGrid(string callsign)
     {
-        var grids = _db.QueryAsync<CallsignGridDatabase>("SELECT * FROM callsign_grid WHERE callsign=? LIMIT 1", callsign);
-        if (grids.Result.Count == 0) return "";
-        return grids.Result[0].Grid;
+        var grids = _db.QueryAsync<CallsignGridDatabase>("SELECT * FROM callsign_grid WHERE callsign=? LIMIT 1", callsign).ConfigureAwait(false).GetAwaiter().GetResult();
+        if (grids.Count == 0) return "";
+        return grids[0].Grid;
     }
 
     public CountryDatabase QueryCountryByCallsign(string callsign)
@@ -150,8 +155,8 @@ public class DatabaseHandler
         // 不能用LEFT JOIN
         var countriesRes = _db.QueryAsync<CountryDatabase>(
             "select a.*,b.* from callsigns as a left join countries as b on a.country_id =b.id WHERE (SUBSTR(?,1,LENGTH(callsign))=callsign) OR (callsign='='||?) order by LENGTH(callsign) desc LIMIT 1",
-            callsign, callsign);
-        if (countriesRes.Result.Count == 0) return new CountryDatabase();
+            callsign, callsign).ConfigureAwait(false).GetAwaiter().GetResult();
+        if (countriesRes.Count == 0) return new CountryDatabase();
         // var cal = _db.Query<CallsignDatabase>($"SELECT callsign FROM callsigns WHERE (SUBSTR(\"{callsign}\", 1, LENGTH(callsign)) = callsign) OR (callsign = \"=\" || \"{callsign}\")) LIMIT 1");
         // if (cal.Count == 0)
         // {
@@ -165,16 +170,17 @@ public class DatabaseHandler
         // {
         //     return new CountryDatabase();
         // }
-        return countriesRes.Result[0];
+        return countriesRes[0];
     }
 
     public CountryDatabase QueryCountryByName(string countryEnName)
     {
         var countryRes =
-            _db.QueryAsync<CountryDatabase>("SELECT * FROM countries WHERE country_en=? LIMIT 1", countryEnName);
-        if (countryRes.Result.Count == 0) return new CountryDatabase();
+            _db.QueryAsync<CountryDatabase>("SELECT * FROM countries WHERE country_en=? LIMIT 1", countryEnName).ConfigureAwait(false)
+                .GetAwaiter().GetResult();
+        if (countryRes.Count == 0) return new CountryDatabase();
 
-        return countryRes.Result[0];
+        return countryRes[0];
     }
 
     private void InitTableData()
@@ -193,6 +199,7 @@ public class DatabaseHandler
         var assetManager = ctx.Assets;
         try
         {
+            var a = 0;
             var inputStream = assetManager.Open("cty.dat");
             using (var reader = new StreamReader(inputStream))
             {
@@ -204,16 +211,20 @@ public class DatabaseHandler
                     var info = st[j].Split(":");
                     if (info.Length < 9) continue;
                     var ls = info[8].Replace("\n", "").Split(",");
-                    for (var i = 0; i < ls.Length; i++)
+                    _db.RunInTransactionAsync((tran) =>
                     {
-                        if (ls[i].Contains(")")) ls[i] = ls[i].Substring(0, ls[i].IndexOf("("));
-                        if (ls[i].Contains("[")) ls[i] = ls[i].Substring(0, ls[i].IndexOf("["));
-                        _db.InsertAsync(new CallsignDatabase
+                        for (var i = 0; i < ls.Length; i++)
                         {
-                            Callsign = ls[i].Trim(),
-                            CountryId = j + 1
-                        }).GetAwaiter().GetResult();
-                    }
+                            if (ls[i].Contains(")")) ls[i] = ls[i].Substring(0, ls[i].IndexOf("("));
+                            if (ls[i].Contains("[")) ls[i] = ls[i].Substring(0, ls[i].IndexOf("["));
+                            tran.Insert(new CallsignDatabase
+                            {
+                                Callsign = ls[i].Trim(),
+                                CountryId = j + 1
+                            });
+                            Log.Debug(TAG, (a++).ToString());
+                        }
+                    }).ConfigureAwait(false).GetAwaiter().GetResult();
                 }
             }
         }
@@ -264,7 +275,7 @@ public class DatabaseHandler
                     var cdb = new CountryDatabase(st[i]);
                     cdb.CountryNameCN = searchENForCountryNameCN(cdb.CountryNameEn);
                     cdb.Id = i + 1;
-                    _db.InsertAsync(cdb).GetAwaiter().GetResult();
+                    _db.InsertAsync(cdb).ConfigureAwait(false).GetAwaiter().GetResult();
                 }
             }
         }
