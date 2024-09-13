@@ -9,7 +9,7 @@
     <string name="save_settings">保存</string>
     <string name="start_server">开启服务</string>
     <string name="stop_server">停止服务</string>
-    <string name="loading">加载中...</string>
+    <string name="loading">请稍候...</string>
     <string name="test_conf">测试配置</string>
     <string name="txing">发射中...</string>
     <string name="wait_conn">等待连接...</string>

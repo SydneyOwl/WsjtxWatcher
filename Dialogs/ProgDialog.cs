@@ -16,7 +16,7 @@ public class ProgDialog
         progressDialog = new AlertDialog.Builder(ctx);
     }
 
-    public void startAni()
+    public void StartAni()
     {
         progressDialog.SetMessage(ctx.GetString(ResourceConstant.String.loading));
         progressDialog.SetCancelable(false);
@@ -24,7 +24,7 @@ public class ProgDialog
         dia = progressDialog.Show();
     }
 
-    public void stopAni()
+    public void StopAni()
     {
         dia?.Dismiss();
     }

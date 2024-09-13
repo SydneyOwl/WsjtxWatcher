@@ -55,7 +55,10 @@ public class MainActivity : Activity
             , WindowManagerFlags.KeepScreenOn);
 
         OverrideSettings();
-        DatabaseHandler.GetInstance(this);
+        new Task(() =>
+        {
+            DatabaseHandler.GetInstance(this);
+        }).Start();
         // Set our view from the "main" layout resource
         
         // 权限检查

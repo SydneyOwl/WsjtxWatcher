@@ -48,16 +48,16 @@ public class DatabaseHandler
             _db.CreateTableAsync<CallsignDatabase>().ContinueWith((_) =>
             {
                 Log.Debug(TAG, "CallsignDatabase Created!");
-            });
+            }).GetAwaiter().GetResult();
             _db.CreateTableAsync<CountryDatabase>().ContinueWith((_) =>
             {
                 Log.Debug(TAG, "CountryDatabase Created!");
                 
-            });
+            }).GetAwaiter().GetResult();
             _db.CreateTableAsync<CallsignGridDatabase>().ContinueWith((_) =>
             {
                 Log.Debug(TAG, "CallsignGridDatabase Created!");
-            });
+            }).GetAwaiter().GetResult();
             InitTableData();
             dbExists = true;
         }
@@ -68,9 +68,9 @@ public class DatabaseHandler
         }
     }
 
-    public void resetDatabase()
+    public void ResetDatabase()
     {
-        _db.CloseAsync();
+        _db.CloseAsync().GetAwaiter().GetResult();
         try
         {
             UdpServer.getInstance().stopServer();
@@ -90,17 +90,18 @@ public class DatabaseHandler
         _db = new SQLiteAsyncConnection(connectionString);
         _db.CreateTableAsync<CallsignDatabase>().ContinueWith((_) =>
         {
-            Log.Debug(TAG, "CallsignDatabase Created!");
-        });
+            Log.Debug(TAG, "RST-CallsignDatabase Created!");
+        }).GetAwaiter().GetResult();
         _db.CreateTableAsync<CountryDatabase>().ContinueWith((_) =>
         {
-            Log.Debug(TAG, "CountryDatabase Created!");
-        });
+            Log.Debug(TAG, "RST-CountryDatabase Created!");
+        }).GetAwaiter().GetResult();
         _db.CreateTableAsync<CallsignGridDatabase>().ContinueWith((_) =>
         {
-            Log.Debug(TAG, "CallsignGridDatabase Created!");
-        });
+            Log.Debug(TAG, "RST-CallsignGridDatabase Created!");
+        }).GetAwaiter().GetResult();
         InitTableData();
+        Log.Debug(TAG, "RST-Done!");
         dbExists = true;
     }
  
@@ -180,8 +181,11 @@ public class DatabaseHandler
     {
         // 国家信息
         InitCountryDic();
+        Log.Debug(TAG, "RST->initCountryDic!");
         InitCountryData();
+        Log.Debug(TAG, "RST->initInitCountryData!");
         InitCallsign();
+        Log.Debug(TAG, "RST->initInitCallsign!");
     }
 
     private void InitCallsign()

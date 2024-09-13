@@ -90,11 +90,11 @@ public class SettingsActivity : Activity
         vibrationAllCheckbox.CheckedChange += onChkChg.VibrateAllCheckboxChanged;
 
         
-        ords = new OnResetDBListener();
+        ords = new OnResetDBListener(this);
         resetDbButton = FindViewById<Button>(ResourceConstant.Id.reset_database);
         resetDbButton.SetOnClickListener(ords);
         
-        oras = new OnResetAllListener();
+        oras = new OnResetAllListener(this);
         resetAllButton = FindViewById<Button>(ResourceConstant.Id.reset_all);
         resetAllButton.SetOnClickListener(oras);
         

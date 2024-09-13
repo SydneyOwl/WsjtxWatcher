@@ -14,5 +14,5 @@
             android:layout_marginRight="40dp"
             android:textSize="20dp"
             android:textColor="#999"
-            android:text="Loading..."/>
+            android:text="@string/loading"/>
 </LinearLayout>
