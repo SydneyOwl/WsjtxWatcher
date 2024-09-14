@@ -53,4 +53,5 @@
     <string name="selected_dxcc">选中的DXCC：</string>
     <string name="received_msg">收到FT8信息：</string>
     <string name="included_in_msg">我参与此信息：</string>
+    <string name="search">输入搜索内容...</string>
 </resources>

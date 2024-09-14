@@ -48,6 +48,9 @@ public class DxccItemAdapter : BaseAdapter<CountryDatabase>
                 ChDelete = convertView.FindViewById<CheckBox>(ResourceConstant.Id.ch_delete)
             };
 
+            viewHolder.ChDelete.Click -= OnCheckBoxClick; // Ensure no duplicate event handlers
+            viewHolder.ChDelete.Click += OnCheckBoxClick; // Bind event handler
+
             convertView.Tag = viewHolder;
         }
         else
@@ -72,27 +75,6 @@ public class DxccItemAdapter : BaseAdapter<CountryDatabase>
         viewHolder.DxccCq.Text = "CQ: " + item.CqZone;
         viewHolder.ChDelete.Checked = item.Checked;
 
-        _listView.ItemClick += (sender, e) =>
-        {
-            if (e.Position == position)
-            {
-                viewHolder.ChDelete.Toggle();
-                item.Checked = viewHolder.ChDelete.Checked;
-                var sharedPreferences =
-                    _context.GetSharedPreferences(_context.GetString(ResourceConstant.String.storage_key),
-                        FileCreationMode.Private);
-                var l = sharedPreferences.GetStringSet("prefered_dxcc", new List<string>()).ToList();
-                if (item.Checked)
-                    l.Add(item.Id.ToString());
-                else
-                    l.Remove(item.Id.ToString());
-                l = l.Distinct().ToList();
-                var edit = sharedPreferences.Edit();
-                edit.PutStringSet("prefered_dxcc", l);
-                edit.Apply();
-            }
-        };
-
         return convertView;
     }
 
@@ -104,5 +86,26 @@ public class DxccItemAdapter : BaseAdapter<CountryDatabase>
         public TextView DxccItu { get; set; }
         public TextView DxccCq { get; set; }
         public CheckBox ChDelete { get; set; }
+    }private void OnCheckBoxClick(object sender, EventArgs e)
+    {
+        var checkBox = (CheckBox)sender;
+        var position = (int)checkBox.Tag;
+        var item = _data[position];
+
+        item.Checked = checkBox.Checked;
+
+        var sharedPreferences =
+            _context.GetSharedPreferences(_context.GetString(ResourceConstant.String.storage_key),
+                FileCreationMode.Private);
+        var l = sharedPreferences.GetStringSet("prefered_dxcc", new List<string>()).ToList();
+        if (item.Checked)
+            l.Add(item.Id.ToString());
+        else
+            l.Remove(item.Id.ToString());
+        l = l.Distinct().ToList();
+        var edit = sharedPreferences.Edit();
+        edit.PutStringSet("prefered_dxcc", l);
+        edit.Apply();
     }
+    
 }

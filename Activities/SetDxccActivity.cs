@@ -19,6 +19,7 @@ public class SetDxccActivity : Activity
         SetContentView(ResourceConstant.Layout.activity_set_dxcc);
         var lvData = FindViewById<ListView>(ResourceConstant.Id.lv_data);
         var btnSelectAll = FindViewById<CheckBox>(ResourceConstant.Id.che_all);
+        var search_edittext = FindViewById<EditText>(ResourceConstant.Id.search_edittext);
         // 初始化数据
         _data = DatabaseHandler.GetInstance(null).QueryAllCountries();
         // 标记checked
@@ -65,6 +66,14 @@ public class SetDxccActivity : Activity
                 //若列表中没有数据则隐藏全选复选框
                 btnSelectAll.Visibility = ViewStates.Gone;
             }
+        };
+
+        search_edittext.TextChanged += (sender, args) =>
+        {
+            _data.Clear();
+            var result = DatabaseHandler.GetInstance(null).QueryCountriesByNameOrDxcc(args.Text.ToString());
+            _data.AddRange(result);
+            _adapter.NotifyDataSetChanged();
         };
     }
 }

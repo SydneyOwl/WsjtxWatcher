@@ -21,90 +21,108 @@ public class CallItemAdapter : ArrayAdapter<DecodedMsg>
     }
 
     public override View GetView(int position, View convertView, ViewGroup parent)
+{
+    ViewHolder holder;
+
+    if (convertView == null)
     {
-        if (convertView == null)
+        var inflater = LayoutInflater.From(_context);
+        convertView = inflater.Inflate(ResourceConstant.Layout.call_item, parent, false);
+
+        holder = new ViewHolder
         {
-            var inflater = LayoutInflater.From(_context);
-            convertView = inflater.Inflate(ResourceConstant.Layout.call_item, parent, false);
+            CallingListIdBTextView = convertView.FindViewById<TextView>(ResourceConstant.Id.callingListIdBTextView),
+            CallListDtTextView = convertView.FindViewById<TextView>(ResourceConstant.Id.callListDtTextView),
+            CallingListFreqTextView = convertView.FindViewById<TextView>(ResourceConstant.Id.callingListFreqTextView),
+            CallListMessageTextView = convertView.FindViewById<TextView>(ResourceConstant.Id.callListMessageTextView),
+            BandItemTextView = convertView.FindViewById<TextView>(ResourceConstant.Id.bandItemTextView),
+            CallingUtcTextView = convertView.FindViewById<TextView>(ResourceConstant.Id.callingUtcTextView),
+            LowTrustTextview = convertView.FindViewById<TextView>(ResourceConstant.Id.lowTrustTextview),
+            CallToItemTextView = convertView.FindViewById<TextView>(ResourceConstant.Id.callToItemTextView),
+            CallFromItemTextView = convertView.FindViewById<TextView>(ResourceConstant.Id.CallFromItemTextView),
+            CallingListDistTextView = convertView.FindViewById<TextView>(ResourceConstant.Id.callingListDistTextView)
+        };
 
-            convertView.Tag = new ViewHolder
-            {
-                CallingListIdBTextView = convertView.FindViewById<TextView>(ResourceConstant.Id.callingListIdBTextView),
-                CallListDtTextView = convertView.FindViewById<TextView>(ResourceConstant.Id.callListDtTextView),
-                CallingListFreqTextView =
-                    convertView.FindViewById<TextView>(ResourceConstant.Id.callingListFreqTextView),
-                CallListMessageTextView =
-                    convertView.FindViewById<TextView>(ResourceConstant.Id.callListMessageTextView),
-                BandItemTextView = convertView.FindViewById<TextView>(ResourceConstant.Id.bandItemTextView),
-                CallingUtcTextView = convertView.FindViewById<TextView>(ResourceConstant.Id.callingUtcTextView),
-                LowTrustTextview = convertView.FindViewById<TextView>(ResourceConstant.Id.lowTrustTextview),
-                CallToItemTextView = convertView.FindViewById<TextView>(ResourceConstant.Id.callToItemTextView),
-                CallFromItemTextView = convertView.FindViewById<TextView>(ResourceConstant.Id.CallFromItemTextView),
-                CallingListDistTextView =
-                    convertView.FindViewById<TextView>(ResourceConstant.Id.callingListDistTextView)
-            };
-        }
-
-        var holder = (ViewHolder)convertView.Tag;
-        var msg = GetItem(position);
-
-        var isUserTransmit = msg.Transmitter == "USER_TRANSMIT";
-
-        holder.CallingListIdBTextView.Visibility = isUserTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.CallListDtTextView.Visibility = isUserTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.CallingListFreqTextView.Visibility = isUserTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.BandItemTextView.Visibility = isUserTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.CallingUtcTextView.Visibility = isUserTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.LowTrustTextview.Visibility = isUserTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.CallToItemTextView.Visibility = isUserTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.CallFromItemTextView.Visibility = isUserTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.CallingListDistTextView.Visibility = isUserTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.CallListMessageTextView.Text = isUserTransmit
-            ? string.IsNullOrEmpty(msg.Message)
-                ? _context.GetString(ResourceConstant.String.user_tx_period)
-                : msg.Message
-            : msg.Message;
-
-        if (!isUserTransmit)
-        {
-            holder.CallingListIdBTextView.Text = msg.Snr.ToString();
-            holder.CallListDtTextView.Text = msg.OffsetTimeSeconds.ToString("F1");
-            holder.CallingListFreqTextView.Text = msg.OffsetFrequencyHz.ToString();
-            holder.CallingUtcTextView.Text = msg.DecodeTime;
-            holder.LowTrustTextview.Visibility = msg.LowConfidence ? ViewStates.Visible : ViewStates.Invisible;
-            holder.CallToItemTextView.Text = SettingsVariables.CurrentLanguage == "zh"
-                ? msg.ToLocationCountryZh
-                : msg.ToLocationCountryEn;
-            holder.CallFromItemTextView.Text = SettingsVariables.CurrentLanguage == "zh"
-                ? msg.FromLocationCountryZh
-                : msg.FromLocationCountryEn;
-            holder.CallingListDistTextView.Text = msg.Distance;
-            holder.BandItemTextView.Text =
-                _model.CurrentFreq == 0 ? "未知" : (_model.CurrentFreq / 1_000_000).ToString("F3") + "MHz";
-
-            var messageColor = msg.Message.Contains("RR73") || msg.Message.Contains("73") || msg.Message.Contains("RRR")
-                ? ResourceConstant.Color.tracker_new_cq_win_end_color
-                : ResourceConstant.Color.text_view_color;
-            holder.CallListMessageTextView.SetTextColor(Context.Resources.GetColor(messageColor));
-            holder.CallListMessageTextView.PaintFlags = msg.Message.Contains("RR73") || msg.Message.Contains("73") ||
-                                                        msg.Message.Contains("RRR")
-                ? PaintFlags.StrikeThruText
-                : PaintFlags.LinearText;
-
-            if (!string.IsNullOrEmpty(SettingsVariables.MyCallsign) &&
-                msg.Message.Contains(SettingsVariables.MyCallsign))
-                holder.CallListMessageTextView.SetTextColor(
-                    Context.Resources.GetColor(ResourceConstant.Color.message_in_my_call_text_color));
-
-            var sec = int.Parse(msg.DecodeTime.Split(":").Last());
-            var backgroundColor = sec is > 55 and < 60 || sec < 5 || sec is > 25 and < 35
-                ? ResourceConstant.Color.odd_period
-                : ResourceConstant.Color.even_period;
-            convertView.SetBackgroundColor(Context.Resources.GetColor(backgroundColor));
-        }
-
-        return convertView;
+        convertView.Tag = holder;
     }
+    else
+    {
+        holder = (ViewHolder)convertView.Tag;
+    }
+
+    var msg = GetItem(position);
+    var isUserTransmit = msg.Transmitter == "USER_TRANSMIT";
+
+    // Set visibility
+    var visibility = isUserTransmit ? ViewStates.Gone : ViewStates.Visible;
+    holder.CallingListIdBTextView.Visibility = visibility;
+    holder.CallListDtTextView.Visibility = visibility;
+    holder.CallingListFreqTextView.Visibility = visibility;
+    holder.BandItemTextView.Visibility = visibility;
+    holder.CallingUtcTextView.Visibility = visibility;
+    holder.LowTrustTextview.Visibility = isUserTransmit ? ViewStates.Gone : (msg.LowConfidence ? ViewStates.Visible : ViewStates.Invisible);
+    holder.CallToItemTextView.Visibility = visibility;
+    holder.CallFromItemTextView.Visibility = visibility;
+    holder.CallingListDistTextView.Visibility = visibility;
+
+    // Set text values
+    holder.CallListMessageTextView.Text = isUserTransmit
+        ? string.IsNullOrEmpty(msg.Message)
+            ? _context.GetString(ResourceConstant.String.user_tx_period)
+            : msg.Message
+        : msg.Message;
+
+    // Reset paint flags and colors
+    holder.CallListMessageTextView.PaintFlags = PaintFlags.LinearText; // Default paint flags
+    holder.CallListMessageTextView.SetTextColor(Context.Resources.GetColor(ResourceConstant.Color.text_view_color));
+
+    if (!isUserTransmit)
+    {
+        holder.CallingListIdBTextView.Text = msg.Snr.ToString();
+        holder.CallListDtTextView.Text = msg.OffsetTimeSeconds.ToString("F1");
+        holder.CallingListFreqTextView.Text = msg.OffsetFrequencyHz.ToString();
+        holder.CallingUtcTextView.Text = msg.DecodeTime;
+        holder.CallToItemTextView.Text = SettingsVariables.CurrentLanguage == "zh"
+            ? msg.ToLocationCountryZh
+            : msg.ToLocationCountryEn;
+        holder.CallFromItemTextView.Text = SettingsVariables.CurrentLanguage == "zh"
+            ? msg.FromLocationCountryZh
+            : msg.FromLocationCountryEn;
+        holder.CallingListDistTextView.Text = msg.Distance;
+        holder.BandItemTextView.Text =
+            _model.CurrentFreq == 0 ? "未知" : (_model.CurrentFreq / 1_000_000).ToString("F3") + "MHz";
+
+        if (msg.Message.Contains("RR73") || msg.Message.Contains("73") || msg.Message.Contains("RRR"))
+        {
+            holder.CallListMessageTextView.PaintFlags |= PaintFlags.StrikeThruText;
+            holder.CallListMessageTextView.SetTextColor(Context.Resources.GetColor(ResourceConstant.Color.tracker_new_cq_win_end_color));
+        }
+        else
+        {
+            holder.CallListMessageTextView.PaintFlags |= PaintFlags.LinearText;
+            holder.CallListMessageTextView.SetTextColor(Context.Resources.GetColor(ResourceConstant.Color.text_view_color));
+        }
+
+        if (!string.IsNullOrEmpty(SettingsVariables.MyCallsign) &&
+            msg.Message.Contains(SettingsVariables.MyCallsign))
+        {
+            holder.CallListMessageTextView.SetTextColor(Context.Resources.GetColor(ResourceConstant.Color.message_in_my_call_text_color));
+        }
+
+        var sec = int.Parse(msg.DecodeTime.Split(":").Last());
+        var backgroundColor = sec is > 55 and < 60 or < 5 or > 25 and < 35
+            ? ResourceConstant.Color.odd_period
+            : ResourceConstant.Color.even_period;
+        convertView.SetBackgroundColor(Context.Resources.GetColor(backgroundColor));
+    }
+    else
+    {
+        convertView.SetBackgroundColor(Context.Resources.GetColor(ResourceConstant.Color.my_transmit_period));
+    }
+
+    return convertView;
+}
+
 
     private class ViewHolder : Object
     {

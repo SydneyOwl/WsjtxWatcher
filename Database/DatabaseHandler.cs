@@ -174,6 +174,11 @@ public class DatabaseHandler
 
         return countryRes[0];
     }
+    
+    public List<CountryDatabase> QueryCountriesByNameOrDxcc(string query)
+    {
+        return _db.QueryAsync<CountryDatabase>("SELECT * FROM countries WHERE country_en LIKE '%' || ? || '%' or country_cn LIKE '%' || ? || '%' or dxcc LIKE '%' || ? || '%'",query,query,query).GetAwaiter().GetResult();
+    }
 
     public List<CountryDatabase> QueryAllCountries()
     {
