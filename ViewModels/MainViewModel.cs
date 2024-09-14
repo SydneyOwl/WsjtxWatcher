@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using System.Collections.ObjectModel;
+using System.Net;
+using WsjtxWatcher.Adapters;
 using WsjtxWatcher.Ft8Transmit;
 using WsjtxWatcher.Utils.UdpServer;
 
@@ -32,9 +34,9 @@ public class MainViewModel : ViewBase
 
     public double CurrentFreq = 0;
 
-    public List<DecodedMsg> DecodedMsgList = new();
+    public ObservableCollection<DecodedMsg> DecodedMsgList = new();
     public bool LastTxStatus = false;
-
+    public CallItemAdapter adapter;
     public Watchdog RecvWatchdog;
 
     public EndPoint SessionEndPoint;

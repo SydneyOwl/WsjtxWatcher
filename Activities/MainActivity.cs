@@ -25,7 +25,6 @@ public class MainActivity : Activity
     public static Mutex Mutex = new();
     private readonly MainViewModel _model = MainViewModel.GetInstance();
     private TextView _aboutMe;
-    private CallItemAdapter _adapter;
     private ListView _listView;
     private IMenuItem _startServer;
     private IMenuItem _stopServer;
@@ -71,11 +70,18 @@ public class MainActivity : Activity
         _listView = FindViewById<ListView>(ResourceConstant.Id.calllist_view);
         _aboutMe = FindViewById<TextView>(ResourceConstant.Id.about_me);
         _totalRecord = FindViewById<TextView>(ResourceConstant.Id.total_record);
-        _adapter = new CallItemAdapter(this, ResourceConstant.Layout.call_item, _model.DecodedMsgList);
-        _listView.Adapter = _adapter;
+        _model.adapter = new CallItemAdapter(this, _listView, _model.DecodedMsgList);
+        _listView.Adapter = _model.adapter;
         // // // //设置发射消息框的动画
         _txLayout.Visibility = ViewStates.Visible;
 
+        _model.DecodedMsgList.CollectionChanged += (sender, args) =>
+        {
+            RunOnUiThread(() =>
+            {
+                _model.adapter.NotifyDataSetChanged();
+            });
+        };
 
         // 超时指示
         _model.RecvWatchdog = new Watchdog(TimeSpan.FromSeconds(16),
@@ -146,7 +152,7 @@ public class MainActivity : Activity
         // 绑定三个按钮，真是太不优雅了，我都不敢想后面有多难维护
         FindViewById<Button>(ResourceConstant.Id.halt_tx).SetOnClickListener(new OnHaltTxListener());
         FindViewById<Button>(ResourceConstant.Id.replay).SetOnClickListener(new OnReplayListener());
-        FindViewById<Button>(ResourceConstant.Id.clear).SetOnClickListener(new OnClearListener(_adapter));
+        FindViewById<Button>(ResourceConstant.Id.clear).SetOnClickListener(new OnClearListener());
 
         _model.TransmittingMessage = GetString(ResourceConstant.String.open_service);
         var tgAni = AnimationUtils.LoadAnimation(this
@@ -173,73 +179,20 @@ public class MainActivity : Activity
                 StartActivity(intent);
                 break;
             case ResourceConstant.Id.start_server:
-                var handler = new WsjtxMsgHandler(this);
-                handler.OnDecodeMessageReceived += message =>
+                var handler = new WsjtxMsgHandler();
+                handler.OnDecodeMessageReceived += msg =>
                 {
                     new Task(() =>
                     {
-                        var msg = DecodedMsg.RawDecodedToDecodedMsg(message);
                         RunOnUiThread(() =>
                         {
-                            _adapter.Add(msg);
                             if (!string.IsNullOrEmpty(SettingsVariables.MyCallsign) &&
                                 msg.Message.Contains(SettingsVariables.MyCallsign))
                                 _aboutMe.Text = $"与我有关：{++_model.AboutMe}";
-
                             _totalRecord.Text = $"总记录数：{++_model.TotalRecord}";
                         });
-                        // 发送提醒
-                        if (SettingsVariables.VibrateOnAll) Vibrate.DoVibrate(this);
-                        if (SettingsVariables.SendNotificationOnAll)
-                            Notifications.GetInstance(this)
-                                .PopCommonNotification(
-                                    GetString(ResourceConstant.String.received_msg) + message.Message);
-                        // 有我出现
-                        if (!string.IsNullOrEmpty(SettingsVariables.MyCallsign) &&
-                            message.Message.Contains(SettingsVariables.MyCallsign))
-                        {
-                            if (SettingsVariables.VibrateOnCall) Vibrate.DoVibrate(this);
-                            if (SettingsVariables.SendNotificationOnCall)
-                                Notifications.GetInstance(this)
-                                    .PopCommonNotification(GetString(ResourceConstant.String.included_in_msg) +
-                                                           message.Message);
-                        }
-
-                        // 稀有DXCC
-                        var wantedDxcc =
-                            GetSharedPreferences(GetString(ResourceConstant.String.storage_key),
-                                FileCreationMode.Private).GetStringSet("prefered_dxcc", new List<string>()).ToList();
-                        if (wantedDxcc.Contains(msg.FromLocationCountryId.ToString()))
-                        {
-                            if (SettingsVariables.VibrateOnDxcc) Vibrate.DoVibrate(this);
-                            if (SettingsVariables.SendNotificationOnDxcc)
-                                Notifications.GetInstance(this)
-                                    .PopCommonNotification(GetString(ResourceConstant.String.selected_dxcc) +
-                                                           message.Message);
-                        }
                     }).Start();
                 };
-                handler.OnStatusMessageReceived += message =>
-                {
-                    RunOnUiThread(() =>
-                    {
-                        if (!_model.LastTxStatus && message.Transmitting)
-                            _adapter.Add(new DecodedMsg
-                            {
-                                Transmitter = "USER_TRANSMIT",
-                                Message = message.TXMessage
-                            });
-
-                        _model.LastTxStatus = message.Transmitting;
-                    });
-                };
-                // UdpServer.getInstance().startServer(new UdpServerConf
-                // {
-                //     handler = handler,
-                //     port = SettingsVariables.port,
-                //     ip = Wifi.getLocalIPAddress(this)
-                //     // ip = IPAddress.Any.ToString()
-                // });
                 _model.UdpConf = new UdpServerConf
                 {
                     Handler = handler,

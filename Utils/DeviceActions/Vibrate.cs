@@ -8,11 +8,11 @@ public class Vibrate
 {
     private static readonly ThrottleDispatcher ThrottleDispatcher = new(TimeSpan.FromMilliseconds(12000));
 
-    public static void DoVibrate(Context ctx)
+    public static void DoVibrate()
     {
         ThrottleDispatcher.Throttle(() =>
         {
-            var vibrator = (Vibrator)ctx.GetSystemService(Context.VibratorService);
+            var vibrator = (Vibrator)Application.Context.GetSystemService(Context.VibratorService);
             if (vibrator.HasVibrator)
                 vibrator.Vibrate(VibrationEffect.CreateOneShot(500, VibrationEffect.DefaultAmplitude));
         });

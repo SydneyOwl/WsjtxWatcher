@@ -86,7 +86,8 @@ public class DxccItemAdapter : BaseAdapter<CountryDatabase>
         public TextView DxccItu { get; set; }
         public TextView DxccCq { get; set; }
         public CheckBox ChDelete { get; set; }
-    }private void OnCheckBoxClick(object sender, EventArgs e)
+    }
+    private void OnCheckBoxClick(object sender, EventArgs e)
     {
         var checkBox = (CheckBox)sender;
         var position = (int)checkBox.Tag;

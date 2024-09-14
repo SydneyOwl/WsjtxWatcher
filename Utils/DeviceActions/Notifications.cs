@@ -9,22 +9,22 @@ public class Notifications
 {
     private static Notifications _instance;
     private static readonly ThrottleDispatcher ThrottleDispatcher = new(TimeSpan.FromMilliseconds(10000));
-    private readonly Context _ctx;
     private readonly NotificationManager _notificationManager;
 
 
-    private Notifications(Context ctx)
+    private Notifications()
     {
-        this._ctx = ctx;
-        _notificationManager = (NotificationManager)this._ctx.GetSystemService(Context.NotificationService);
-        var channelMsgRecv = new NotificationChannel(ctx.GetString(ResourceConstant.String.notification_channel_id1),
-            ctx.GetString(ResourceConstant.String.app_name),
+        var _ctx = Application.Context;
+        _notificationManager = (NotificationManager)_ctx.GetSystemService(Context.NotificationService);
+        var channelMsgRecv = new NotificationChannel(_ctx.GetString(ResourceConstant.String.notification_channel_id1),
+            _ctx.GetString(ResourceConstant.String.app_name),
             NotificationImportance.High);
         _notificationManager.CreateNotificationChannel(channelMsgRecv);
     }
 
     public void PopCommonNotification(string msg)
     {
+        var _ctx = Application.Context;
         var notifications =
             new Notification.Builder(_ctx, _ctx.GetString(ResourceConstant.String.notification_channel_id1))
                 .SetContentTitle(_ctx.GetString(ResourceConstant.String.user_ft8_msg_available))
@@ -40,9 +40,9 @@ public class Notifications
     }
 
 
-    public static Notifications GetInstance(Context ctx)
+    public static Notifications GetInstance()
     {
-        if (_instance == null) _instance = new Notifications(ctx);
+        if (_instance == null) _instance = new Notifications();
 
         return _instance;
     }
