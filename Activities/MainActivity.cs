@@ -187,9 +187,9 @@ public class MainActivity : Activity
                 {
                     new Task(() =>
                     {
+                        var msg = DecodedMsg.RawDecodedToDecodedMsg(message);
                         RunOnUiThread(() =>
                         {
-                            var msg = DecodedMsg.RawDecodedToDecodedMsg(message);
                             adapter.Add(msg);
                             if (!string.IsNullOrEmpty(SettingsVariables.myCallsign) &&
                                 msg.Message.Contains(SettingsVariables.myCallsign))
@@ -212,7 +212,7 @@ public class MainActivity : Activity
                         }
                         // 稀有DXCC
                         var wantedDxcc = GetSharedPreferences(GetString(Resource.String.storage_key), FileCreationMode.Private).GetStringSet("prefered_dxcc",new List<string>()).ToList();
-                        if (wantedDxcc.Contains(message.Id.ToString()))
+                        if (wantedDxcc.Contains(msg.FromLocationCountryId.ToString()))
                         {
                             if (SettingsVariables.vibrate_on_dxcc) Vibrate.DoVibrate(this);
                             if (SettingsVariables.send_notification_on_dxcc)
