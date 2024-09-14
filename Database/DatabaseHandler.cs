@@ -183,6 +183,11 @@ public class DatabaseHandler
         return countryRes[0];
     }
 
+    public List<CountryDatabase> QueryAllCountries()
+    {
+        return _db.QueryAsync<CountryDatabase>("SELECT * FROM countries").GetAwaiter().GetResult();
+    }
+
     private void InitTableData()
     {
         // 国家信息

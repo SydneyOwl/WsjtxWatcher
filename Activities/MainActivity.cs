@@ -202,12 +202,21 @@ public class MainActivity : Activity
                         // 发送提醒
                         if (SettingsVariables.vibrate_on_all) Vibrate.DoVibrate(this);
                         if (SettingsVariables.send_notification_on_all)
-                            Notifications.getInstance(this).PopCommonNotification(message.Message);
+                            Notifications.getInstance(this).PopCommonNotification(GetString(ResourceConstant.String.received_msg)+message.Message);
+                        // 有我出现
                         if (!string.IsNullOrEmpty(SettingsVariables.myCallsign) && message.Message.Contains(SettingsVariables.myCallsign))
                         {
                             if (SettingsVariables.vibrate_on_call) Vibrate.DoVibrate(this);
                             if (SettingsVariables.send_notification_on_call)
-                                Notifications.getInstance(this).PopCommonNotification(message.Message);
+                                Notifications.getInstance(this).PopCommonNotification(GetString(ResourceConstant.String.included_in_msg)+message.Message);
+                        }
+                        // 稀有DXCC
+                        var wantedDxcc = GetSharedPreferences(GetString(Resource.String.storage_key), FileCreationMode.Private).GetStringSet("prefered_dxcc",new List<string>()).ToList();
+                        if (wantedDxcc.Contains(message.Id.ToString()))
+                        {
+                            if (SettingsVariables.vibrate_on_dxcc) Vibrate.DoVibrate(this);
+                            if (SettingsVariables.send_notification_on_dxcc)
+                                Notifications.getInstance(this).PopCommonNotification(GetString(ResourceConstant.String.selected_dxcc)+message.Message);
                         }
                     }).Start();
                 };
@@ -301,7 +310,9 @@ public class MainActivity : Activity
         SettingsVariables.myLocation = sharedPref.GetString("location", "");
         SettingsVariables.send_notification_on_call = sharedPref.GetBoolean("send_notification_on_call", false);
         SettingsVariables.send_notification_on_all = sharedPref.GetBoolean("send_notification_on_all", false);
+        SettingsVariables.send_notification_on_dxcc = sharedPref.GetBoolean("send_notification_on_dxcc", false);
         SettingsVariables.vibrate_on_call = sharedPref.GetBoolean("vibrate_on_call", false);
         SettingsVariables.vibrate_on_all = sharedPref.GetBoolean("vibrate_on_all", false);
+        SettingsVariables.vibrate_on_dxcc = sharedPref.GetBoolean("vibrate_on_dxcc", false);
     }
 }

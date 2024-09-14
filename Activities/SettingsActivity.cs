@@ -19,12 +19,15 @@ public class SettingsActivity : Activity
     private TextView locationTextEdit;
     private CheckBox sendNotificationCheckbox;
     private CheckBox sendNotificationAllCheckbox;
+    private CheckBox sendNotificationDxccCheckbox;
     private CheckBox vibrationCheckbox;
     private CheckBox vibrationAllCheckbox;
+    private CheckBox vibrationDxccCheckbox;
     private Button resetDbButton;
     private Button resetAllButton;
     private Button addWhiteListButton;
     private Button addBrandButton;
+    private Button jumpToDxccButton;
 
     private OnPortChanged portChanged;
     private OnCallsignChanged callsignChanged;
@@ -88,6 +91,17 @@ public class SettingsActivity : Activity
         vibrationAllCheckbox = FindViewById<CheckBox>(ResourceConstant.Id.vibration_all_checkbox);
         vibrationAllCheckbox.Checked = SettingsVariables.vibrate_on_all;
         vibrationAllCheckbox.CheckedChange += onChkChg.VibrateAllCheckboxChanged;
+        
+        // 设定dxcc通知
+        sendNotificationDxccCheckbox = FindViewById<CheckBox>(ResourceConstant.Id.send_notification_dxcc_checkbox);
+        sendNotificationDxccCheckbox.Checked = SettingsVariables.send_notification_on_dxcc;
+        sendNotificationDxccCheckbox.CheckedChange += onChkChg.SendNotificationDxccCheckboxChanged;
+        
+        // 设定dxcc振动
+        vibrationDxccCheckbox = FindViewById<CheckBox>(ResourceConstant.Id.vibration_dxcc_checkbox);
+        vibrationDxccCheckbox.Checked = SettingsVariables.vibrate_on_dxcc;
+        vibrationDxccCheckbox.CheckedChange += onChkChg.VibrateDxccCheckboxChanged;
+        
 
         
         ords = new OnResetDBListener(this);
@@ -113,6 +127,9 @@ public class SettingsActivity : Activity
         
         addWhiteListButton = FindViewById<Button>(ResourceConstant.Id.add_background);
         addWhiteListButton.SetOnClickListener(new OnAddBackgroundListener());
+
+        jumpToDxccButton = FindViewById<Button>(ResourceConstant.Id.set_dxcc);
+        jumpToDxccButton.SetOnClickListener(new OnJumpDxccListener(this));
     }
 
     protected override void OnDestroy()

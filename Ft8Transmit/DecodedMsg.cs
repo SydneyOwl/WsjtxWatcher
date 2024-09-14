@@ -43,6 +43,10 @@ public class DecodedMsg
     public string ToLocationCountryEn { get; set; }
 
     public string FromLocationCountryEn { get; set; }
+    
+    public int ToLocationCountryId { get; set; }
+
+    public int FromLocationCountryId { get; set; }
 
     //这里注意，一定不是我发送的信息！
     public static DecodedMsg RawDecodedToDecodedMsg(Decode dec)
@@ -168,6 +172,7 @@ public class DecodedMsg
             var result = DatabaseHandler.GetInstance(null).QueryCountryByCallsign(Transmitter);
             FromLocationCountryZh = result.CountryNameCN;
             FromLocationCountryEn = result.CountryNameEn;
+            FromLocationCountryId = result.Id;
         }
 
         if (!string.IsNullOrEmpty(Receiver))
@@ -175,6 +180,7 @@ public class DecodedMsg
             var result = DatabaseHandler.GetInstance(null).QueryCountryByCallsign(Receiver);
             ToLocationCountryZh = result.CountryNameCN;
             ToLocationCountryEn = result.CountryNameEn;
+            ToLocationCountryId = result.Id;
         }
     }
 

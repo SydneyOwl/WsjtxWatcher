@@ -50,4 +50,10 @@
     <string name="notification_channel_id1" translatable="false">2341</string>
     <string name="notification_channel_id2" translatable="false">4214</string>
     <string name="notify_id2" translatable="false">6311</string>
+    <string name="on_dxcc">When selected dxcc appears:</string>
+    <string name="set_dxcc_entity">Select DXCC</string>
+    <string name="select_all">Select All</string>
+    <string name="selected_dxcc">Selected Dxcc:</string>
+    <string name="received_msg">Received msg:</string>
+    <string name="included_in_msg">I am included in the msg:</string>
 </resources>

@@ -3,6 +3,7 @@ using Android.Views;
 using Android.Widget;
 using System.Threading.Tasks;
 using Android.OS;
+using Android.Util;
 using WsjtxWatcher.Activities;
 using WsjtxWatcher.Database;
 using WsjtxWatcher.Dialogs;
@@ -36,13 +37,13 @@ namespace WsjtxWatcher.Behaviors.Watchers
                     
                     // 删除 SharedPreferences
                     var sharedPreferences = ctx.GetSharedPreferences(ctx.GetString(Resource.String.storage_key), FileCreationMode.Private);
-                    sharedPreferences.Edit().Clear().Apply();
-                    Utils.AppPackage.ChkInstallTime.SetCurrentTag(v.Context);
+                    sharedPreferences.Edit().Clear().Commit();
+                    Utils.AppPackage.DefaultSettings.SetDefault(v.Context);
                 }
                 catch (Exception ex)
                 {
                     // 处理异常（如果有必要）
-                    Console.WriteLine(ex.Message);
+                    Log.Debug("RSTALL",ex.Message);
                 }
                 finally
                 {

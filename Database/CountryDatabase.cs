@@ -45,6 +45,8 @@ public class CountryDatabase
     [Column("gmt_offset")] public float GMT_offset { get; set; } //与 GMT 的本地时间偏移---
 
     [Column("dxcc")] public string DXCC { get; set; } //DXCC前缀---
+    
+    [Ignore] public bool Checked { get; set; } // 是不是我想要的dxcc，这个字段不存在数据库里面
 
     public override string ToString()
     {

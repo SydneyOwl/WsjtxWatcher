@@ -46,4 +46,10 @@
     <string name="add_to_background">后台运行权限</string>
     <string name="service_running">服务运行中</string>
     <string name="listening_msg">正在监听FT8信息，点击退出...</string>
+    <string name="on_dxcc">当选中的dxcc出现时：</string>
+    <string name="set_dxcc_entity">选择dxcc</string>
+    <string name="select_all">全选</string>
+    <string name="selected_dxcc">选中的DXCC：</string>
+    <string name="received_msg">收到FT8信息：</string>
+    <string name="included_in_msg">我参与此信息：</string>
 </resources>

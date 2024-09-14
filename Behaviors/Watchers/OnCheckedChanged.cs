@@ -56,4 +56,26 @@ public class OnCheckedChanged
       edit.PutBoolean("vibrate_on_all", args.IsChecked);
       edit.Apply();
    }
+   
+   public void SendNotificationDxccCheckboxChanged(object? o, CompoundButton.CheckedChangeEventArgs args)
+   {
+      SettingsVariables.send_notification_on_dxcc = args.IsChecked;
+      // save conf
+      var sharedPref =
+         ctx.GetSharedPreferences(ctx.GetString(ResourceConstant.String.storage_key), FileCreationMode.Private);
+      var edit = sharedPref.Edit();
+      edit.PutBoolean("send_notification_on_dxcc", args.IsChecked);
+      edit.Apply();
+   }
+   
+   public void VibrateDxccCheckboxChanged(object? o, CompoundButton.CheckedChangeEventArgs args)
+   {
+      SettingsVariables.vibrate_on_dxcc = args.IsChecked;
+      // save conf
+      var sharedPref =
+         ctx.GetSharedPreferences(ctx.GetString(ResourceConstant.String.storage_key), FileCreationMode.Private);
+      var edit = sharedPref.Edit();
+      edit.PutBoolean("vibrate_on_dxcc", args.IsChecked);
+      edit.Apply();
+   }
 }
