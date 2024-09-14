@@ -7,7 +7,7 @@ namespace WsjtxWatcher.Utils.Network;
 
 public class Wifi
 {
-    public static bool isWificonnected(Context context)
+    public static bool IsWificonnected(Context context)
     {
         var connectivityManager = (ConnectivityManager)context
             .GetSystemService(Context.ConnectivityService);
@@ -16,7 +16,7 @@ public class Wifi
         return wifiNetworkInfo.IsConnected;
     }
 
-    public static string getLocalIPAddress(Context context)
+    public static string GetLocalIpAddress(Context context)
     {
         var wifiManager = (WifiManager)context.GetSystemService(Context.WifiService);
         if (wifiManager != null)

@@ -5,8 +5,8 @@ namespace WsjtxWatcher.Utils.Maidenhead;
 // * TNX FT8CN----
 public class MaidenheadGrid
 {
-    private const string TAG = "MaidenheadGrid";
-    private const double EARTH_RADIUS = 6371393; // 平均半径，单位：米
+    private const string Tag = "MaidenheadGrid";
+    private const double EarthRadius = 6371393; // 平均半径，单位：米
 
     public static LatLng GridToLatLng(string grid)
     {
@@ -156,34 +156,34 @@ public class MaidenheadGrid
 
     public static string GetGridSquare(LatLng location)
     {
-        var _long = location.Longitude + 180;
-        var _lat = location.Latitude + 90;
+        var @long = location.Longitude + 180;
+        var lat = location.Latitude + 90;
 
         var buff = new StringBuilder();
 
         // 第一对两个字符
-        var index = (int)(_long / 20);
+        var index = (int)(@long / 20);
         buff.Append((char)(index + 'A'));
-        _long -= index * 20;
+        @long -= index * 20;
 
-        index = (int)(_lat / 10);
+        index = (int)(lat / 10);
         buff.Append((char)(index + 'A'));
-        _lat -= index * 10;
+        lat -= index * 10;
 
         // 第二对两数字
-        index = (int)(_long / 2);
+        index = (int)(@long / 2);
         buff.Append((char)(index + '0'));
-        _long -= index * 2;
+        @long -= index * 2;
 
-        index = (int)_lat;
+        index = (int)lat;
         buff.Append((char)(index + '0'));
-        _lat -= index;
+        lat -= index;
 
         // 第三对两个小写字符
-        index = (int)(_long / 0.083333);
+        index = (int)(@long / 0.083333);
         buff.Append((char)(index + 'a'));
 
-        index = (int)(_lat / 0.0416665);
+        index = (int)(lat / 0.0416665);
         buff.Append((char)(index + 'a'));
 
         return buff.ToString().Substring(0, 4);
@@ -191,16 +191,16 @@ public class MaidenheadGrid
 
     public static double GetDist(LatLng latLng1, LatLng latLng2)
     {
-        var radiansAX = DegreesToRadians(latLng1.Longitude);
-        var radiansAY = DegreesToRadians(latLng1.Latitude);
-        var radiansBX = DegreesToRadians(latLng2.Longitude);
-        var radiansBY = DegreesToRadians(latLng2.Latitude);
+        var radiansAx = DegreesToRadians(latLng1.Longitude);
+        var radiansAy = DegreesToRadians(latLng1.Latitude);
+        var radiansBx = DegreesToRadians(latLng2.Longitude);
+        var radiansBy = DegreesToRadians(latLng2.Latitude);
 
-        var cos = Math.Cos(radiansAY) * Math.Cos(radiansBY) * Math.Cos(radiansAX - radiansBX)
-                  + Math.Sin(radiansAY) * Math.Sin(radiansBY);
+        var cos = Math.Cos(radiansAy) * Math.Cos(radiansBy) * Math.Cos(radiansAx - radiansBx)
+                  + Math.Sin(radiansAy) * Math.Sin(radiansBy);
         var acos = Math.Acos(cos);
 
-        return EARTH_RADIUS * acos / 1000; // 返回公里
+        return EarthRadius * acos / 1000; // 返回公里
     }
 
     public static double GetDist(string mGrid1, string mGrid2)
@@ -226,7 +226,7 @@ public class MaidenheadGrid
         return string.Format("{0} km", GetDist(latLng1, latLng2));
     }
 
-    public static string GetDistStrEN(string mGrid1, string mGrid2)
+    public static string GetDistStrEn(string mGrid1, string mGrid2)
     {
         var dist = GetDist(mGrid1, mGrid2);
         if (dist == 0)
@@ -237,10 +237,7 @@ public class MaidenheadGrid
 
     public static bool CheckMaidenhead(string s)
     {
-        if (s.Length != 4 && s.Length != 6)
-        {
-            return false;
-        }
+        if (s.Length != 4 && s.Length != 6) return false;
 
         if (s.Equals("RR73", StringComparison.OrdinalIgnoreCase)) return false;
         return char.IsLetter(s[0])

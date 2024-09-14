@@ -5,93 +5,137 @@ namespace WsjtxWatcher.Utils.Brand;
 
 public class ChkBrand
 {
-    private static void showActivity(Context ctx,String packageName) {
-        Intent intent = ctx.PackageManager.GetLaunchIntentForPackage(packageName);
+    private static void ShowActivity(Context ctx, string packageName)
+    {
+        var intent = ctx.PackageManager.GetLaunchIntentForPackage(packageName);
         ctx.StartActivity(intent);
     }
- 
-    private static void showActivity(Context ctx,String packageName, String activityDir) {
-        Intent intent = new Intent();
+
+    private static void ShowActivity(Context ctx, string packageName, string activityDir)
+    {
+        var intent = new Intent();
         intent.SetComponent(new ComponentName(packageName, activityDir));
         intent.AddFlags(ActivityFlags.NewTask);
         ctx.StartActivity(intent);
     }
-    
-    public static bool isHuawei()
+
+    public static bool IsHuawei()
     {
-        if (Build.Brand == null) {
-            return false;
-        }
+        if (Build.Brand == null) return false;
         return Build.Brand.ToLower().Equals("huawei") || Build.Brand.ToLower().Equals("honor");
     }
-    public static void goHuaweiSetting(Context ctx) {
-        try {
-            showActivity(ctx,"com.huawei.systemmanager",
+
+    public static void GoHuaweiSetting(Context ctx)
+    {
+        try
+        {
+            ShowActivity(ctx, "com.huawei.systemmanager",
                 "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity");
-        } catch (Exception e) {
-            showActivity(ctx,"com.huawei.systemmanager",
+        }
+        catch (Exception e)
+        {
+            ShowActivity(ctx, "com.huawei.systemmanager",
                 "com.huawei.systemmanager.optimize.bootstart.BootStartActivity");
         }
     }
-    public static bool isXiaomi() {
+
+    public static bool IsXiaomi()
+    {
         return Build.Brand != null && Build.Brand.ToLower().Equals("xiaomi");
     }
-    public static void goXiaomiSetting(Context ctx) {
-        showActivity(ctx,"com.miui.securitycenter",
+
+    public static void GoXiaomiSetting(Context ctx)
+    {
+        ShowActivity(ctx, "com.miui.securitycenter",
             "com.miui.permcenter.autostart.AutoStartManagementActivity");
     }
-    public static bool isOPPO() {
+
+    public static bool IsOppo()
+    {
         return Build.Brand != null && Build.Brand.ToLower().Equals("oppo");
     }
-    public static void goOPPOSetting(Context ctx) {
-        try {
-            showActivity(ctx,"com.coloros.phonemanager");
-        } catch (Exception e1) {
-            try {
-                showActivity(ctx,"com.oppo.safe");
-            } catch (Exception e2) {
-                try {
-                    showActivity(ctx,"com.coloros.oppoguardelf");
-                } catch (Exception e3) {
-                    showActivity(ctx,"com.coloros.safecenter");
+
+    public static void GoOppoSetting(Context ctx)
+    {
+        try
+        {
+            ShowActivity(ctx, "com.coloros.phonemanager");
+        }
+        catch (Exception e1)
+        {
+            try
+            {
+                ShowActivity(ctx, "com.oppo.safe");
+            }
+            catch (Exception e2)
+            {
+                try
+                {
+                    ShowActivity(ctx, "com.coloros.oppoguardelf");
+                }
+                catch (Exception e3)
+                {
+                    ShowActivity(ctx, "com.coloros.safecenter");
                 }
             }
         }
     }
-    public static bool isVIVO() {
+
+    public static bool IsVivo()
+    {
         return Build.Brand != null && Build.Brand.ToLower().Equals("vivo");
     }
-    public static void goVIVOSetting(Context ctx) {
-        showActivity(ctx,"com.iqoo.secure");
+
+    public static void GoVivoSetting(Context ctx)
+    {
+        ShowActivity(ctx, "com.iqoo.secure");
     }
-    public static bool isMeizu() {
+
+    public static bool IsMeizu()
+    {
         return Build.Brand != null && Build.Brand.ToLower().Equals("meizu");
     }
-    public static void goMeizuSetting(Context ctx) {
-        showActivity(ctx,"com.meizu.safe");
+
+    public static void GoMeizuSetting(Context ctx)
+    {
+        ShowActivity(ctx, "com.meizu.safe");
     }
-    public static bool isSamsung() {
+
+    public static bool IsSamsung()
+    {
         return Build.Brand != null && Build.Brand.ToLower().Equals("samsung");
     }
-    public static void goSamsungSetting(Context ctx) {
-        try {
-            showActivity(ctx,"com.samsung.android.sm_cn");
-        } catch (Exception e) {
-            showActivity(ctx,"com.samsung.android.sm");
+
+    public static void GoSamsungSetting(Context ctx)
+    {
+        try
+        {
+            ShowActivity(ctx, "com.samsung.android.sm_cn");
+        }
+        catch (Exception e)
+        {
+            ShowActivity(ctx, "com.samsung.android.sm");
         }
     }
-    public static bool isLeTV() {
+
+    public static bool IsLeTv()
+    {
         return Build.Brand != null && Build.Brand.ToLower().Equals("letv");
     }
-    public static void goLetvSetting(Context ctx) {
-        showActivity(ctx,"com.letv.android.letvsafe",
+
+    public static void GoLetvSetting(Context ctx)
+    {
+        ShowActivity(ctx, "com.letv.android.letvsafe",
             "com.letv.android.letvsafe.AutobootManageActivity");
     }
-    public static bool isSmartisan() {
+
+    public static bool IsSmartisan()
+    {
         return Build.Brand != null && Build.Brand.ToLower().Equals("smartisan");
     }
-    
-    public static void goSmartisanSetting(Context ctx) {
-        showActivity(ctx,"com.smartisanos.security");
+
+    public static void GoSmartisanSetting(Context ctx)
+    {
+        ShowActivity(ctx, "com.smartisanos.security");
     }
 }

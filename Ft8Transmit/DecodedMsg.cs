@@ -9,7 +9,7 @@ namespace WsjtxWatcher.Ft8Transmit;
 
 public class DecodedMsg
 {
-    private static string TAG = "DecMsgs";
+    private static string _tag = "DecMsgs";
     public bool New { get; set; }
 
     public string DecodeTime { get; set; }
@@ -43,7 +43,7 @@ public class DecodedMsg
     public string ToLocationCountryEn { get; set; }
 
     public string FromLocationCountryEn { get; set; }
-    
+
     public int ToLocationCountryId { get; set; }
 
     public int FromLocationCountryId { get; set; }
@@ -52,7 +52,7 @@ public class DecodedMsg
     public static DecodedMsg RawDecodedToDecodedMsg(Decode dec)
     {
         var tmp = new DecodedMsg();
-        var deodedTime = UTCTimer.ConvertMillisecondsToTime(dec.Time);
+        var deodedTime = UtcTimer.ConvertMillisecondsToTime(dec.Time);
         tmp.New = dec.New;
         tmp.DecodeTime = deodedTime;
         tmp.Snr = dec.Snr;
@@ -62,16 +62,16 @@ public class DecodedMsg
         tmp.Message = dec.Message.TrimEnd();
         tmp.LowConfidence = dec.LowConfidence;
         tmp.OffAir = dec.OffAir;
-        tmp.recordCallsignAndLocation();
-        tmp.calcCallsign();
-        tmp.calcCountry();
-        tmp.calcDistance();
+        tmp.RecordCallsignAndLocation();
+        tmp.CalcCallsign();
+        tmp.CalcCountry();
+        tmp.CalcDistance();
         Console.WriteLine($"Done. The result appears to beeee:{tmp}");
         return tmp;
     }
 
     // 获取发射者和接收者的呼号
-    private void calcCallsign()
+    private void CalcCallsign()
     {
         // 情况1 CQ (AB) CALLSIGN (GRID)
         var data = Message.Split(" ");
@@ -104,7 +104,7 @@ public class DecodedMsg
     }
 
     // 只把呼号和对应坐标入库
-    private void recordCallsignAndLocation()
+    private void RecordCallsignAndLocation()
     {
         // 最后一位肯定是梅登海格，或者是呼号的话说明没发坐标
         var data = Message.Split(" ");
@@ -130,11 +130,11 @@ public class DecodedMsg
         TransmitterLocation = targetLoc;
     }
 
-    private void calcDistance()
+    private void CalcDistance()
     {
-        if (string.IsNullOrEmpty(SettingsVariables.myLocation)) return;
+        if (string.IsNullOrEmpty(SettingsVariables.MyLocation)) return;
         // 校验我的位置
-        if (!MaidenheadGrid.CheckMaidenhead(SettingsVariables.myLocation)) return;
+        if (!MaidenheadGrid.CheckMaidenhead(SettingsVariables.MyLocation)) return;
         double distance = 0;
         if (string.IsNullOrEmpty(TransmitterLocation))
         {
@@ -144,33 +144,29 @@ public class DecodedMsg
                 var countryDetail = DatabaseHandler.GetInstance(null).QueryCountryByName(FromLocationCountryEn);
                 var lat = countryDetail.Latitude;
                 var lon = countryDetail.Longitude;
-                var countryLatLon = new LatLng(lat,lon);
-                var myLatLon = MaidenheadGrid.GridToLatLng(SettingsVariables.myLocation);
+                var countryLatLon = new LatLng(lat, lon);
+                var myLatLon = MaidenheadGrid.GridToLatLng(SettingsVariables.MyLocation);
                 distance = MaidenheadGrid.GetDist(countryLatLon, myLatLon);
             }
         }
         else
         {
-            distance = MaidenheadGrid.GetDist(SettingsVariables.myLocation, TransmitterLocation);
+            distance = MaidenheadGrid.GetDist(SettingsVariables.MyLocation, TransmitterLocation);
         }
 
-        if (distance==0)
-        {
+        if (distance == 0)
             Distance = "? km";
-        }
         else
-        {
-            Distance = Math.Floor(distance).ToString(CultureInfo.InvariantCulture)+ " km";
-        }
+            Distance = Math.Floor(distance).ToString(CultureInfo.InvariantCulture) + " km";
     }
 
     // 计算所在国家
-    private void calcCountry()
+    private void CalcCountry()
     {
         if (!string.IsNullOrEmpty(Transmitter))
         {
             var result = DatabaseHandler.GetInstance(null).QueryCountryByCallsign(Transmitter);
-            FromLocationCountryZh = result.CountryNameCN;
+            FromLocationCountryZh = result.CountryNameCn;
             FromLocationCountryEn = result.CountryNameEn;
             FromLocationCountryId = result.Id;
         }
@@ -178,7 +174,7 @@ public class DecodedMsg
         if (!string.IsNullOrEmpty(Receiver))
         {
             var result = DatabaseHandler.GetInstance(null).QueryCountryByCallsign(Receiver);
-            ToLocationCountryZh = result.CountryNameCN;
+            ToLocationCountryZh = result.CountryNameCn;
             ToLocationCountryEn = result.CountryNameEn;
             ToLocationCountryId = result.Id;
         }

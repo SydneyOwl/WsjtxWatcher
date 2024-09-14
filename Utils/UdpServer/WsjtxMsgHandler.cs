@@ -5,28 +5,27 @@ using _Microsoft.Android.Resource.Designer;
 using Android.Content;
 using WsjtxUtils.WsjtxMessages.Messages;
 using WsjtxUtils.WsjtxUdpServer;
-using WsjtxWatcher.Ft8Transmit;
 using WsjtxWatcher.ViewModels;
 
 namespace WsjtxWatcher.Utils.UdpServer;
 
 public class WsjtxMsgHandler : WsjtxUdpServerBaseAsyncMessageHandler
 {
-    private readonly Context ctx;
-
-    private readonly MainViewModel model = MainViewModel.GetInstance();
-    
     public delegate void MessageReceivedHandler<T>(T message);
+
+    private readonly Context _ctx;
+
+    private readonly MainViewModel _model = MainViewModel.GetInstance();
+
+    public WsjtxMsgHandler(Context ctx)
+    {
+        this._ctx = ctx;
+    }
 
     // 声明一个事件
     public event MessageReceivedHandler<Decode> OnDecodeMessageReceived;
-    
+
     public event MessageReceivedHandler<Status> OnStatusMessageReceived;
-    
-    public WsjtxMsgHandler(Context ctx)
-    {
-        this.ctx = ctx;
-    }
 
     private void WriteMessageAsJsonToConsole<T>(T message) where T : IWsjtxDirectionOut
     {
@@ -41,9 +40,9 @@ public class WsjtxMsgHandler : WsjtxUdpServerBaseAsyncMessageHandler
         CancellationToken cancellationToken = default)
     {
         WriteMessageAsJsonToConsole(message);
-        model.RecvWatchdog.Feed();
-        model.clientId = message.Id;
-        model.sessionEndPoint = endPoint;
+        _model.RecvWatchdog.Feed();
+        _model.ClientId = message.Id;
+        _model.SessionEndPoint = endPoint;
         await base.HandleClearMessageAsync(server, message, endPoint, cancellationToken);
     }
 
@@ -51,9 +50,9 @@ public class WsjtxMsgHandler : WsjtxUdpServerBaseAsyncMessageHandler
         CancellationToken cancellationToken = default)
     {
         WriteMessageAsJsonToConsole(message);
-        model.RecvWatchdog.Feed();
-        model.clientId = message.Id;
-        model.sessionEndPoint = endPoint;
+        _model.RecvWatchdog.Feed();
+        _model.ClientId = message.Id;
+        _model.SessionEndPoint = endPoint;
         await base.HandleClosedMessageAsync(server, message, endPoint, cancellationToken);
     }
 
@@ -62,9 +61,9 @@ public class WsjtxMsgHandler : WsjtxUdpServerBaseAsyncMessageHandler
     {
         OnDecodeMessageReceived?.Invoke(message);
         WriteMessageAsJsonToConsole(message);
-        model.RecvWatchdog.Feed();
-        model.clientId = message.Id;
-        model.sessionEndPoint = endPoint;
+        _model.RecvWatchdog.Feed();
+        _model.ClientId = message.Id;
+        _model.SessionEndPoint = endPoint;
         await base.HandleDecodeMessageAsync(server, message, endPoint, cancellationToken);
     }
 
@@ -72,9 +71,9 @@ public class WsjtxMsgHandler : WsjtxUdpServerBaseAsyncMessageHandler
         CancellationToken cancellationToken = default)
     {
         WriteMessageAsJsonToConsole(message);
-        model.RecvWatchdog.Feed();
-        model.clientId = message.Id;
-        model.sessionEndPoint = endPoint;
+        _model.RecvWatchdog.Feed();
+        _model.ClientId = message.Id;
+        _model.SessionEndPoint = endPoint;
         await base.HandleHeartbeatMessageAsync(server, message, endPoint, cancellationToken);
     }
 
@@ -82,9 +81,9 @@ public class WsjtxMsgHandler : WsjtxUdpServerBaseAsyncMessageHandler
         EndPoint endPoint, CancellationToken cancellationToken = default)
     {
         WriteMessageAsJsonToConsole(message);
-        model.RecvWatchdog.Feed();
-        model.clientId = message.Id;
-        model.sessionEndPoint = endPoint;
+        _model.RecvWatchdog.Feed();
+        _model.ClientId = message.Id;
+        _model.SessionEndPoint = endPoint;
         await base.HandleLoggedAdifMessageAsync(server, message, endPoint, cancellationToken);
     }
 
@@ -92,9 +91,9 @@ public class WsjtxMsgHandler : WsjtxUdpServerBaseAsyncMessageHandler
         CancellationToken cancellationToken = default)
     {
         WriteMessageAsJsonToConsole(message);
-        model.RecvWatchdog.Feed();
-        model.clientId = message.Id;
-        model.sessionEndPoint = endPoint;
+        _model.RecvWatchdog.Feed();
+        _model.ClientId = message.Id;
+        _model.SessionEndPoint = endPoint;
         await base.HandleQsoLoggedMessageAsync(server, message, endPoint, cancellationToken);
     }
 
@@ -103,23 +102,23 @@ public class WsjtxMsgHandler : WsjtxUdpServerBaseAsyncMessageHandler
     {
         OnStatusMessageReceived?.Invoke(message);
         WriteMessageAsJsonToConsole(message);
-        model.RecvWatchdog.Feed();
-        model.clientId = message.Id;
-        model.sessionEndPoint = endPoint;
+        _model.RecvWatchdog.Feed();
+        _model.ClientId = message.Id;
+        _model.SessionEndPoint = endPoint;
         if (message.TXMode != "FT8") return;
-        model.currentFreq = message.DialFrequencyInHz;
+        _model.CurrentFreq = message.DialFrequencyInHz;
         // 发射中, 如果支持TxMsg则必不为空
         if (message.Transmitting)
         {
-            model.IsTransmitting = true;
+            _model.IsTransmitting = true;
             // 低版本的jtdx没有tx message字段，无法显示相关信息！
-            model.TransmittingMessage = string.IsNullOrEmpty(message.TXMessage)
-                ? ctx.GetString(ResourceConstant.String.txing)
+            _model.TransmittingMessage = string.IsNullOrEmpty(message.TXMessage)
+                ? _ctx.GetString(ResourceConstant.String.txing)
                 : message.TXMessage;
         }
         else
         {
-            model.IsTransmitting = false;
+            _model.IsTransmitting = false;
         }
 
         await base.HandleStatusMessageAsync(server, message, endPoint, cancellationToken);
@@ -129,9 +128,9 @@ public class WsjtxMsgHandler : WsjtxUdpServerBaseAsyncMessageHandler
         EndPoint endPoint, CancellationToken cancellationToken = default)
     {
         WriteMessageAsJsonToConsole(message);
-        model.RecvWatchdog.Feed();
-        model.clientId = message.Id;
-        model.sessionEndPoint = endPoint;
+        _model.RecvWatchdog.Feed();
+        _model.ClientId = message.Id;
+        _model.SessionEndPoint = endPoint;
         await base.HandleWSPRDecodeMessageAsync(server, message, endPoint, cancellationToken);
     }
 }

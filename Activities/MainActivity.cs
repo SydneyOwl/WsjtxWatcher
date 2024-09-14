@@ -8,12 +8,11 @@ using Android.Views.Animations;
 using WsjtxWatcher.Adapters;
 using WsjtxWatcher.Behaviors.Watchers;
 using WsjtxWatcher.Database;
-using WsjtxWatcher.Dialogs;
 using WsjtxWatcher.Ft8Transmit;
+using WsjtxWatcher.Utils.AppPackage;
 using WsjtxWatcher.Utils.DeviceActions;
 using WsjtxWatcher.Utils.Network;
 using WsjtxWatcher.Utils.UdpServer;
-using WsjtxWatcher.Utils.UTCTimer;
 using WsjtxWatcher.Variables;
 using WsjtxWatcher.ViewModels;
 
@@ -22,17 +21,17 @@ namespace WsjtxWatcher.Activities;
 [Activity(Label = "@string/app_name", MainLauncher = true)]
 public class MainActivity : Activity
 {
-    public static string TAG = "MainActivity";
-    public static Mutex mutex = new();
-    private readonly MainViewModel model = MainViewModel.GetInstance();
-    private IMenuItem startServer;
-    private IMenuItem stopServer;
-    private RelativeLayout txLayout;
-    private TextView txmsg;
-    private ListView listView;
-    private TextView aboutMe;
-    private TextView totalRecord;
-    private CallItemAdapter adapter;
+    public static string Tag = "MainActivity";
+    public static Mutex Mutex = new();
+    private readonly MainViewModel _model = MainViewModel.GetInstance();
+    private TextView _aboutMe;
+    private CallItemAdapter _adapter;
+    private ListView _listView;
+    private IMenuItem _startServer;
+    private IMenuItem _stopServer;
+    private TextView _totalRecord;
+    private RelativeLayout _txLayout;
+    private TextView _txmsg;
 
     protected override void OnCreate(Bundle savedInstanceState)
     {
@@ -45,7 +44,7 @@ public class MainActivity : Activity
         var resources = Application.Context.Resources;
         var config = resources.Configuration;
         var language = config.Locale.Language;
-        SettingsVariables.currentLanguage = language; //zh
+        SettingsVariables.CurrentLanguage = language; //zh
         //全屏
         // Window?.SetFlags(WindowManagerFlags.Fullscreen
         //     , WindowManagerFlags.Fullscreen);
@@ -55,121 +54,113 @@ public class MainActivity : Activity
             , WindowManagerFlags.KeepScreenOn);
 
         OverrideSettings();
-        new Task(() =>
-        {
-            DatabaseHandler.GetInstance(this);
-        }).Start();
+        new Task(() => { DatabaseHandler.GetInstance(this); }).Start();
         // Set our view from the "main" layout resource
-        
+
         // 权限检查
-        RequestPermissions(new []{Manifest.Permission.Vibrate,Manifest.Permission.PostNotifications}, 645);
-        
+        RequestPermissions(new[] { Manifest.Permission.Vibrate, Manifest.Permission.PostNotifications }, 645);
+
         if (CheckSelfPermission(Manifest.Permission.Vibrate) != Permission.Granted)
-        {
-            Toast.MakeText(this, ResourceConstant.String.denied_vibrate,ToastLength.Short);
-        }
+            Toast.MakeText(this, ResourceConstant.String.denied_vibrate, ToastLength.Short);
 
         if (CheckSelfPermission(Manifest.Permission.PostNotifications) != Permission.Granted)
-        {
-            
-            Toast.MakeText(this, ResourceConstant.String.denied_notification,ToastLength.Short);
-        }
+            Toast.MakeText(this, ResourceConstant.String.denied_notification, ToastLength.Short);
 
-        txmsg = FindViewById<TextView>(ResourceConstant.Id.transmittingMessageTextView);
-        txLayout = FindViewById<RelativeLayout>(ResourceConstant.Id.transmittingLayout);
-        listView = FindViewById<ListView>(ResourceConstant.Id.calllist_view);
-        aboutMe = FindViewById<TextView>(ResourceConstant.Id.about_me);
-        totalRecord = FindViewById<TextView>(ResourceConstant.Id.total_record);
-        adapter = new CallItemAdapter(this,ResourceConstant.Layout.call_item, model.DecodedMsgList);
-        listView.Adapter = adapter;
+        _txmsg = FindViewById<TextView>(ResourceConstant.Id.transmittingMessageTextView);
+        _txLayout = FindViewById<RelativeLayout>(ResourceConstant.Id.transmittingLayout);
+        _listView = FindViewById<ListView>(ResourceConstant.Id.calllist_view);
+        _aboutMe = FindViewById<TextView>(ResourceConstant.Id.about_me);
+        _totalRecord = FindViewById<TextView>(ResourceConstant.Id.total_record);
+        _adapter = new CallItemAdapter(this, ResourceConstant.Layout.call_item, _model.DecodedMsgList);
+        _listView.Adapter = _adapter;
         // // // //设置发射消息框的动画
-        txLayout.Visibility = ViewStates.Visible;
-        
+        _txLayout.Visibility = ViewStates.Visible;
+
 
         // 超时指示
-        model.RecvWatchdog = new Watchdog(TimeSpan.FromSeconds(16),
+        _model.RecvWatchdog = new Watchdog(TimeSpan.FromSeconds(16),
             isTimeout =>
             {
                 RunOnUiThread(() =>
                 {
                     if (isTimeout)
                     {
-                        model.IsWaitingForConn = true;
-                        setTitle(GetString(ResourceConstant.String.recv_timeout));
+                        _model.IsWaitingForConn = true;
+                        SetTitle(GetString(ResourceConstant.String.recv_timeout));
                     }
                     else
                     {
-                        model.IsWaitingForConn = false;
-                        setTitle(GetString(ResourceConstant.String.app_name));
+                        _model.IsWaitingForConn = false;
+                        SetTitle(GetString(ResourceConstant.String.app_name));
                     }
                 });
             });
 
-        model.PropertyChanged += (sender, args) =>
+        _model.PropertyChanged += (sender, args) =>
         {
             switch (args.PropertyName)
             {
                 case "IsTransmitting":
                     RunOnUiThread(() =>
                     {
-                        setTxLayoutConf(null, model.IsTransmitting ? ViewStates.Visible : ViewStates.Invisible);
-                        setTitle(model.IsTransmitting
+                        SetTxLayoutConf(null, _model.IsTransmitting ? ViewStates.Visible : ViewStates.Invisible);
+                        SetTitle(_model.IsTransmitting
                             ? GetString(ResourceConstant.String.app_name)
                             : GetString(ResourceConstant.String.receving));
                     });
                     break;
                 case "TransmittingMessage":
-                    Log.Debug(TAG, $"TransmittingMessage:{model.TransmittingMessage}");
-                    RunOnUiThread(() => { setTxLayoutConf(model.TransmittingMessage, ViewStates.Visible); });
+                    Log.Debug(Tag, $"TransmittingMessage:{_model.TransmittingMessage}");
+                    RunOnUiThread(() => { SetTxLayoutConf(_model.TransmittingMessage, ViewStates.Visible); });
                     break;
                 case "IsWaitingForConn":
                     RunOnUiThread(() =>
                     {
-                        if (model.IsWaitingForConn)
-                            setTxLayoutConf(GetString(ResourceConstant.String.wait_conn), ViewStates.Visible);
+                        if (_model.IsWaitingForConn)
+                            SetTxLayoutConf(GetString(ResourceConstant.String.wait_conn), ViewStates.Visible);
                         else
-                            setTxLayoutConf(null, ViewStates.Invisible);
+                            SetTxLayoutConf(null, ViewStates.Invisible);
                     });
                     break;
                 case "IsMsgServiceRunning":
                     RunOnUiThread(() =>
                     {
-                        if (model.IsMsgServiceRunning)
+                        if (_model.IsMsgServiceRunning)
                         {
-                            startServer.SetEnabled(false);
-                            stopServer.SetEnabled(true);
+                            _startServer.SetEnabled(false);
+                            _stopServer.SetEnabled(true);
                         }
                         else
                         {
-                            startServer.SetEnabled(true);
-                            stopServer.SetEnabled(false);
-                            model.RecvWatchdog.Stop();
-                            setTxLayoutConf(GetString(ResourceConstant.String.open_service), ViewStates.Visible);
-                            setTitle(GetString(ResourceConstant.String.app_name));
+                            _startServer.SetEnabled(true);
+                            _stopServer.SetEnabled(false);
+                            _model.RecvWatchdog.Stop();
+                            SetTxLayoutConf(GetString(ResourceConstant.String.open_service), ViewStates.Visible);
+                            SetTitle(GetString(ResourceConstant.String.app_name));
                         }
                     });
                     break;
             }
         };
-        
+
         // 绑定三个按钮，真是太不优雅了，我都不敢想后面有多难维护
         FindViewById<Button>(ResourceConstant.Id.halt_tx).SetOnClickListener(new OnHaltTxListener());
         FindViewById<Button>(ResourceConstant.Id.replay).SetOnClickListener(new OnReplayListener());
-        FindViewById<Button>(ResourceConstant.Id.clear).SetOnClickListener(new OnClearListener(adapter));
+        FindViewById<Button>(ResourceConstant.Id.clear).SetOnClickListener(new OnClearListener(_adapter));
 
-        model.TransmittingMessage = GetString(ResourceConstant.String.open_service);
+        _model.TransmittingMessage = GetString(ResourceConstant.String.open_service);
         var tgAni = AnimationUtils.LoadAnimation(this
             , ResourceConstant.Animation.view_blink);
-        txmsg.StartAnimation(tgAni);
-        Utils.AppPackage.ChkInstallTime.SetCurrentTag(this);
+        _txmsg.StartAnimation(tgAni);
+        ChkInstallTime.SetCurrentTag(this);
     }
 
     public override bool OnCreateOptionsMenu(IMenu? menu)
     {
         MenuInflater.Inflate(ResourceConstant.Menu.main_menu, menu);
-        startServer = menu.FindItem(ResourceConstant.Id.start_server);
-        stopServer = menu.FindItem(ResourceConstant.Id.stop_server);
-        stopServer.SetEnabled(false);
+        _startServer = menu.FindItem(ResourceConstant.Id.start_server);
+        _stopServer = menu.FindItem(ResourceConstant.Id.stop_server);
+        _stopServer.SetEnabled(false);
         return true;
     }
 
@@ -190,33 +181,41 @@ public class MainActivity : Activity
                         var msg = DecodedMsg.RawDecodedToDecodedMsg(message);
                         RunOnUiThread(() =>
                         {
-                            adapter.Add(msg);
-                            if (!string.IsNullOrEmpty(SettingsVariables.myCallsign) &&
-                                msg.Message.Contains(SettingsVariables.myCallsign))
-                            {
-                                aboutMe.Text = $"与我有关：{++model.aboutMe}";
-                            }
+                            _adapter.Add(msg);
+                            if (!string.IsNullOrEmpty(SettingsVariables.MyCallsign) &&
+                                msg.Message.Contains(SettingsVariables.MyCallsign))
+                                _aboutMe.Text = $"与我有关：{++_model.AboutMe}";
 
-                            totalRecord.Text = $"总记录数：{++model.totalRecord}";
+                            _totalRecord.Text = $"总记录数：{++_model.TotalRecord}";
                         });
                         // 发送提醒
-                        if (SettingsVariables.vibrate_on_all) Vibrate.DoVibrate(this);
-                        if (SettingsVariables.send_notification_on_all)
-                            Notifications.getInstance(this).PopCommonNotification(GetString(ResourceConstant.String.received_msg)+message.Message);
+                        if (SettingsVariables.VibrateOnAll) Vibrate.DoVibrate(this);
+                        if (SettingsVariables.SendNotificationOnAll)
+                            Notifications.GetInstance(this)
+                                .PopCommonNotification(
+                                    GetString(ResourceConstant.String.received_msg) + message.Message);
                         // 有我出现
-                        if (!string.IsNullOrEmpty(SettingsVariables.myCallsign) && message.Message.Contains(SettingsVariables.myCallsign))
+                        if (!string.IsNullOrEmpty(SettingsVariables.MyCallsign) &&
+                            message.Message.Contains(SettingsVariables.MyCallsign))
                         {
-                            if (SettingsVariables.vibrate_on_call) Vibrate.DoVibrate(this);
-                            if (SettingsVariables.send_notification_on_call)
-                                Notifications.getInstance(this).PopCommonNotification(GetString(ResourceConstant.String.included_in_msg)+message.Message);
+                            if (SettingsVariables.VibrateOnCall) Vibrate.DoVibrate(this);
+                            if (SettingsVariables.SendNotificationOnCall)
+                                Notifications.GetInstance(this)
+                                    .PopCommonNotification(GetString(ResourceConstant.String.included_in_msg) +
+                                                           message.Message);
                         }
+
                         // 稀有DXCC
-                        var wantedDxcc = GetSharedPreferences(GetString(Resource.String.storage_key), FileCreationMode.Private).GetStringSet("prefered_dxcc",new List<string>()).ToList();
+                        var wantedDxcc =
+                            GetSharedPreferences(GetString(ResourceConstant.String.storage_key),
+                                FileCreationMode.Private).GetStringSet("prefered_dxcc", new List<string>()).ToList();
                         if (wantedDxcc.Contains(msg.FromLocationCountryId.ToString()))
                         {
-                            if (SettingsVariables.vibrate_on_dxcc) Vibrate.DoVibrate(this);
-                            if (SettingsVariables.send_notification_on_dxcc)
-                                Notifications.getInstance(this).PopCommonNotification(GetString(ResourceConstant.String.selected_dxcc)+message.Message);
+                            if (SettingsVariables.VibrateOnDxcc) Vibrate.DoVibrate(this);
+                            if (SettingsVariables.SendNotificationOnDxcc)
+                                Notifications.GetInstance(this)
+                                    .PopCommonNotification(GetString(ResourceConstant.String.selected_dxcc) +
+                                                           message.Message);
                         }
                     }).Start();
                 };
@@ -224,16 +223,14 @@ public class MainActivity : Activity
                 {
                     RunOnUiThread(() =>
                     {
-                        if (!model.LastTxStatus && message.Transmitting)
-                        {
-                            adapter.Add(new DecodedMsg()
+                        if (!_model.LastTxStatus && message.Transmitting)
+                            _adapter.Add(new DecodedMsg
                             {
                                 Transmitter = "USER_TRANSMIT",
                                 Message = message.TXMessage
                             });
-                        }
 
-                        model.LastTxStatus = message.Transmitting;
+                        _model.LastTxStatus = message.Transmitting;
                     });
                 };
                 // UdpServer.getInstance().startServer(new UdpServerConf
@@ -243,55 +240,55 @@ public class MainActivity : Activity
                 //     ip = Wifi.getLocalIPAddress(this)
                 //     // ip = IPAddress.Any.ToString()
                 // });
-                model.udpConf = new UdpServerConf
+                _model.UdpConf = new UdpServerConf
                 {
-                    handler = handler,
-                    port = SettingsVariables.port,
-                    ip = Wifi.getLocalIPAddress(this)
+                    Handler = handler,
+                    Port = SettingsVariables.Port,
+                    Ip = Wifi.GetLocalIpAddress(this)
                     // ip = IPAddress.Any.ToString()
                 };
                 var serviceIntent = new Intent(this, typeof(MsgPushService));
                 StartService(serviceIntent);
-                model.RecvWatchdog.Start();
-                Log.Debug(TAG, "Server started!");
-                setTitle(GetString(ResourceConstant.String.receving));
-                setTxLayoutConf(GetString(ResourceConstant.String.wait_conn), ViewStates.Visible);
-                startServer.SetEnabled(false);
-                stopServer.SetEnabled(true);
+                _model.RecvWatchdog.Start();
+                Log.Debug(Tag, "Server started!");
+                SetTitle(GetString(ResourceConstant.String.receving));
+                SetTxLayoutConf(GetString(ResourceConstant.String.wait_conn), ViewStates.Visible);
+                _startServer.SetEnabled(false);
+                _stopServer.SetEnabled(true);
                 break;
             case ResourceConstant.Id.stop_server:
                 // ProgDialog prog = new ProgDialog(this);
-                Log.Debug(TAG, "Server stopping");
+                Log.Debug(Tag, "Server stopping");
                 // prog.startAni();
                 // UdpServer.getInstance().stopServer();
                 var serviceIntent1 = new Intent(this, typeof(MsgPushService));
                 StopService(serviceIntent1);
-                Log.Debug(TAG, "Server stopped!");
-                model.RecvWatchdog.Stop();
-                setTitle(GetString(ResourceConstant.String.app_name));
-                setTxLayoutConf(GetString(ResourceConstant.String.open_service), ViewStates.Visible);
+                Log.Debug(Tag, "Server stopped!");
+                _model.RecvWatchdog.Stop();
+                SetTitle(GetString(ResourceConstant.String.app_name));
+                SetTxLayoutConf(GetString(ResourceConstant.String.open_service), ViewStates.Visible);
                 // prog.stopAni();
-                startServer.SetEnabled(true);
-                stopServer.SetEnabled(false);
+                _startServer.SetEnabled(true);
+                _stopServer.SetEnabled(false);
                 break;
         }
 
         return base.OnOptionsItemSelected(item);
     }
 
-    private void setTxLayoutConf(string msg, ViewStates vs)
+    private void SetTxLayoutConf(string msg, ViewStates vs)
     {
-        mutex.WaitOne();
-        if (!string.IsNullOrEmpty(msg)) txmsg.Text = msg;
-        txLayout.Visibility = vs;
-        mutex.ReleaseMutex();
+        Mutex.WaitOne();
+        if (!string.IsNullOrEmpty(msg)) _txmsg.Text = msg;
+        _txLayout.Visibility = vs;
+        Mutex.ReleaseMutex();
     }
 
-    private void setTitle(string msg)
+    private void SetTitle(string msg)
     {
-        mutex.WaitOne();
+        Mutex.WaitOne();
         Title = msg;
-        mutex.ReleaseMutex();
+        Mutex.ReleaseMutex();
     }
 
     protected override void OnDestroy()
@@ -305,14 +302,14 @@ public class MainActivity : Activity
     private void OverrideSettings()
     {
         var sharedPref = GetSharedPreferences(GetString(ResourceConstant.String.storage_key), FileCreationMode.Private);
-        SettingsVariables.port = sharedPref.GetString("port", "2237");
-        SettingsVariables.myCallsign = sharedPref.GetString("callsign", "");
-        SettingsVariables.myLocation = sharedPref.GetString("location", "");
-        SettingsVariables.send_notification_on_call = sharedPref.GetBoolean("send_notification_on_call", false);
-        SettingsVariables.send_notification_on_all = sharedPref.GetBoolean("send_notification_on_all", false);
-        SettingsVariables.send_notification_on_dxcc = sharedPref.GetBoolean("send_notification_on_dxcc", false);
-        SettingsVariables.vibrate_on_call = sharedPref.GetBoolean("vibrate_on_call", false);
-        SettingsVariables.vibrate_on_all = sharedPref.GetBoolean("vibrate_on_all", false);
-        SettingsVariables.vibrate_on_dxcc = sharedPref.GetBoolean("vibrate_on_dxcc", false);
+        SettingsVariables.Port = sharedPref.GetString("port", "2237");
+        SettingsVariables.MyCallsign = sharedPref.GetString("callsign", "");
+        SettingsVariables.MyLocation = sharedPref.GetString("location", "");
+        SettingsVariables.SendNotificationOnCall = sharedPref.GetBoolean("send_notification_on_call", false);
+        SettingsVariables.SendNotificationOnAll = sharedPref.GetBoolean("send_notification_on_all", false);
+        SettingsVariables.SendNotificationOnDxcc = sharedPref.GetBoolean("send_notification_on_dxcc", false);
+        SettingsVariables.VibrateOnCall = sharedPref.GetBoolean("vibrate_on_call", false);
+        SettingsVariables.VibrateOnAll = sharedPref.GetBoolean("vibrate_on_all", false);
+        SettingsVariables.VibrateOnDxcc = sharedPref.GetBoolean("vibrate_on_dxcc", false);
     }
 }

@@ -9,119 +9,124 @@ namespace WsjtxWatcher.Utils.UdpServer;
 
 public class UdpServerConf
 {
-    public IWsjtxUdpMessageHandler handler;
-    public string ip;
-    public string port;
+    public IWsjtxUdpMessageHandler Handler;
+    public string Ip;
+    public string Port;
 }
 
 public sealed class UdpServer
 {
-    private static string TAG = "UdpServer";
+    private static string _tag = "UdpServer";
 
-    private static UdpServer instance;
+    private static UdpServer _instance;
 
-    private UdpServerConf conf;
+    private UdpServerConf _conf;
 
-    private WsjtxUdpServer server;
+    private WsjtxUdpServer _server;
 
-    private CancellationTokenSource tokenSource;
+    private CancellationTokenSource _tokenSource;
 
-    public static UdpServer getInstance()
+    public static UdpServer GetInstance()
     {
-        if (instance == null) instance = new UdpServer();
-        return instance;
+        if (_instance == null) _instance = new UdpServer();
+        return _instance;
     }
 
-    public bool isServiceRunning()
+    public bool IsServiceRunning()
     {
-        if (server == null) return false;
-        return server.IsRunning;
+        if (_server == null) return false;
+        return _server.IsRunning;
     }
 
-    public Task startServer(UdpServerConf conf)
+    public Task StartServer(UdpServerConf conf)
     {
-        this.conf = conf;
+        this._conf = conf;
         try
         {
-            stopServer();
+            StopServer();
         }
         catch
         {
             //ignored
         }
 
-        tokenSource = new CancellationTokenSource();
+        _tokenSource = new CancellationTokenSource();
         IPAddress ip;
         int port;
-        if (!IPAddress.TryParse(conf.ip, out ip)) throw new Exception($"Failed to parse ip {conf.ip}!");
-        if (!int.TryParse(conf.port, out port)) throw new Exception($"Failed to parse port {conf.port}!");
-        server = new WsjtxUdpServer(conf.handler, ip, port);
+        if (!IPAddress.TryParse(conf.Ip, out ip)) throw new Exception($"Failed to parse ip {conf.Ip}!");
+        if (!int.TryParse(conf.Port, out port)) throw new Exception($"Failed to parse port {conf.Port}!");
+        _server = new WsjtxUdpServer(conf.Handler, ip, port);
         Log.Debug("Server",
-            $"Starting UDP server: {server.LocalEndpoint.Address}:{server.LocalEndpoint.Port} IsMulticast:{server.IsMulticast} {(server.IsMulticast ? ip : string.Empty)}");
+            $"Starting UDP server: {_server.LocalEndpoint.Address}:{_server.LocalEndpoint.Port} IsMulticast:{_server.IsMulticast} {(_server.IsMulticast ? ip : string.Empty)}");
         return Task.Run(() =>
         {
             try
             {
-                server.Start(tokenSource);
+                _server.Start(_tokenSource);
             }
             catch (Exception e)
             {
-                
             }
         });
     }
 
     // block!
-    public void stopServer()
+    public void StopServer()
     {
         try
         {
-            tokenSource?.Cancel();
-            if (isServiceRunning())
+            _tokenSource?.Cancel();
+            if (IsServiceRunning())
             {
                 Log.Debug("Server", "Service running, Try stopping...");
-                server?.Stop();
-                server?.Dispose();
+                _server?.Stop();
+                _server?.Dispose();
             }
         }
         catch
         {
             //ignored...
         }
-        
     }
 
     public void SendHaltTxMessage()
     {
         try
         {
-            server.SendMessageTo(MainViewModel.GetInstance().sessionEndPoint, new HaltTx(MainViewModel.GetInstance().clientId));
-            server.SendMessageTo(MainViewModel.GetInstance().sessionEndPoint, new HaltTx(MainViewModel.GetInstance().clientId, true));
+            _server.SendMessageTo(MainViewModel.GetInstance().SessionEndPoint,
+                new HaltTx(MainViewModel.GetInstance().ClientId));
+            _server.SendMessageTo(MainViewModel.GetInstance().SessionEndPoint,
+                new HaltTx(MainViewModel.GetInstance().ClientId, true));
         }
         catch
         {
             //ignored
         }
     }
-    
+
     public void SendReplayMessage()
     {
         try
         {
-            server.SendMessageTo(MainViewModel.GetInstance().sessionEndPoint, new Replay(MainViewModel.GetInstance().clientId));
+            _server.SendMessageTo(MainViewModel.GetInstance().SessionEndPoint,
+                new Replay(MainViewModel.GetInstance().ClientId));
         }
         catch
         {
             //ignored
         }
     }
+
     public void SendClearMessage()
     {
         try
         {
-            server.SendMessageTo(MainViewModel.GetInstance().sessionEndPoint, new Clear(MainViewModel.GetInstance().clientId,ClearWindow.Both));
-            server.SendMessageTo(MainViewModel.GetInstance().sessionEndPoint, new Clear(MainViewModel.GetInstance().clientId,ClearWindow.BandActivity));
-            server.SendMessageTo(MainViewModel.GetInstance().sessionEndPoint, new Clear(MainViewModel.GetInstance().clientId,ClearWindow.RxFrequency));
+            _server.SendMessageTo(MainViewModel.GetInstance().SessionEndPoint,
+                new Clear(MainViewModel.GetInstance().ClientId, ClearWindow.Both));
+            _server.SendMessageTo(MainViewModel.GetInstance().SessionEndPoint,
+                new Clear(MainViewModel.GetInstance().ClientId, ClearWindow.BandActivity));
+            _server.SendMessageTo(MainViewModel.GetInstance().SessionEndPoint,
+                new Clear(MainViewModel.GetInstance().ClientId, ClearWindow.RxFrequency));
         }
         catch
         {

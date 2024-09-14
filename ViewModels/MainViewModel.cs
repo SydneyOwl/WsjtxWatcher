@@ -1,8 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.Net;
-using _Microsoft.Android.Resource.Designer;
-using WsjtxUtils.WsjtxUdpServer;
-using WsjtxWatcher.Adapters;
+﻿using System.Net;
 using WsjtxWatcher.Ft8Transmit;
 using WsjtxWatcher.Utils.UdpServer;
 
@@ -10,12 +6,12 @@ namespace WsjtxWatcher.ViewModels;
 
 public class MainViewModel : ViewBase
 {
-    private static string TAG = "MainViewModel";
+    private static string _tag = "MainViewModel";
 
-    private static MainViewModel instance;
-    private bool _IsRecvTimeout;
-    private bool _IsTransmitting;
-    public bool LastTxStatus = false;
+    private static MainViewModel _instance;
+    private bool _isMsgServiceRunning;
+    private bool _isRecvTimeout;
+    private bool _isTransmitting;
 
     // public static ReactiveProperty<bool> IsWaitingForConn { get; set; } = new(true); //是否连接中？
     //
@@ -27,25 +23,25 @@ public class MainViewModel : ViewBase
     //
     // public static int TimeElapsed = 0;
 
-    private bool _IsWaitingForConn = true;
-    private string _TransmittingMessage = "";
-    private bool _IsMsgServiceRunning = false;
+    private bool _isWaitingForConn = true;
+    private string _transmittingMessage = "";
+
+    public int AboutMe = 0;
+
+    public string ClientId;
+
+    public double CurrentFreq = 0;
+
+    public List<DecodedMsg> DecodedMsgList = new();
+    public bool LastTxStatus = false;
 
     public Watchdog RecvWatchdog;
 
-    public List<DecodedMsg> DecodedMsgList = new();
+    public EndPoint SessionEndPoint;
 
-    public double currentFreq = 0;
+    public int TotalRecord = 0;
 
-    public EndPoint sessionEndPoint;
-    
-    public string clientId;
-
-    public int aboutMe = 0;
-    
-    public int totalRecord = 0;
-
-    public UdpServerConf udpConf;
+    public UdpServerConf UdpConf;
 
 
     private MainViewModel()
@@ -55,58 +51,58 @@ public class MainViewModel : ViewBase
 
     public bool IsWaitingForConn
     {
-        get => _IsWaitingForConn;
+        get => _isWaitingForConn;
         set
         {
-            _IsWaitingForConn = value;
+            _isWaitingForConn = value;
             OnPropertyChanged();
         }
     }
-    
+
     public bool IsMsgServiceRunning
     {
-        get => _IsMsgServiceRunning;
+        get => _isMsgServiceRunning;
         set
         {
-            _IsMsgServiceRunning = value;
+            _isMsgServiceRunning = value;
             OnPropertyChanged();
         }
     }
-    
+
 
     public bool IsTransmitting
     {
-        get => _IsTransmitting;
+        get => _isTransmitting;
         set
         {
-            _IsTransmitting = value;
+            _isTransmitting = value;
             OnPropertyChanged();
         }
     }
 
     public bool IsRecvTimeout
     {
-        get => _IsRecvTimeout;
+        get => _isRecvTimeout;
         set
         {
-            _IsRecvTimeout = value;
+            _isRecvTimeout = value;
             OnPropertyChanged();
         }
     }
 
     public string TransmittingMessage
     {
-        get => _TransmittingMessage;
+        get => _transmittingMessage;
         set
         {
-            _TransmittingMessage = value;
+            _transmittingMessage = value;
             OnPropertyChanged();
         }
     }
 
     public static MainViewModel GetInstance()
     {
-        if (instance == null) instance = new MainViewModel();
-        return instance;
+        if (_instance == null) _instance = new MainViewModel();
+        return _instance;
     }
 }

@@ -19,7 +19,7 @@ public static class BaseRigOperation
     /// </summary>
     /// <param name="freq">频率</param>
     /// <returns>是否在频段内</returns>
-    public static bool CheckIsWSPR2(long freq)
+    public static bool CheckIsWspr2(long freq)
     {
         return (freq >= 137400 && freq <= 137600) // 2190m
                || (freq >= 475400 && freq <= 475600) // 630m

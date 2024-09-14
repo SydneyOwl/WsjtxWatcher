@@ -3,7 +3,7 @@
 namespace WsjtxWatcher.Utils.UTCTimer;
 
 // TNX FT8CN----
-public class UTCTimer
+public class UtcTimer
 {
     /// <summary>
     ///     获取时间字符串（UTC）。
@@ -24,7 +24,7 @@ public class UTCTimer
     /// </summary>
     /// <param name="time">时间戳（毫秒）</param>
     /// <returns>格式化的时间字符串</returns>
-    public static string GetTimeHHMMSS(long time)
+    public static string GetTimeHhmmss(long time)
     {
         var curtime = time / 1000;
         var hour = curtime / (60 * 60) % 24; // 小时
@@ -38,7 +38,7 @@ public class UTCTimer
     /// </summary>
     /// <param name="time">时间戳（毫秒）</param>
     /// <returns>格式化的日期字符串</returns>
-    public static string GetYYYYMMDD(long time)
+    public static string GetYyyymmdd(long time)
     {
         DateTimeOffset dateTime = DateTimeOffset.FromUnixTimeMilliseconds(time).UtcDateTime;
         return dateTime.ToString("yyyyMMdd", CultureInfo.InvariantCulture);

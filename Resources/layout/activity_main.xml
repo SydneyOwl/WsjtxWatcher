@@ -57,14 +57,21 @@
             android:layout_alignParentBottom="true"
             android:orientation="horizontal"
             android:padding="10dp">
-        <LinearLayout android:id="@+id/status_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="10dp">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/total_record" android:text="@string/total_record" />
-            <TextView android:layout_marginLeft="20dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/about_me"  android:text="@string/about_me" />
+        <LinearLayout android:id="@+id/status_layout" android:layout_width="match_parent"
+                      android:layout_height="wrap_content" android:layout_marginBottom="10dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                      android:id="@+id/total_record" android:text="@string/total_record"/>
+            <TextView android:layout_marginLeft="20dp" android:layout_width="wrap_content"
+                      android:layout_height="wrap_content" android:id="@+id/about_me" android:text="@string/about_me"/>
         </LinearLayout>
-        <LinearLayout android:layout_below="@id/status_layout" android:id="@+id/button_layout" android:layout_width="match_parent" android:layout_height="wrap_content">
-            <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/halt_tx" android:text="@string/halt_tx" />
-            <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/replay" android:text="@string/re_decode" />
-            <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/clear" android:text="@string/clear_record" />
+        <LinearLayout android:layout_below="@id/status_layout" android:id="@+id/button_layout"
+                      android:layout_width="match_parent" android:layout_height="wrap_content">
+            <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/halt_tx"
+                    android:text="@string/halt_tx"/>
+            <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/replay"
+                    android:text="@string/re_decode"/>
+            <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/clear"
+                    android:text="@string/clear_record"/>
         </LinearLayout>
     </RelativeLayout>
 

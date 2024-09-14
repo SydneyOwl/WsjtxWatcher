@@ -2,23 +2,23 @@
 
 public class SettingsVariables
 {
-    public static string port = "2237";
+    public static string Port = "2237";
 
-    public static string myCallsign = "";
+    public static string MyCallsign = "";
 
-    public static string myLocation = "";
+    public static string MyLocation = "";
 
-    public static string currentLanguage = "";
+    public static string CurrentLanguage = "";
 
-    public static bool vibrate_on_call = false;
-    
-    public static bool vibrate_on_all = false;
-    
-    public static bool vibrate_on_dxcc = false;
-    
-    public static bool send_notification_on_call = false;
-    
-    public static bool send_notification_on_all = false;
-    
-    public static bool send_notification_on_dxcc= false;
+    public static bool VibrateOnCall = false;
+
+    public static bool VibrateOnAll = false;
+
+    public static bool VibrateOnDxcc = false;
+
+    public static bool SendNotificationOnCall = false;
+
+    public static bool SendNotificationOnAll = false;
+
+    public static bool SendNotificationOnDxcc = false;
 }

@@ -11,8 +11,8 @@ public class DefaultSettings
         var sharedPref =
             ctx.GetSharedPreferences(ctx.GetString(ResourceConstant.String.storage_key), FileCreationMode.Private);
         var edit = sharedPref.Edit();
-        edit.PutString("version", GlobalVariables.version_tag);
-        edit.PutStringSet("prefered_dxcc", new List<string>()
+        edit.PutString("version", GlobalVariables.VersionTag);
+        edit.PutStringSet("prefered_dxcc", new List<string>
         {
             // according to https://dxnews.com/dxcc-2017/  (DXCC Most Wanted 2024) TOP 10
             "257", // north korea
@@ -24,7 +24,7 @@ public class DefaultSettings
             "17", //PETER 1 ISLAND
             "172", //KERGUELEN ISLAND
             "363", //AVES ISLAND
-            "16", //BOUVET ISLAND
+            "16" //BOUVET ISLAND
         });
         edit.Commit();
     }

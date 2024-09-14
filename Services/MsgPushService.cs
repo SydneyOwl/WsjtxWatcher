@@ -1,13 +1,9 @@
 ﻿using _Microsoft.Android.Resource.Designer;
-using Android.App;
 using Android.Content;
 using Android.OS;
 using Android.Util;
-using WsjtxWatcher.Utils.Network;
 using WsjtxWatcher.Utils.UdpServer;
-using WsjtxWatcher.Variables;
 using WsjtxWatcher.ViewModels;
-using Resource = Android.Resource;
 
 [Service]
 public class MsgPushService : Service
@@ -18,9 +14,9 @@ public class MsgPushService : Service
     {
         throw new NotImplementedException("OnBind not implemented");
     }
-    
+
     public override StartCommandResult OnStartCommand(Intent intent, StartCommandFlags flags, int startId)
-    { 
+    {
         if (intent?.Action == "STOP_SERVICE")
         {
             MainViewModel.GetInstance().IsMsgServiceRunning = false;
@@ -29,13 +25,14 @@ public class MsgPushService : Service
         else
         {
             Log.Info("MyService", "Service Started");
-            var conf = MainViewModel.GetInstance().udpConf;
-            UdpServer.getInstance().startServer(conf);
+            var conf = MainViewModel.GetInstance().UdpConf;
+            UdpServer.GetInstance().StartServer(conf);
             MainViewModel.GetInstance().IsMsgServiceRunning = true;
         }
+
         return StartCommandResult.Sticky;
     }
-    
+
 
     public override void OnCreate()
     {
@@ -47,11 +44,12 @@ public class MsgPushService : Service
     private void StartForegroundService()
     {
         var notificationManager = (NotificationManager)GetSystemService(NotificationService);
-        
-        NotificationChannel channel_serviceStart = new NotificationChannel(GetString(ResourceConstant.String.notification_channel_id2),GetString(ResourceConstant.String.app_name),
+
+        var channelServiceStart = new NotificationChannel(GetString(ResourceConstant.String.notification_channel_id2),
+            GetString(ResourceConstant.String.app_name),
             NotificationImportance.Default);
-        notificationManager.CreateNotificationChannel(channel_serviceStart);
-        
+        notificationManager.CreateNotificationChannel(channelServiceStart);
+
         var stopIntent = new Intent(this, GetType());
         stopIntent.SetAction("STOP_SERVICE");
         var pendingIntent = PendingIntent.GetService(this, 0, stopIntent, PendingIntentFlags.UpdateCurrent);
@@ -70,7 +68,7 @@ public class MsgPushService : Service
     {
         base.OnDestroy();
         Log.Info(Tag, "OnDestroy: ");
-        UdpServer.getInstance().stopServer();
+        UdpServer.GetInstance().StopServer();
     }
 
     public override void OnRebind(Intent intent)

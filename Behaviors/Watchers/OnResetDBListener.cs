@@ -8,19 +8,21 @@ using Object = Java.Lang.Object;
 
 namespace WsjtxWatcher.Behaviors.Watchers;
 
-public class OnResetDBListener : Object,View.IOnClickListener
+public class OnResetDbListener : Object, View.IOnClickListener
 {
-    private Context ctx;
-    private ProgDialog progDialog;
+    private readonly Context _ctx;
+    private ProgDialog _progDialog;
 
-    public OnResetDBListener(Context ctx)
+    public OnResetDbListener(Context ctx)
     {
-        this.ctx = ctx;
+        this._ctx = ctx;
     }
+
     public void OnClick(View? v)
-    { // 显示等待动画
-        progDialog = new ProgDialog(ctx);
-        progDialog.StartAni();
+    {
+        // 显示等待动画
+        _progDialog = new ProgDialog(_ctx);
+        _progDialog.StartAni();
 
         // 执行后台任务
         Task.Run(() =>
@@ -35,15 +37,13 @@ public class OnResetDBListener : Object,View.IOnClickListener
             }
             finally
             {
-                ((Activity)ctx).RunOnUiThread(() =>
-                {
-                    progDialog.StopAni();
-                });
+                ((Activity)_ctx).RunOnUiThread(() => { _progDialog.StopAni(); });
                 // 重启
-                Intent intent = new Intent(Application.Context, typeof(MainActivity)); // 替换为你的启动活动
+                var intent = new Intent(Application.Context, typeof(MainActivity)); // 替换为你的启动活动
                 intent.AddFlags(ActivityFlags.ClearTop | ActivityFlags.NewTask);
-                PendingIntent pendingIntent = PendingIntent.GetActivity(Application.Context, 0, intent, PendingIntentFlags.CancelCurrent);
-                AlarmManager alarmManager = (AlarmManager)Application.Context.GetSystemService(Context.AlarmService);
+                var pendingIntent =
+                    PendingIntent.GetActivity(Application.Context, 0, intent, PendingIntentFlags.CancelCurrent);
+                var alarmManager = (AlarmManager)Application.Context.GetSystemService(Context.AlarmService);
                 alarmManager.Set(AlarmType.Rtc, DateTime.Now.Millisecond + 600, pendingIntent); // 100 毫秒后重启
                 Process.KillProcess(Process.MyPid()); // 结束当前进程
             }

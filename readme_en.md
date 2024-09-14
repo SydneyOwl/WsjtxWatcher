@@ -2,7 +2,9 @@
 
 ## Introduction
 
-This software leverages the UDP server functionality built into `Wsjtx` (or `JTDX`, hereafter referred to as `wsjtx`) to facilitate data interaction with wsjtx. Users can view real-time FT8 information and perform actions such as canceling transmissions within the application. Currently, the software supports both Simplified Chinese and English.
+This software leverages the UDP server functionality built into `Wsjtx` (or `JTDX`, hereafter referred to as `wsjtx`) to
+facilitate data interaction with wsjtx. Users can view real-time FT8 information and perform actions such as canceling
+transmissions within the application. Currently, the software supports both Simplified Chinese and English.
 
 <img src="./md_assets/page3.png" style="zoom: 80%;" />
 
@@ -12,7 +14,9 @@ This software leverages the UDP server functionality built into `Wsjtx` (or `JTD
 
 ## How to Use
 
-1. Click the menu in the upper-right corner and select the settings page. Enter your callsign and Maidenhead locator coordinates on the settings page, and adjust other settings as needed. Note the IP address and port number displayed on this page.
+1. Click the menu in the upper-right corner and select the settings page. Enter your callsign and Maidenhead locator
+   coordinates on the settings page, and adjust other settings as needed. Note the IP address and port number displayed
+   on this page.
 
 2. Return to the main interface and click the menu again, then select "Start Service."
 
@@ -20,7 +24,8 @@ This software leverages the UDP server functionality built into `Wsjtx` (or `JTD
 
    <img src="./md_assets/page4.png" style="zoom: 67%;" />
 
-   **Ensure that the computer running wsjtx and your phone are on the same local network, such as being connected to the same Wi-Fi!**
+   **Ensure that the computer running wsjtx and your phone are on the same local network, such as being connected to the
+   same Wi-Fi!**
 
 4. Wait for the information to appear on the software interface!
 
@@ -31,8 +36,10 @@ This software leverages the UDP server functionality built into `Wsjtx` (or `JTD
 
 ## Acknowledgments
 
-+ Thanks to the [ft8cn](https://github.com/N0BOY/FT8CN) project, from which some interface configurations and utility classes were borrowed. I have also gained considerable development knowledge from it.
-+ Appreciation to [WsjtxUtils](https://github.com/KC3PIB/WsjtxUtils) for highlighting the lack of suitable wsjtx decoding libraries, influencing the choice not to develop in Java.
++ Thanks to the [ft8cn](https://github.com/N0BOY/FT8CN) project, from which some interface configurations and utility
+  classes were borrowed. I have also gained considerable development knowledge from it.
++ Appreciation to [WsjtxUtils](https://github.com/KC3PIB/WsjtxUtils) for highlighting the lack of suitable wsjtx
+  decoding libraries, influencing the choice not to develop in Java.
 
 ## License
 

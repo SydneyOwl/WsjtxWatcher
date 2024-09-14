@@ -13,39 +13,40 @@ namespace WsjtxWatcher.Ft8Transmit;
  * @date 2023-03-20
  * ----代码来自 FT8CN----
  */
-public class QSLRecord
+public class QslRecord
 {
-    private static string TAG = "QSLRecord";
-    private readonly long bandFreq; //发射的波段
-    private readonly string bandLength = "";
-    private string comment;
-    public string errorMSG = ""; //如果解析出错，错误的消息
-    public long id = -1;
+    private static string _tag = "QSLRecord";
+    private readonly long _bandFreq; //发射的波段
+    private readonly string _bandLength = "";
 
-    public bool isInvalid = false; //是否解析出错
-    public bool isLotW_import = false; //是否是从外部数据导入的，此项需要在数据库中比对才能设定
-    public bool isLotW_QSL = false; //是否是lotw确认的
-    public bool isQSL = false; //手工确认
+    private readonly string _mode = "FT8";
+    private readonly string _toCallsign; //对方的呼号
+    private readonly int _wavFrequency; //发射的频率
+    private string _comment;
+    public string ErrorMsg = ""; //如果解析出错，错误的消息
+    public long Id = -1;
 
-    private readonly string mode = "FT8";
+    public bool IsInvalid = false; //是否解析出错
+    public bool IsLotWImport = false; //是否是从外部数据导入的，此项需要在数据库中比对才能设定
+    public bool IsLotWQsl = false; //是否是lotw确认的
+
+    public bool IsQsl = false; //手工确认
     //private long endTime;//结束时间
 
-    private string myCallsign; //我的呼号
+    private string _myCallsign; //我的呼号
 
-    private string myMaidenGrid; //我的网格
+    private string _myMaidenGrid; //我的网格
 
     //private long startTime;//起始时间
-    private string qso_date;
-    private string qso_date_off;
-    private int receivedReport; //我收到对方的报告（也就是SNR）
+    private string _qsoDate;
+    private string _qsoDateOff;
+    private int _receivedReport; //我收到对方的报告（也就是SNR）
 
-    public bool saved = false; //是否被保存到数据库中
-    private int sendReport; //对方收到我的报告（也就是我发送的信号强度）
-    private string time_off;
-    private string time_on;
-    private readonly string toCallsign; //对方的呼号
-    private string toMaidenGrid; //对方的网格
-    private readonly int wavFrequency; //发射的频率
+    public bool Saved = false; //是否被保存到数据库中
+    private int _sendReport; //对方收到我的报告（也就是我发送的信号强度）
+    private string _timeOff;
+    private string _timeOn;
+    private string _toMaidenGrid; //对方的网格
 
     /**
      * 构建通联成功的对象
@@ -62,216 +63,216 @@ public class QSLRecord
      * @param bandFreq       载波频率
      * @param wavFrequency   声音频率
      */
-    public QSLRecord()
+    public QslRecord()
     {
     }
 
-    public QSLRecord(long startTime, long endTime, string myCallsign, string myMaidenGrid
+    public QslRecord(long startTime, long endTime, string myCallsign, string myMaidenGrid
         , string toCallsign, string toMaidenGrid, int sendReport, int receivedReport
         , string mode, long bandFreq, int wavFrequency)
     {
         //this.startTime = startTime;
-        qso_date = UTCTimer.GetYYYYMMDD(startTime);
-        time_on = UTCTimer.GetTimeHHMMSS(startTime);
-        qso_date_off = UTCTimer.GetYYYYMMDD(endTime);
-        time_off = UTCTimer.GetTimeHHMMSS(endTime);
-        this.myCallsign = myCallsign;
-        this.myMaidenGrid = myMaidenGrid;
-        this.toCallsign = toCallsign;
-        this.toMaidenGrid = toMaidenGrid;
-        this.sendReport = sendReport;
-        this.receivedReport = receivedReport;
-        this.mode = mode;
-        bandLength = BaseRigOperation.GetMeterFromFreq(bandFreq); //获取波长
-        this.bandFreq = bandFreq;
-        this.wavFrequency = wavFrequency;
+        _qsoDate = UtcTimer.GetYyyymmdd(startTime);
+        _timeOn = UtcTimer.GetTimeHhmmss(startTime);
+        _qsoDateOff = UtcTimer.GetYyyymmdd(endTime);
+        _timeOff = UtcTimer.GetTimeHhmmss(endTime);
+        this._myCallsign = myCallsign;
+        this._myMaidenGrid = myMaidenGrid;
+        this._toCallsign = toCallsign;
+        this._toMaidenGrid = toMaidenGrid;
+        this._sendReport = sendReport;
+        this._receivedReport = receivedReport;
+        this._mode = mode;
+        _bandLength = BaseRigOperation.GetMeterFromFreq(bandFreq); //获取波长
+        this._bandFreq = bandFreq;
+        this._wavFrequency = wavFrequency;
         var distance = "";
         if (!myMaidenGrid.Equals("") && !toMaidenGrid.Equals(""))
-            distance = MaidenheadGrid.GetDistStrEN(myMaidenGrid, toMaidenGrid);
+            distance = MaidenheadGrid.GetDistStrEn(myMaidenGrid, toMaidenGrid);
     }
 
-    public void update(QSLRecord record)
+    public void Update(QslRecord record)
     {
-        qso_date_off = record.qso_date_off;
-        time_off = record.time_off;
-        toMaidenGrid = record.toMaidenGrid;
-        sendReport = record.sendReport;
-        receivedReport = record.receivedReport;
+        _qsoDateOff = record._qsoDateOff;
+        _timeOff = record._timeOff;
+        _toMaidenGrid = record._toMaidenGrid;
+        _sendReport = record._sendReport;
+        _receivedReport = record._receivedReport;
     }
 
 
-    public string toString()
+    public string ToString()
     {
         return "QSLRecord{" +
-               "id=" + id +
-               ", qso_date='" + qso_date + '\'' +
-               ", time_on='" + time_on + '\'' +
-               ", qso_date_off='" + qso_date_off + '\'' +
-               ", time_off='" + time_off + '\'' +
-               ", myCallsign='" + myCallsign + '\'' +
-               ", myMaidenGrid='" + myMaidenGrid + '\'' +
-               ", toCallsign='" + toCallsign + '\'' +
-               ", toMaidenGrid='" + toMaidenGrid + '\'' +
-               ", sendReport=" + sendReport +
-               ", receivedReport=" + receivedReport +
-               ", mode='" + mode + '\'' +
-               ", bandLength='" + bandLength + '\'' +
-               ", bandFreq=" + bandFreq +
-               ", wavFrequency=" + wavFrequency +
-               ", isQSL=" + isQSL +
-               ", isLotW_import=" + isLotW_import +
-               ", isLotW_QSL=" + isLotW_QSL +
-               ", saved=" + saved +
-               ", comment='" + comment + '\'' +
+               "id=" + Id +
+               ", qso_date='" + _qsoDate + '\'' +
+               ", time_on='" + _timeOn + '\'' +
+               ", qso_date_off='" + _qsoDateOff + '\'' +
+               ", time_off='" + _timeOff + '\'' +
+               ", myCallsign='" + _myCallsign + '\'' +
+               ", myMaidenGrid='" + _myMaidenGrid + '\'' +
+               ", toCallsign='" + _toCallsign + '\'' +
+               ", toMaidenGrid='" + _toMaidenGrid + '\'' +
+               ", sendReport=" + _sendReport +
+               ", receivedReport=" + _receivedReport +
+               ", mode='" + _mode + '\'' +
+               ", bandLength='" + _bandLength + '\'' +
+               ", bandFreq=" + _bandFreq +
+               ", wavFrequency=" + _wavFrequency +
+               ", isQSL=" + IsQsl +
+               ", isLotW_import=" + IsLotWImport +
+               ", isLotW_QSL=" + IsLotWQsl +
+               ", saved=" + Saved +
+               ", comment='" + _comment + '\'' +
                '}';
     }
 
-    public string toHtmlString()
+    public string ToHtmlString()
     {
-        var ss = saved ? "<font color=red>, saved=true</font>" : ", saved=false";
+        var ss = Saved ? "<font color=red>, saved=true</font>" : ", saved=false";
         return "QSLRecord{" +
-               "id=" + id +
-               ", qso_date='" + qso_date + '\'' +
-               ", time_on='" + time_on + '\'' +
-               ", qso_date_off='" + qso_date_off + '\'' +
-               ", time_off='" + time_off + '\'' +
-               ", myCallsign='" + myCallsign + '\'' +
-               ", myMaidenGrid='" + myMaidenGrid + '\'' +
-               ", toCallsign='" + toCallsign + '\'' +
-               ", toMaidenGrid='" + toMaidenGrid + '\'' +
-               ", sendReport=" + sendReport +
-               ", receivedReport=" + receivedReport +
-               ", mode='" + mode + '\'' +
-               ", bandLength='" + bandLength + '\'' +
-               ", bandFreq=" + bandFreq +
-               ", wavFrequency=" + wavFrequency +
-               ", isQSL=" + isQSL +
-               ", isLotW_import=" + isLotW_import +
-               ", isLotW_QSL=" + isLotW_QSL +
+               "id=" + Id +
+               ", qso_date='" + _qsoDate + '\'' +
+               ", time_on='" + _timeOn + '\'' +
+               ", qso_date_off='" + _qsoDateOff + '\'' +
+               ", time_off='" + _timeOff + '\'' +
+               ", myCallsign='" + _myCallsign + '\'' +
+               ", myMaidenGrid='" + _myMaidenGrid + '\'' +
+               ", toCallsign='" + _toCallsign + '\'' +
+               ", toMaidenGrid='" + _toMaidenGrid + '\'' +
+               ", sendReport=" + _sendReport +
+               ", receivedReport=" + _receivedReport +
+               ", mode='" + _mode + '\'' +
+               ", bandLength='" + _bandLength + '\'' +
+               ", bandFreq=" + _bandFreq +
+               ", wavFrequency=" + _wavFrequency +
+               ", isQSL=" + IsQsl +
+               ", isLotW_import=" + IsLotWImport +
+               ", isLotW_QSL=" + IsLotWQsl +
                ss +
-               ", comment='" + comment + '\'' +
+               ", comment='" + _comment + '\'' +
                '}';
     }
 
-    public string getBandLength()
+    public string GetBandLength()
     {
-        return bandLength;
+        return _bandLength;
     }
 
-    public string getToCallsign()
+    public string GetToCallsign()
     {
-        return toCallsign;
+        return _toCallsign;
     }
 
-    public string getToMaidenGrid()
+    public string GetToMaidenGrid()
     {
-        return toMaidenGrid;
+        return _toMaidenGrid;
     }
 
-    public string getMode()
+    public string GetMode()
     {
-        return mode;
+        return _mode;
     }
 
-    public long getBandFreq()
+    public long GetBandFreq()
     {
-        return bandFreq;
+        return _bandFreq;
     }
 
-    public int getWavFrequency()
+    public int GetWavFrequency()
     {
-        return wavFrequency;
+        return _wavFrequency;
     }
 
 
-    public string getMyCallsign()
+    public string GetMyCallsign()
     {
-        return myCallsign;
+        return _myCallsign;
     }
 
-    public void setMyCallsign(string val)
+    public void SetMyCallsign(string val)
     {
-        myCallsign = val;
+        _myCallsign = val;
     }
 
-    public string getMyMaidenGrid()
+    public string GetMyMaidenGrid()
     {
-        return myMaidenGrid;
+        return _myMaidenGrid;
     }
 
-    public void setMyMaidenGrid(string myMaidenGrid)
+    public void SetMyMaidenGrid(string myMaidenGrid)
     {
-        this.myMaidenGrid = myMaidenGrid;
+        this._myMaidenGrid = myMaidenGrid;
     }
 
-    public int getSendReport()
+    public int GetSendReport()
     {
-        return sendReport;
+        return _sendReport;
     }
 
-    public int getReceivedReport()
+    public int GetReceivedReport()
     {
-        return receivedReport;
+        return _receivedReport;
     }
 
     public string getQso_date()
     {
-        return qso_date;
+        return _qsoDate;
     }
 
     public string getTime_on()
     {
-        return time_on;
+        return _timeOn;
     }
 
     public string getQso_date_off()
     {
-        return qso_date_off;
+        return _qsoDateOff;
     }
 
     public string getTime_off()
     {
-        return time_off;
+        return _timeOff;
     }
 
-    public string getStartTime()
+    public string GetStartTime()
     {
-        return qso_date + "-" + time_on;
+        return _qsoDate + "-" + _timeOn;
     }
 
-    public string getEndTime()
+    public string GetEndTime()
     {
-        return qso_date_off + "-" + time_off;
+        return _qsoDateOff + "-" + _timeOff;
     }
 
-    public string getComment()
+    public string GetComment()
     {
-        return comment;
+        return _comment;
     }
 
 
-    public void setToMaidenGrid(string toMaidenGrid)
+    public void SetToMaidenGrid(string toMaidenGrid)
     {
-        this.toMaidenGrid = toMaidenGrid;
+        this._toMaidenGrid = toMaidenGrid;
     }
 
-    public void setSendReport(int sendReport)
+    public void SetSendReport(int sendReport)
     {
-        this.sendReport = sendReport;
+        this._sendReport = sendReport;
     }
 
-    public void setReceivedReport(int receivedReport)
+    public void SetReceivedReport(int receivedReport)
     {
-        this.receivedReport = receivedReport;
+        this._receivedReport = receivedReport;
     }
 
-    public void setQso_date(string qso_date)
+    public void setQso_date(string qsoDate)
     {
-        this.qso_date = qso_date;
+        this._qsoDate = qsoDate;
     }
 
-    public void setTime_on(string time_on)
+    public void setTime_on(string timeOn)
     {
-        this.time_on = time_on;
+        this._timeOn = timeOn;
     }
 }

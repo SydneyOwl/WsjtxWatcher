@@ -9,31 +9,28 @@ namespace WsjtxWatcher.Utils.UdpServer;
 
 public class UdpAndroidServer
 {
-    private static UdpAndroidServer instance;
-
-    private UdpClient client; // .....
+    private static UdpAndroidServer _instance;
 
     private CancellationTokenSource _tokenSource;
 
-    private bool isServerRunning;
+    private UdpClient _client; // .....
 
-    public static UdpAndroidServer getInstance()
+    private bool _isServerRunning;
+
+    public static UdpAndroidServer GetInstance()
     {
-        if (instance == null)
-        {
-            instance = new UdpAndroidServer();
-        }
+        if (_instance == null) _instance = new UdpAndroidServer();
 
-        return instance;
+        return _instance;
     }
 
-    public Task StartAndroidUdpServerAsync(string ip, string port)
+    public Task StartAndroidUdpServerAsync(string _ip, string _port)
     {
         try
         {
             _tokenSource?.Cancel();
-            client?.Close();
-            client?.Dispose();
+            _client?.Close();
+            _client?.Dispose();
         }
         catch
         {
@@ -41,23 +38,22 @@ public class UdpAndroidServer
         }
 
         _tokenSource = new CancellationTokenSource();
-        if (!IPAddress.TryParse(ip, out var _ip)) throw new Exception($"Failed to parse ip {ip}!");
-        if (!int.TryParse(port, out var _port)) throw new Exception($"Failed to parse port {port}!");
-        var localEndPoint = new IPEndPoint(_ip, _port);
+        if (!IPAddress.TryParse(_ip, out var ip)) throw new Exception($"Failed to parse ip {ip}!");
+        if (!int.TryParse(_port, out var port)) throw new Exception($"Failed to parse port {port}!");
+        var localEndPoint = new IPEndPoint(ip, port);
         return Task.Run(async () =>
         {
-            using (client = new UdpClient())
+            using (_client = new UdpClient())
             {
-                isServerRunning = true;
-                client.Client.Bind(localEndPoint);
+                _isServerRunning = true;
+                _client.Client.Bind(localEndPoint);
                 while (!_tokenSource.Token.IsCancellationRequested)
-                {
                     try
                     {
-                        UdpReceiveResult result = await client.ReceiveAsync().ConfigureAwait(false);
+                        var result = await _client.ReceiveAsync().ConfigureAwait(false);
                         Memory<byte> source = new(result.Buffer);
-                        WsjtxMessage? msg = source.DeserializeWsjtxMessage();
-                        MessageType? messageType = msg?.MessageType;
+                        var msg = source.DeserializeWsjtxMessage();
+                        var messageType = msg?.MessageType;
                         if (messageType.HasValue)
                         {
                             WriteMessageAsJsonToConsole((IWsjtxDirectionOut)msg);
@@ -84,12 +80,12 @@ public class UdpAndroidServer
                     }
                     catch (ObjectDisposedException)
                     {
-                        isServerRunning = false;
+                        _isServerRunning = false;
                         // Handle if the UdpClient is disposed
                         break;
                     }
-                }
-                isServerRunning = false;
+
+                _isServerRunning = false;
             }
         });
     }
@@ -99,11 +95,12 @@ public class UdpAndroidServer
         return Task.Run(() =>
         {
             _tokenSource.Cancel();
-            client.Close();
-            client.Dispose();
-            isServerRunning = false;
+            _client.Close();
+            _client.Dispose();
+            _isServerRunning = false;
         });
     }
+
     private void WriteMessageAsJsonToConsole<T>(T message) where T : IWsjtxDirectionOut
     {
         Console.WriteLine(typeof(T) + "~~~~" + JsonSerializer.Serialize(message, new JsonSerializerOptions

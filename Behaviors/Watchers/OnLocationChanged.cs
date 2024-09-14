@@ -9,11 +9,11 @@ namespace WsjtxWatcher.Behaviors.Watchers;
 
 public class OnLocationChanged : Object, ITextWatcher
 {
-    private readonly Context ctx;
+    private readonly Context _ctx;
 
     public OnLocationChanged(Context ctx)
     {
-        this.ctx = ctx;
+        this._ctx = ctx;
     }
 
     public void AfterTextChanged(IEditable? s)
@@ -26,10 +26,10 @@ public class OnLocationChanged : Object, ITextWatcher
 
     public void OnTextChanged(ICharSequence? s, int start, int before, int count)
     {
-        SettingsVariables.myLocation = s.ToString().ToUpper();
+        SettingsVariables.MyLocation = s.ToString().ToUpper();
         // save conf
         var sharedPref =
-            ctx.GetSharedPreferences(ctx.GetString(ResourceConstant.String.storage_key), FileCreationMode.Private);
+            _ctx.GetSharedPreferences(_ctx.GetString(ResourceConstant.String.storage_key), FileCreationMode.Private);
         var edit = sharedPref.Edit();
         edit.PutString("location", s.ToString().ToUpper());
         edit.Apply();

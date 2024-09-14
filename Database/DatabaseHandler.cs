@@ -1,6 +1,7 @@
 ﻿using Android.Content;
 using Android.Util;
 using SQLite;
+using WsjtxWatcher.Utils.AppPackage;
 using WsjtxWatcher.Utils.UdpServer;
 
 namespace WsjtxWatcher.Database;
@@ -9,62 +10,60 @@ public class DatabaseHandler
 {
     private static DatabaseHandler _instance;
 
-    private static readonly string TAG = "DBHandler";
+    private static readonly string Tag = "DBHandler";
 
-    public static Dictionary<string, string> countries;
+    public static Dictionary<string, string> Countries;
     private SQLiteAsyncConnection _db;
-    private Context ctx;
+    private readonly Context _ctx;
 
-    private bool dbExists;
-    private string dbPath;
+    private bool _dbExists;
+    private readonly string _dbPath;
 
     private DatabaseHandler(Context ctx)
     {
-        this.ctx = ctx;
-        var isSameVersion = Utils.AppPackage.ChkInstallTime.IsSameVersion(ctx);
-        dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wsjtx-watcher-database.db");
-        var connectionString = new SQLiteConnectionString(dbPath,
-            SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite  |
+        this._ctx = ctx;
+        var isSameVersion = ChkInstallTime.IsSameVersion(ctx);
+        _dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wsjtx-watcher-database.db");
+        var connectionString = new SQLiteConnectionString(_dbPath,
+            SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite |
             SQLiteOpenFlags.SharedCache, true);
-        dbExists = File.Exists(dbPath);
+        _dbExists = File.Exists(_dbPath);
         // if (dbExists)
         // {
         //     // 测试用，记得删掉！！！
         //     File.Delete(dbPath);
         // }
-        if (!(dbExists && isSameVersion))
+        if (!(_dbExists && isSameVersion))
         {
-            Log.Debug(TAG, "Different version.");
+            Log.Debug(Tag, "Different version.");
             try
             {
-                File.Delete(dbPath);
+                File.Delete(_dbPath);
             }
             catch
             {
                 // ignored
             }
-            Log.Debug(TAG, "Creating db..");
+
+            Log.Debug(Tag, "Creating db..");
             _db = new SQLiteAsyncConnection(connectionString);
-            _db.CreateTableAsync<CallsignDatabase>().ContinueWith((_) =>
+            _db.CreateTableAsync<CallsignDatabase>().ContinueWith(_ => { Log.Debug(Tag, "CallsignDatabase Created!"); })
+                .ConfigureAwait(false).GetAwaiter().GetResult();
+            _db.CreateTableAsync<CountryDatabase>().ContinueWith(_ => { Log.Debug(Tag, "CountryDatabase Created!"); })
+                .ConfigureAwait(false).GetAwaiter().GetResult();
+            _db.CreateTableAsync<CallsignGridDatabase>().ContinueWith(_ =>
             {
-                Log.Debug(TAG, "CallsignDatabase Created!");
-            }).ConfigureAwait(false).GetAwaiter().GetResult();
-            _db.CreateTableAsync<CountryDatabase>().ContinueWith((_) =>
-            {
-                Log.Debug(TAG, "CountryDatabase Created!");
-            }).ConfigureAwait(false).GetAwaiter().GetResult();
-            _db.CreateTableAsync<CallsignGridDatabase>().ContinueWith((_) =>
-            {
-                Log.Debug(TAG, "CallsignGridDatabase Created!");
+                Log.Debug(Tag, "CallsignGridDatabase Created!");
             }).ConfigureAwait(false).GetAwaiter().GetResult();
             InitTableData();
-            dbExists = true;
+            _dbExists = true;
         }
         else
         {
-            Log.Debug(TAG, "Same version. Skipping..");
+            Log.Debug(Tag, "Same version. Skipping..");
             _db = new SQLiteAsyncConnection(connectionString);
         }
+
         _db.EnableWriteAheadLoggingAsync().ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
@@ -73,44 +72,34 @@ public class DatabaseHandler
         _db.CloseAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         try
         {
-            UdpServer.getInstance().stopServer();
+            UdpServer.GetInstance().StopServer();
         }
         catch
         {
             //ignored
         }
-        
-        if (dbExists)
-        {
-            File.Delete(dbPath);
-        }
-        var connectionString = new SQLiteConnectionString(dbPath,
+
+        if (_dbExists) File.Delete(_dbPath);
+        var connectionString = new SQLiteConnectionString(_dbPath,
             SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.ProtectionComplete |
             SQLiteOpenFlags.SharedCache | SQLiteOpenFlags.FullMutex, true);
         _db = new SQLiteAsyncConnection(connectionString);
-        _db.CreateTableAsync<CallsignDatabase>().ContinueWith((_) =>
+        _db.CreateTableAsync<CallsignDatabase>().ContinueWith(_ => { Log.Debug(Tag, "RST-CallsignDatabase Created!"); })
+            .ConfigureAwait(false).GetAwaiter().GetResult();
+        _db.CreateTableAsync<CountryDatabase>().ContinueWith(_ => { Log.Debug(Tag, "RST-CountryDatabase Created!"); })
+            .ConfigureAwait(false).GetAwaiter().GetResult();
+        _db.CreateTableAsync<CallsignGridDatabase>().ContinueWith(_ =>
         {
-            Log.Debug(TAG, "RST-CallsignDatabase Created!");
-        }).ConfigureAwait(false).GetAwaiter().GetResult();
-        _db.CreateTableAsync<CountryDatabase>().ContinueWith((_) =>
-        {
-            Log.Debug(TAG, "RST-CountryDatabase Created!");
-        }).ConfigureAwait(false).GetAwaiter().GetResult();
-        _db.CreateTableAsync<CallsignGridDatabase>().ContinueWith((_) =>
-        {
-            Log.Debug(TAG, "RST-CallsignGridDatabase Created!");
+            Log.Debug(Tag, "RST-CallsignGridDatabase Created!");
         }).ConfigureAwait(false).GetAwaiter().GetResult();
         InitTableData();
-        Log.Debug(TAG, "RST-Done!");
-        dbExists = true;
+        Log.Debug(Tag, "RST-Done!");
+        _dbExists = true;
     }
- 
+
     public static DatabaseHandler GetInstance(Context ctx)
     {
-        if (_instance == null)
-        {
-            _instance = new DatabaseHandler(ctx);
-        }
+        if (_instance == null) _instance = new DatabaseHandler(ctx);
 
         return _instance;
     }
@@ -145,7 +134,9 @@ public class DatabaseHandler
     // 查找呼号对应的坐标
     public string QueryGrid(string callsign)
     {
-        var grids = _db.QueryAsync<CallsignGridDatabase>("SELECT * FROM callsign_grid WHERE callsign=? LIMIT 1", callsign).ConfigureAwait(false).GetAwaiter().GetResult();
+        var grids = _db
+            .QueryAsync<CallsignGridDatabase>("SELECT * FROM callsign_grid WHERE callsign=? LIMIT 1", callsign)
+            .ConfigureAwait(false).GetAwaiter().GetResult();
         if (grids.Count == 0) return "";
         return grids[0].Grid;
     }
@@ -176,7 +167,8 @@ public class DatabaseHandler
     public CountryDatabase QueryCountryByName(string countryEnName)
     {
         var countryRes =
-            _db.QueryAsync<CountryDatabase>("SELECT * FROM countries WHERE country_en=? LIMIT 1", countryEnName).ConfigureAwait(false)
+            _db.QueryAsync<CountryDatabase>("SELECT * FROM countries WHERE country_en=? LIMIT 1", countryEnName)
+                .ConfigureAwait(false)
                 .GetAwaiter().GetResult();
         if (countryRes.Count == 0) return new CountryDatabase();
 
@@ -192,16 +184,16 @@ public class DatabaseHandler
     {
         // 国家信息
         InitCountryDic();
-        Log.Debug(TAG, "RST->initCountryDic!");
+        Log.Debug(Tag, "RST->initCountryDic!");
         InitCountryData();
-        Log.Debug(TAG, "RST->initInitCountryData!");
+        Log.Debug(Tag, "RST->initInitCountryData!");
         InitCallsign();
-        Log.Debug(TAG, "RST->initInitCallsign!");
+        Log.Debug(Tag, "RST->initInitCallsign!");
     }
 
     private void InitCallsign()
     {
-        var assetManager = ctx.Assets;
+        var assetManager = _ctx.Assets;
         try
         {
             var a = 0;
@@ -216,7 +208,7 @@ public class DatabaseHandler
                     var info = st[j].Split(":");
                     if (info.Length < 9) continue;
                     var ls = info[8].Replace("\n", "").Split(",");
-                    _db.RunInTransactionAsync((tran) =>
+                    _db.RunInTransactionAsync(tran =>
                     {
                         for (var i = 0; i < ls.Length; i++)
                         {
@@ -227,7 +219,7 @@ public class DatabaseHandler
                                 Callsign = ls[i].Trim(),
                                 CountryId = j + 1
                             });
-                            Log.Debug(TAG, (a++).ToString());
+                            Log.Debug(Tag, (a++).ToString());
                         }
                     }).ConfigureAwait(false).GetAwaiter().GetResult();
                 }
@@ -235,14 +227,14 @@ public class DatabaseHandler
         }
         catch (Exception e)
         {
-            Log.Warn(TAG, e.Message);
+            Log.Warn(Tag, e.Message);
             //ignored
         }
     }
 
     private void InitCountryDic()
     {
-        var assetManager = ctx.Assets;
+        var assetManager = _ctx.Assets;
         try
         {
             var inputStream = assetManager.Open("country_en2cn.dat");
@@ -250,12 +242,12 @@ public class DatabaseHandler
             {
                 var result = reader.ReadToEnd();
                 var st = result.Split("\n");
-                countries = new Dictionary<string, string>();
+                Countries = new Dictionary<string, string>();
                 for (var i = 0; i < st.Length; i++)
                 {
                     if (!st[i].Contains(":")) continue;
                     var cc = st[i].Split(":");
-                    countries[cc[0]] = cc[1];
+                    Countries[cc[0]] = cc[1];
                 }
             }
         }
@@ -266,7 +258,7 @@ public class DatabaseHandler
 
     private void InitCountryData()
     {
-        var assetManager = ctx.Assets;
+        var assetManager = _ctx.Assets;
         try
         {
             var inputStream = assetManager.Open("cty.dat");
@@ -278,7 +270,7 @@ public class DatabaseHandler
                 {
                     if (!st[i].Contains(":")) continue;
                     var cdb = new CountryDatabase(st[i]);
-                    cdb.CountryNameCN = searchENForCountryNameCN(cdb.CountryNameEn);
+                    cdb.CountryNameCn = SearchEnForCountryNameCn(cdb.CountryNameEn);
                     cdb.Id = i + 1;
                     _db.InsertAsync(cdb).ConfigureAwait(false).GetAwaiter().GetResult();
                 }
@@ -286,14 +278,14 @@ public class DatabaseHandler
         }
         catch (Exception e)
         {
-            Log.Warn(TAG, e.Message);
+            Log.Warn(Tag, e.Message);
             //ignored
         }
     }
 
-    private string searchENForCountryNameCN(string country)
+    private string SearchEnForCountryNameCn(string country)
     {
-        if (countries.TryGetValue(country, out var cnCountry)) return cnCountry;
+        if (Countries.TryGetValue(country, out var cnCountry)) return cnCountry;
         return null;
     }
 }

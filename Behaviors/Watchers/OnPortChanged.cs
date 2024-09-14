@@ -9,11 +9,11 @@ namespace WsjtxWatcher.Behaviors.Watchers;
 
 public class OnPortChanged : Object, ITextWatcher
 {
-    private readonly Context ctx;
+    private readonly Context _ctx;
 
     public OnPortChanged(Context ctx)
     {
-        this.ctx = ctx;
+        this._ctx = ctx;
     }
 
     public void AfterTextChanged(IEditable? s)
@@ -26,10 +26,10 @@ public class OnPortChanged : Object, ITextWatcher
 
     public void OnTextChanged(ICharSequence? s, int start, int before, int count)
     {
-        SettingsVariables.port = s.ToString();
+        SettingsVariables.Port = s.ToString();
         // save conf
         var sharedPref =
-            ctx.GetSharedPreferences(ctx.GetString(ResourceConstant.String.storage_key), FileCreationMode.Private);
+            _ctx.GetSharedPreferences(_ctx.GetString(ResourceConstant.String.storage_key), FileCreationMode.Private);
         var edit = sharedPref.Edit();
         edit.PutString("port", s.ToString());
         edit.Apply();

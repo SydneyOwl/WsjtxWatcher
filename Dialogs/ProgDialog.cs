@@ -5,27 +5,27 @@ namespace WsjtxWatcher.Dialogs;
 
 public class ProgDialog
 {
-    private readonly Context ctx;
+    private readonly Context _ctx;
+    private readonly AlertDialog.Builder _progressDialog;
 
-    private AlertDialog dia;
-    private readonly AlertDialog.Builder progressDialog;
+    private AlertDialog _dia;
 
     public ProgDialog(Context ctx)
     {
-        this.ctx = ctx;
-        progressDialog = new AlertDialog.Builder(ctx);
+        this._ctx = ctx;
+        _progressDialog = new AlertDialog.Builder(ctx);
     }
 
     public void StartAni()
     {
-        progressDialog.SetMessage(ctx.GetString(ResourceConstant.String.loading));
-        progressDialog.SetCancelable(false);
-        progressDialog.SetView(ResourceConstant.Layout.dialog_loading);
-        dia = progressDialog.Show();
+        _progressDialog.SetMessage(_ctx.GetString(ResourceConstant.String.loading));
+        _progressDialog.SetCancelable(false);
+        _progressDialog.SetView(ResourceConstant.Layout.dialog_loading);
+        _dia = _progressDialog.Show();
     }
 
     public void StopAni()
     {
-        dia?.Dismiss();
+        _dia?.Dismiss();
     }
 }
