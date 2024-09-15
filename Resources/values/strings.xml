@@ -57,4 +57,5 @@
     <string name="received_msg">Received msg:</string>
     <string name="included_in_msg">I am included in the msg:</string>
     <string name="search">Input to search...</string>
+    <string name="search_callsign">Search Callsign</string>
 </resources>

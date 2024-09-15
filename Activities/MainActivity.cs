@@ -31,6 +31,7 @@ public class MainActivity : Activity
     private TextView _totalRecord;
     private RelativeLayout _txLayout;
     private TextView _txmsg;
+    private EditText _callsign;
 
     protected override void OnCreate(Bundle savedInstanceState)
     {
@@ -70,6 +71,8 @@ public class MainActivity : Activity
         _listView = FindViewById<ListView>(ResourceConstant.Id.calllist_view);
         _aboutMe = FindViewById<TextView>(ResourceConstant.Id.about_me);
         _totalRecord = FindViewById<TextView>(ResourceConstant.Id.total_record);
+        _callsign = FindViewById<EditText>(ResourceConstant.Id.callsign_search);
+        
         _model.adapter = new CallItemAdapter(this, _listView, _model.DecodedMsgList);
         _listView.Adapter = _model.adapter;
         // // // //设置发射消息框的动画
@@ -79,7 +82,14 @@ public class MainActivity : Activity
         {
             RunOnUiThread(() =>
             {
-                _model.adapter.NotifyDataSetChanged();
+                _model.adapter.FilterItemsByCallsign(_callsign.Text);
+            });
+        };
+        _callsign.TextChanged += (sender, args) =>
+        {
+            RunOnUiThread(() =>
+            {
+                _model.adapter.FilterItemsByCallsign(args.Text.ToString());
             });
         };
 

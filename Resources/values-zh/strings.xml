@@ -54,4 +54,5 @@
     <string name="received_msg">收到FT8信息：</string>
     <string name="included_in_msg">我参与此信息：</string>
     <string name="search">输入搜索内容...</string>
+    <string name="search_callsign">搜索呼号...</string>
 </resources>

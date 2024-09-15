@@ -15,6 +15,7 @@ public class CallItemAdapter : BaseAdapter<DecodedMsg>
     private readonly Context _context;
     private readonly MainViewModel _model = MainViewModel.GetInstance();
     private readonly ObservableCollection<DecodedMsg> _data;
+    private List<DecodedMsg> _filteredData;
     private readonly ListView _listView;
 
     public CallItemAdapter(Context context, ListView listView, ObservableCollection<DecodedMsg> data)
@@ -24,9 +25,9 @@ public class CallItemAdapter : BaseAdapter<DecodedMsg>
         _data = data;
     }
 
-    public override DecodedMsg this[int position] => _data[position];
+    public override DecodedMsg this[int position] => _filteredData[position];
 
-    public override int Count => _data != null ? _data.Count : 0;
+    public override int Count => _filteredData != null ? _filteredData.Count : 0;
 
     public override long GetItemId(int position)
     {
@@ -63,7 +64,7 @@ public class CallItemAdapter : BaseAdapter<DecodedMsg>
             holder = (ViewHolder)convertView.Tag;
         }
 
-        var msg = _data[position];
+        var msg = _filteredData[position];
         var isUserTransmit = msg.Transmitter == "USER_TRANSMIT";
 
         // Set visibility
@@ -134,6 +135,18 @@ public class CallItemAdapter : BaseAdapter<DecodedMsg>
         }
 
         return convertView;
+    }
+    public void FilterItemsByCallsign(string callsign)
+    {
+        if (string.IsNullOrEmpty(callsign))
+        {
+            _filteredData = _data.ToList();
+        }
+        else
+        {
+            _filteredData = _data.Where(item => ((!string.IsNullOrEmpty(item.Transmitter) && item.Transmitter.Contains(callsign.ToUpper())) || (!string.IsNullOrEmpty(item.Receiver) && item.Receiver.Contains(callsign.ToUpper())))).ToList();
+        }
+        NotifyDataSetChanged();
     }
 
 
