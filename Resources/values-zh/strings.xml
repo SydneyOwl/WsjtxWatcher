@@ -43,7 +43,7 @@
     <string name="white_list">2. 将应用加入电池优化白名单： 系统为省电，可能会误杀后台UDP服务器，造成无法正常接收信息。
     </string>
     <string name="add_to_whitelist">加入白名单</string>
-    <string name="background">3.后台运行权限：如未开启后台运行权限，可能将导致软件进入后台时收到信息无法及时推送</string>
+    <string name="background">3.后台运行权限：如未开启后台运行权限，可能将导致软件进入后台时收到信息无法及时推送！</string>
     <string name="add_to_background">后台运行权限</string>
     <string name="service_running">服务运行中</string>
     <string name="listening_msg">正在监听FT8信息，点击退出...</string>

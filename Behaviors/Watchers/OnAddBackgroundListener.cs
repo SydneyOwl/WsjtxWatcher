@@ -1,4 +1,5 @@
-﻿using Android.Views;
+﻿using Android.Content;
+using Android.Views;
 using WsjtxWatcher.Utils.Brand;
 using Object = Java.Lang.Object;
 
@@ -8,18 +9,23 @@ using Object = Object;
 
 public class OnAddBackgroundListener : Object, View.IOnClickListener
 {
+    private Context ctx;
+    public OnAddBackgroundListener(Context ctx)
+    {
+        this.ctx = ctx;
+    }
     public void OnClick(View? v)
     {
         try
         {
-            if (ChkBrand.IsHuawei()) ChkBrand.GoHuaweiSetting(v.Context);
-            else if (ChkBrand.IsMeizu()) ChkBrand.GoMeizuSetting(v.Context);
-            else if (ChkBrand.IsSamsung()) ChkBrand.GoSamsungSetting(v.Context);
-            else if (ChkBrand.IsSmartisan()) ChkBrand.GoSmartisanSetting(v.Context);
-            else if (ChkBrand.IsXiaomi()) ChkBrand.GoXiaomiSetting(v.Context);
-            else if (ChkBrand.IsLeTv()) ChkBrand.GoLetvSetting(v.Context);
-            else if (ChkBrand.IsOppo()) ChkBrand.GoOppoSetting(v.Context);
-            else if (ChkBrand.IsVivo()) ChkBrand.GoVivoSetting(v.Context);
+            if (ChkBrand.IsHuawei()) ChkBrand.GoHuaweiSetting(ctx);
+            else if (ChkBrand.IsMeizu()) ChkBrand.GoMeizuSetting(ctx);
+            else if (ChkBrand.IsSamsung()) ChkBrand.GoSamsungSetting(ctx);
+            else if (ChkBrand.IsSmartisan()) ChkBrand.GoSmartisanSetting(ctx);
+            else if (ChkBrand.IsXiaomi()) ChkBrand.GoXiaomiSetting(ctx);
+            else if (ChkBrand.IsLeTv()) ChkBrand.GoLetvSetting(ctx);
+            else if (ChkBrand.IsOppo()) ChkBrand.GoOppoSetting(ctx);
+            else if (ChkBrand.IsVivo()) ChkBrand.GoVivoSetting(ctx);
         }
         catch
         {

@@ -29,7 +29,6 @@ public class Notifications
             new Notification.Builder(_ctx, _ctx.GetString(ResourceConstant.String.notification_channel_id1))
                 .SetContentTitle(_ctx.GetString(ResourceConstant.String.user_ft8_msg_available))
                 .SetContentText(msg)
-                .SetWhen(DateAndTime.Now.Millisecond)
                 .SetSmallIcon(ResourceConstant.Mipmap.appicon)
                 .SetAutoCancel(true)
                 .Build();

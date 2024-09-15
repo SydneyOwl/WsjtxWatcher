@@ -58,13 +58,13 @@ public class MainActivity : Activity
         // Set our view from the "main" layout resource
 
         // 权限检查
-        RequestPermissions(new[] { Manifest.Permission.Vibrate, Manifest.Permission.PostNotifications }, 645);
-
-        if (CheckSelfPermission(Manifest.Permission.Vibrate) != Permission.Granted)
-            Toast.MakeText(this, ResourceConstant.String.denied_vibrate, ToastLength.Short);
-
-        if (CheckSelfPermission(Manifest.Permission.PostNotifications) != Permission.Granted)
-            Toast.MakeText(this, ResourceConstant.String.denied_notification, ToastLength.Short);
+        // RequestPermissions(new[] { Manifest.Permission.Vibrate, Manifest.Permission.PostNotifications }, 645);
+        //
+        // if (CheckSelfPermission(Manifest.Permission.Vibrate) != Permission.Granted)
+        //     Toast.MakeText(this, ResourceConstant.String.denied_vibrate, ToastLength.Short);
+        //
+        // if (CheckSelfPermission(Manifest.Permission.PostNotifications) != Permission.Granted)
+        //     Toast.MakeText(this, ResourceConstant.String.denied_notification, ToastLength.Short);
 
         _txmsg = FindViewById<TextView>(ResourceConstant.Id.transmittingMessageTextView);
         _txLayout = FindViewById<RelativeLayout>(ResourceConstant.Id.transmittingLayout);

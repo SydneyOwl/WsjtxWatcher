@@ -121,7 +121,7 @@ public class SettingsActivity : Activity
         }
 
         _addWhiteListButton = FindViewById<Button>(ResourceConstant.Id.add_background);
-        _addWhiteListButton.SetOnClickListener(new OnAddBackgroundListener());
+        _addWhiteListButton.SetOnClickListener(new OnAddBackgroundListener(this));
 
         _jumpToDxccButton = FindViewById<Button>(ResourceConstant.Id.set_dxcc);
         _jumpToDxccButton.SetOnClickListener(new OnJumpDxccListener(this));

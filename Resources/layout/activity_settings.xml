@@ -243,7 +243,6 @@
                     android:text="@string/add_to_background"
                     android:id="@+id/add_background"
                     android:layout_below="@id/explain_background"/>
-
         </RelativeLayout>
     </RelativeLayout>
 </ScrollView>
