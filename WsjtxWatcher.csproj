@@ -19,4 +19,7 @@
         <PackageReference Include="WsjtxUtils.WsjtxMessages" Version="1.0.0.67"/>
         <PackageReference Include="WsjtxUtils.WsjtxUdpServer" Version="1.0.0.67"/>
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Resources\drawable-night\" />
+    </ItemGroup>
 </Project>
