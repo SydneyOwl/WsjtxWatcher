@@ -2,9 +2,11 @@
 
 ## Introduction
 
-This software leverages the UDP server functionality built into `Wsjtx` (or `JTDX`, hereafter referred to as `wsjtx`) to
-facilitate data interaction with wsjtx. Users can view real-time FT8 information and perform actions such as canceling
-transmissions within the application. Currently, the software supports both Simplified Chinese and English.
+This software utilizes the UDP server functionality built into `Wsjtx` (or `JTDX`, hereafter referred to as `wsjtx`) to enable data interaction with wsjtx. Users can view real-time FT8 information within the software, and perform actions such as canceling transmission and setting reminders (**some features may not be available on older versions of JTDX!**). You can also specify scenarios that require notifications, making it especially suitable for VHF DX.
+
+When the software is running in the foreground, you can view the received FT8 information in real time. When the software goes to the background or the phone is locked, the software will push notifications to you when receiving specified FT8 information based on your settings.
+
+Currently, the software supports Simplified Chinese and English.
 
 <img src="./md_assets/page3.png" style="zoom: 80%;" />
 
@@ -13,6 +15,8 @@ transmissions within the application. Currently, the software supports both Simp
 + Android 8.0 and above
 
 ## How to Use
+
+**Note: Before using the software, if your phone has battery saver mode enabled, please make sure to disable it. Otherwise, it may cause frequent disconnections!**
 
 1. Click the menu in the upper-right corner and select the settings page. Enter your callsign and Maidenhead locator
    coordinates on the settings page, and adjust other settings as needed. Note the IP address and port number displayed
