@@ -1,11 +1,12 @@
 ﻿using _Microsoft.Android.Resource.Designer;
 using Android.Content;
+using Android.Content.PM;
 using Android.OS;
 using Android.Util;
 using WsjtxWatcher.Utils.UdpServer;
 using WsjtxWatcher.ViewModels;
 
-[Service]
+[Service(Name = "com.sydneyowl.WsjtxWatcher.Services.MsgPushService")]
 public class MsgPushService : Service
 {
     private const string Tag = "BaseService";
@@ -52,7 +53,15 @@ public class MsgPushService : Service
 
         var stopIntent = new Intent(this, GetType());
         stopIntent.SetAction("STOP_SERVICE");
-        var pendingIntent = PendingIntent.GetService(this, 0, stopIntent, PendingIntentFlags.UpdateCurrent);
+        PendingIntent pendingIntent;
+        if (Android.OS.Build.VERSION.SdkInt >= BuildVersionCodes.S)
+        {
+            pendingIntent = PendingIntent.GetService(this, 0, stopIntent, PendingIntentFlags.Immutable);
+        }
+        else
+        {
+            pendingIntent = PendingIntent.GetService(this, 0, stopIntent, PendingIntentFlags.OneShot);
+        }
 
         var notification = new Notification.Builder(this, GetString(ResourceConstant.String.notification_channel_id2))
             .SetContentTitle(GetString(ResourceConstant.String.service_running))
@@ -61,7 +70,14 @@ public class MsgPushService : Service
             .SetContentIntent(pendingIntent)
             .Build();
 
-        StartForeground(int.Parse(GetString(ResourceConstant.String.notify_id2)), notification);
+        if (Android.OS.Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu)
+        {
+            StartForeground(int.Parse(GetString(ResourceConstant.String.notify_id2)), notification,ForegroundService.TypeConnectedDevice);
+        }
+        else
+        {
+            StartForeground(int.Parse(GetString(ResourceConstant.String.notify_id2)), notification);
+        }
     }
 
     public override void OnDestroy()
