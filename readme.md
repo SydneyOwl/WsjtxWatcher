@@ -30,6 +30,8 @@
 
    <img src="./md_assets/page4.png" style="zoom: 67%;" />
 
+   并请勾选“接受UDP请求”！
+
    **确保运行wsjtx的电脑与手机在同一个局域网环境中，例如连接着同一个wifi!**
 
 4. 等待信息在软件界面中出现！

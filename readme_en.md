@@ -28,6 +28,8 @@ Currently, the software supports Simplified Chinese and English.
 
    <img src="./md_assets/page4.png" style="zoom: 67%;" />
 
+    Please check "accept udp requests" checkbox as well! 
+
    **Ensure that the computer running wsjtx and your phone are on the same local network, such as being connected to the
    same Wi-Fi!**
 
