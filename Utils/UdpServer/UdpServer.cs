@@ -56,7 +56,7 @@ public sealed class UdpServer
         if (!IPAddress.TryParse(conf.Ip, out ip)) throw new Exception($"Failed to parse ip {conf.Ip}!");
         if (!int.TryParse(conf.Port, out port)) throw new Exception($"Failed to parse port {conf.Port}!");
         _server = new WsjtxUdpServer(conf.Handler, ip, port);
-        Log.Debug("Server",
+        Serilog.Log.Debug(
             $"Starting UDP server: {_server.LocalEndpoint.Address}:{_server.LocalEndpoint.Port} IsMulticast:{_server.IsMulticast} {(_server.IsMulticast ? ip : string.Empty)}");
         return Task.Run(() =>
         {
@@ -78,7 +78,7 @@ public sealed class UdpServer
             _tokenSource?.Cancel();
             if (IsServiceRunning())
             {
-                Log.Debug("Server", "Service running, Try stopping...");
+                Serilog.Log.Debug("Service running, Try stopping...");
                 _server?.Stop();
                 _server?.Dispose();
             }

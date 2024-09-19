@@ -35,7 +35,7 @@ public class DatabaseHandler
         // }
         if (!(_dbExists && isSameVersion))
         {
-            Log.Debug(Tag, "Different version.");
+            Serilog.Log.Debug("Different version.");
             try
             {
                 File.Delete(_dbPath);
@@ -45,22 +45,22 @@ public class DatabaseHandler
                 // ignored
             }
 
-            Log.Debug(Tag, "Creating db..");
+            Serilog.Log.Debug("Creating db..");
             _db = new SQLiteAsyncConnection(connectionString);
-            _db.CreateTableAsync<CallsignDatabase>().ContinueWith(_ => { Log.Debug(Tag, "CallsignDatabase Created!"); })
+            _db.CreateTableAsync<CallsignDatabase>().ContinueWith(_ => { Serilog.Log.Debug("CallsignDatabase Created!"); })
                 .ConfigureAwait(false).GetAwaiter().GetResult();
-            _db.CreateTableAsync<CountryDatabase>().ContinueWith(_ => { Log.Debug(Tag, "CountryDatabase Created!"); })
+            _db.CreateTableAsync<CountryDatabase>().ContinueWith(_ => { Serilog.Log.Debug("CountryDatabase Created!"); })
                 .ConfigureAwait(false).GetAwaiter().GetResult();
             _db.CreateTableAsync<CallsignGridDatabase>().ContinueWith(_ =>
             {
-                Log.Debug(Tag, "CallsignGridDatabase Created!");
+                Serilog.Log.Debug("CallsignGridDatabase Created!");
             }).ConfigureAwait(false).GetAwaiter().GetResult();
             InitTableData();
             _dbExists = true;
         }
         else
         {
-            Log.Debug(Tag, "Same version. Skipping..");
+            Serilog.Log.Debug("Same version. Skipping..");
             _db = new SQLiteAsyncConnection(connectionString);
         }
 
@@ -84,16 +84,16 @@ public class DatabaseHandler
             SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.ProtectionComplete |
             SQLiteOpenFlags.SharedCache | SQLiteOpenFlags.FullMutex, true);
         _db = new SQLiteAsyncConnection(connectionString);
-        _db.CreateTableAsync<CallsignDatabase>().ContinueWith(_ => { Log.Debug(Tag, "RST-CallsignDatabase Created!"); })
+        _db.CreateTableAsync<CallsignDatabase>().ContinueWith(_ => { Serilog.Log.Debug("RST-CallsignDatabase Created!"); })
             .ConfigureAwait(false).GetAwaiter().GetResult();
-        _db.CreateTableAsync<CountryDatabase>().ContinueWith(_ => { Log.Debug(Tag, "RST-CountryDatabase Created!"); })
+        _db.CreateTableAsync<CountryDatabase>().ContinueWith(_ => { Serilog.Log.Debug("RST-CountryDatabase Created!"); })
             .ConfigureAwait(false).GetAwaiter().GetResult();
         _db.CreateTableAsync<CallsignGridDatabase>().ContinueWith(_ =>
         {
-            Log.Debug(Tag, "RST-CallsignGridDatabase Created!");
+            Serilog.Log.Debug("RST-CallsignGridDatabase Created!");
         }).ConfigureAwait(false).GetAwaiter().GetResult();
         InitTableData();
-        Log.Debug(Tag, "RST-Done!");
+        Serilog.Log.Debug("RST-Done!");
         _dbExists = true;
     }
 
@@ -189,11 +189,11 @@ public class DatabaseHandler
     {
         // 国家信息
         InitCountryDic();
-        Log.Debug(Tag, "RST->initCountryDic!");
+        Serilog.Log.Debug("RST->initCountryDic!");
         InitCountryData();
-        Log.Debug(Tag, "RST->initInitCountryData!");
+        Serilog.Log.Debug("RST->initInitCountryData!");
         InitCallsign();
-        Log.Debug(Tag, "RST->initInitCallsign!");
+        Serilog.Log.Debug("RST->initInitCallsign!");
     }
 
     private void InitCallsign()
@@ -224,7 +224,6 @@ public class DatabaseHandler
                                 Callsign = ls[i].Trim(),
                                 CountryId = j + 1
                             });
-                            Log.Debug(Tag, (a++).ToString());
                         }
                     }).ConfigureAwait(false).GetAwaiter().GetResult();
                 }
@@ -232,7 +231,7 @@ public class DatabaseHandler
         }
         catch (Exception e)
         {
-            Log.Warn(Tag, e.Message);
+            Serilog.Log.Warning(e.Message);
             //ignored
         }
     }
@@ -283,7 +282,7 @@ public class DatabaseHandler
         }
         catch (Exception e)
         {
-            Log.Warn(Tag, e.Message);
+            Serilog.Log.Warning(e.Message);
             //ignored
         }
     }

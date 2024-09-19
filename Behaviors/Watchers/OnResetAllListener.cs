@@ -44,7 +44,7 @@ public class OnResetAllListener : Object, View.IOnClickListener
             catch (Exception ex)
             {
                 // 处理异常（如果有必要）
-                Log.Debug("RSTALL", ex.Message);
+                Serilog.Log.Debug( ex.Message);
             }
             finally
             {

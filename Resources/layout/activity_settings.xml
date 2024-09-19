@@ -200,6 +200,9 @@
             <Button android:layout_width="wrap_content" android:layout_height="wrap_content"
                     android:text="@string/reset_all"
                     android:id="@+id/reset_all"/>
+            <Button android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/open_log"
+                    android:id="@+id/open_log"/>
         </LinearLayout>
 
         <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content"

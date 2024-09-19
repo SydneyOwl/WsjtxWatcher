@@ -15,9 +15,12 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="DebounceThrottle" Version="3.0.1"/>
+        <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+        <PackageReference Include="Serilog.Sinks.Xamarin" Version="1.0.0" />
         <PackageReference Include="sqlite-net-pcl" Version="1.9.172"/>
         <PackageReference Include="WsjtxUtils.WsjtxMessages" Version="1.0.0.67"/>
         <PackageReference Include="WsjtxUtils.WsjtxUdpServer" Version="1.0.0.67"/>
+        <PackageReference Include="Xamarin.AndroidX.Core" Version="1.13.1.5" />
     </ItemGroup>
     <ItemGroup>
       <Folder Include="Resources\drawable-night\" />

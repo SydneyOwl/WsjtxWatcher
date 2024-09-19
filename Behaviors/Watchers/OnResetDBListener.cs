@@ -33,7 +33,7 @@ public class OnResetDbListener : Object, View.IOnClickListener
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Serilog.Log.Error($"Failed to reset database: {ex.Message}");
             }
             finally
             {

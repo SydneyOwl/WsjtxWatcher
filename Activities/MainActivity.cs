@@ -2,9 +2,10 @@ using _Microsoft.Android.Resource.Designer;
 using Android;
 using Android.Content;
 using Android.Content.PM;
-using Android.Util;
+using Android.OS;
 using Android.Views;
 using Android.Views.Animations;
+using Serilog;
 using WsjtxWatcher.Adapters;
 using WsjtxWatcher.Behaviors.Watchers;
 using WsjtxWatcher.Database;
@@ -15,6 +16,7 @@ using WsjtxWatcher.Utils.Network;
 using WsjtxWatcher.Utils.UdpServer;
 using WsjtxWatcher.Variables;
 using WsjtxWatcher.ViewModels;
+using Log = Android.Util.Log;
 
 namespace WsjtxWatcher.Activities;
 
@@ -41,6 +43,37 @@ public class MainActivity : Activity
 
         base.OnCreate(savedInstanceState);
         SetContentView(ResourceConstant.Layout.activity_main);
+        
+        //setup logger
+        Serilog.Log.Logger = new LoggerConfiguration()
+            .WriteTo.File(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "WsjtxWatcher_log.txt"), 
+                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level}] {Message}{NewLine}{Exception}",
+                rollOnFileSizeLimit: true,
+                retainedFileCountLimit: 1,
+                fileSizeLimitBytes: 10485760)
+            .MinimumLevel.Debug()
+            .WriteTo.AndroidLog()
+            .Enrich.WithProperty(Serilog.Core.Constants.SourceContextPropertyName, "WsjtxWatcher")
+            .CreateLogger();
+        
+        AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+        {
+            Serilog.Log.Fatal(e.ExceptionObject as Exception, "Uncaught exception");
+        };
+
+        TaskScheduler.UnobservedTaskException += (sender, e) =>
+        {
+            Serilog.Log.Fatal(e.Exception, "Unobserved task exception");
+            e.SetObserved();
+        };
+        
+        var deviceModel = Build.Model; // 设备型号
+        var deviceManufacturer = Build.Manufacturer; // 制造商
+        var deviceVersion = Build.VERSION.Release; // Android 版本
+        var deviceApiLevel = (int)Build.VERSION.SdkInt; // API 级别
+        var deviceBrand = Build.Brand; // 设备品牌
+        Serilog.Log.Information($"Device Model: {deviceModel}, Manufacturer: {deviceManufacturer}, Android Version: {deviceVersion}, API Level: {deviceApiLevel}, Brand: {deviceBrand}");
+        
         var resources = Application.Context.Resources;
         var config = resources.Configuration;
         var language = config.Locale.Language;
@@ -126,7 +159,7 @@ public class MainActivity : Activity
                     });
                     break;
                 case "TransmittingMessage":
-                    Log.Debug(Tag, $"TransmittingMessage:{_model.TransmittingMessage}");
+                    Serilog.Log.Debug($"TransmittingMessage:{_model.TransmittingMessage}");
                     RunOnUiThread(() => { SetTxLayoutConf(_model.TransmittingMessage, ViewStates.Visible); });
                     break;
                 case "IsWaitingForConn":
@@ -211,9 +244,17 @@ public class MainActivity : Activity
                     // ip = IPAddress.Any.ToString()
                 };
                 var serviceIntent = new Intent(this, typeof(MsgPushService));
-                StartService(serviceIntent);
+                try
+                {
+                    StartService(serviceIntent);
+                }
+                catch (Exception e)
+                {
+                    Serilog.Log.Warning($"Failed to start service: {e.Message}");
+                    break;
+                }
                 _model.RecvWatchdog.Start();
-                Log.Debug(Tag, "Server started!");
+                Serilog.Log.Debug("Server started!");
                 SetTitle(GetString(ResourceConstant.String.receving));
                 SetTxLayoutConf(GetString(ResourceConstant.String.wait_conn), ViewStates.Visible);
                 _startServer.SetEnabled(false);
@@ -221,12 +262,20 @@ public class MainActivity : Activity
                 break;
             case ResourceConstant.Id.stop_server:
                 // ProgDialog prog = new ProgDialog(this);
-                Log.Debug(Tag, "Server stopping");
+                Serilog.Log.Debug("Server stopping");
                 // prog.startAni();
                 // UdpServer.getInstance().stopServer();
                 var serviceIntent1 = new Intent(this, typeof(MsgPushService));
-                StopService(serviceIntent1);
-                Log.Debug(Tag, "Server stopped!");
+                try
+                {
+                    StopService(serviceIntent1);
+                }
+                catch (Exception e)
+                {
+                    Serilog.Log.Warning($"Failed to stop service: {e.Message}");
+                    break;
+                }
+                Serilog.Log.Debug("Server stopped!");
                 _model.RecvWatchdog.Stop();
                 SetTitle(GetString(ResourceConstant.String.app_name));
                 SetTxLayoutConf(GetString(ResourceConstant.String.open_service), ViewStates.Visible);
@@ -259,6 +308,7 @@ public class MainActivity : Activity
         base.OnDestroy();
         var serviceIntent1 = new Intent(this, typeof(MsgPushService));
         StopService(serviceIntent1);
+        Serilog.Log.CloseAndFlush();
     }
 
     // 读出设置

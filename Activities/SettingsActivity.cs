@@ -20,14 +20,13 @@ public class SettingsActivity : Activity
     private OnLocationChanged _locationChanged;
     private TextView _locationTextEdit;
     private OnCheckedChanged _onChkChg;
-    private OnResetAllListener Oras;
-    private OnResetDbListener Ords;
 
     private OnPortChanged _portChanged;
 
     private TextView _portTextEdit;
     private Button _resetAllButton;
     private Button _resetDbButton;
+    private Button _openLogButton;
     private CheckBox _sendNotificationAllCheckbox;
     private CheckBox _sendNotificationCheckbox;
     private CheckBox _sendNotificationDxccCheckbox;
@@ -41,7 +40,7 @@ public class SettingsActivity : Activity
         base.OnCreate(savedInstanceState);
         // Set our view from the "main" layout resource
         SetContentView(ResourceConstant.Layout.activity_settings);
-        Log.Debug(Tag, "Settings Entered");
+        Serilog.Log.Debug("Settings Entered");
         // 检查联网情况
         var ipAddrTextView = FindViewById<TextView>(ResourceConstant.Id.ip_address_value);
         if (!Wifi.IsWificonnected(this))
@@ -102,13 +101,18 @@ public class SettingsActivity : Activity
         _vibrationDxccCheckbox.CheckedChange += _onChkChg.VibrateDxccCheckboxChanged;
 
 
-        Ords = new OnResetDbListener(this);
+        var Ords = new OnResetDbListener(this);
         _resetDbButton = FindViewById<Button>(ResourceConstant.Id.reset_database);
         _resetDbButton.SetOnClickListener(Ords);
 
-        Oras = new OnResetAllListener(this);
+        var Oras = new OnResetAllListener(this);
         _resetAllButton = FindViewById<Button>(ResourceConstant.Id.reset_all);
         _resetAllButton.SetOnClickListener(Oras);
+
+
+        var oo = new OnOpenLogListener(this);
+        _openLogButton = FindViewById<Button>(ResourceConstant.Id.open_log);
+        _openLogButton.SetOnClickListener(oo);
 
         _addWhiteListButton = FindViewById<Button>(ResourceConstant.Id.add_white_list);
         _addWhiteListButton.SetOnClickListener(new OnAddWhiteListListener());
@@ -130,10 +134,10 @@ public class SettingsActivity : Activity
     protected override void OnDestroy()
     {
         base.OnDestroy();
-        _portTextEdit.RemoveTextChangedListener(_portChanged);
-        _callsignTextEdit.RemoveTextChangedListener(_callsignChanged);
-        _locationTextEdit.RemoveTextChangedListener(_locationChanged);
-        _sendNotificationCheckbox.CheckedChange -= _onChkChg.SendNotificationCheckboxChanged;
-        _vibrationCheckbox.CheckedChange -= _onChkChg.VibrateCheckboxChanged;
+        // _portTextEdit.RemoveTextChangedListener(_portChanged);
+        // _callsignTextEdit.RemoveTextChangedListener(_callsignChanged);
+        // _locationTextEdit.RemoveTextChangedListener(_locationChanged);
+        // _sendNotificationCheckbox.CheckedChange -= _onChkChg.SendNotificationCheckboxChanged;
+        // _vibrationCheckbox.CheckedChange -= _onChkChg.VibrateCheckboxChanged;
     }
 }

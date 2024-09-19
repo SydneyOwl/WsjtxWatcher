@@ -25,7 +25,7 @@ public class MsgPushService : Service
         }
         else
         {
-            Log.Info("MyService", "Service Started");
+            Serilog.Log.Information("Service Started");
             var conf = MainViewModel.GetInstance().UdpConf;
             UdpServer.GetInstance().StartServer(conf);
             MainViewModel.GetInstance().IsMsgServiceRunning = true;
@@ -38,7 +38,7 @@ public class MsgPushService : Service
     public override void OnCreate()
     {
         base.OnCreate();
-        Log.Info(Tag, "OnCreate: ");
+        Serilog.Log.Information("OnCreate: ");
         StartForegroundService();
     }
 
@@ -83,19 +83,19 @@ public class MsgPushService : Service
     public override void OnDestroy()
     {
         base.OnDestroy();
-        Log.Info(Tag, "OnDestroy: ");
+        Serilog.Log.Information("OnDestroy: ");
         UdpServer.GetInstance().StopServer();
     }
 
     public override void OnRebind(Intent intent)
     {
-        Log.Info(Tag, "OnRebind: ");
+        Serilog.Log.Information("OnRebind: ");
         base.OnRebind(intent);
     }
 
     public override bool OnUnbind(Intent intent)
     {
-        Log.Info(Tag, "OnUnbind: ");
+        Serilog.Log.Information("OnUnbind: ");
         return base.OnUnbind(intent);
     }
 }
