@@ -59,4 +59,7 @@
     <string name="search">Input to search...</string>
     <string name="search_callsign">Search Callsign</string>
     <string name="open_log">Open Log FIle</string>
+    <string name="start_service_failed">Failed to start service. See logs for more...</string>
+    <string name="stop_service_failed">Failed to stop service. See logs for more...</string>
+    <string name="no_app_found">There\'s no suitable app found to open log!</string>
 </resources>

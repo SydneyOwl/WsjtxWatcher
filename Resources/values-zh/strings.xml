@@ -56,4 +56,7 @@
     <string name="search">输入搜索内容...</string>
     <string name="search_callsign">搜索呼号...</string>
     <string name="open_log">查看日志</string>
+    <string name="start_service_failed">服务启动失败，请查看日志...</string>
+    <string name="stop_service_failed">服务停止失败，请查看日志...</string>
+    <string name="no_app_found">没有能够打开日志的软件...</string>
 </resources>

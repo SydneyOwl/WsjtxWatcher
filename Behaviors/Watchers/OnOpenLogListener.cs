@@ -1,4 +1,5 @@
-﻿using Android.Content;
+﻿using _Microsoft.Android.Resource.Designer;
+using Android.Content;
 using Android.Views;
 using AndroidX.Core.Content;
 using File = Java.IO.File;
@@ -34,7 +35,7 @@ public class OnOpenLogListener : Object, View.IOnClickListener
             catch (Exception e)
             {
                 Serilog.Log.Information(e.Message);
-                Toast.MakeText(ctx, "没有可以打开此文件的应用", ToastLength.Short)?.Show();
+                Toast.MakeText(ctx, ctx.GetString(ResourceConstant.String.no_app_found), ToastLength.Short)?.Show();
             }
         }
     }

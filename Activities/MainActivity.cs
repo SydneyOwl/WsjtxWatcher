@@ -251,7 +251,7 @@ public class MainActivity : Activity
                 catch (Exception e)
                 {
                     Serilog.Log.Warning($"Failed to start service: {e.Message}");
-                    Toast.MakeText(this, "服务启动失败，请查看日志...", ToastLength.Short);
+                    Toast.MakeText(this, GetString(ResourceConstant.String.start_service_failed), ToastLength.Short);
                     break;
                 }
                 _model.RecvWatchdog.Start();
@@ -274,7 +274,7 @@ public class MainActivity : Activity
                 catch (Exception e)
                 {
                     Serilog.Log.Warning($"Failed to stop service: {e.Message}");
-                    Toast.MakeText(this, "服务停止失败，请查看日志...", ToastLength.Short);
+                    Toast.MakeText(this, GetString(ResourceConstant.String.stop_service_failed), ToastLength.Short);
                     break;
                 }
                 Serilog.Log.Debug("Server stopped!");
