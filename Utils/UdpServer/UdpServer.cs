@@ -38,7 +38,7 @@ public sealed class UdpServer
         return _server.IsRunning;
     }
 
-    public Task StartServer(UdpServerConf conf)
+    public void StartServer(UdpServerConf conf)
     {
         this._conf = conf;
         try
@@ -58,16 +58,16 @@ public sealed class UdpServer
         _server = new WsjtxUdpServer(conf.Handler, ip, port);
         Serilog.Log.Debug(
             $"Starting UDP server: {_server.LocalEndpoint.Address}:{_server.LocalEndpoint.Port} IsMulticast:{_server.IsMulticast} {(_server.IsMulticast ? ip : string.Empty)}");
-        return Task.Run(() =>
+        
+        try
         {
-            try
-            {
-                _server.Start(_tokenSource);
-            }
-            catch (Exception e)
-            {
-            }
-        });
+            Serilog.Log.Debug("Starting UDP server========>");
+            _server.Start(_tokenSource);
+        }
+        catch (Exception e)
+        {
+            Serilog.Log.Error(e.Message);
+        }
     }
 
     // block!
@@ -76,15 +76,13 @@ public sealed class UdpServer
         try
         {
             _tokenSource?.Cancel();
-            if (IsServiceRunning())
-            {
-                Serilog.Log.Debug("Service running, Try stopping...");
-                _server?.Stop();
-                _server?.Dispose();
-            }
+             if(_server.IsRunning)  _server?.Stop();
+             if(!_server!.IsDisposed)  _server?.Dispose();
+             Serilog.Log.Debug("Stopping UDP server========>");
         }
-        catch
+        catch(Exception e)
         {
+            Serilog.Log.Error(e.Message);
             //ignored...
         }
     }

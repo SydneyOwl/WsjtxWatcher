@@ -4,6 +4,7 @@ using Android.OS;
 using Android.Util;
 using WsjtxWatcher.Behaviors.Watchers;
 using WsjtxWatcher.Utils.Network;
+using WsjtxWatcher.Utils.UdpServer;
 using WsjtxWatcher.Variables;
 
 namespace WsjtxWatcher.Activities;
@@ -134,6 +135,7 @@ public class SettingsActivity : Activity
     protected override void OnDestroy()
     {
         base.OnDestroy();
+        WsjtxMsgHandler.RefreshDxccList();
         // _portTextEdit.RemoveTextChangedListener(_portChanged);
         // _callsignTextEdit.RemoveTextChangedListener(_callsignChanged);
         // _locationTextEdit.RemoveTextChangedListener(_locationChanged);

@@ -7,7 +7,7 @@ using WsjtxUtils.WsjtxMessages.Messages;
 
 namespace WsjtxWatcher.Utils.UdpServer;
 
-public class UdpAndroidServer
+internal sealed class UdpAndroidServer
 {
     private static UdpAndroidServer _instance;
 

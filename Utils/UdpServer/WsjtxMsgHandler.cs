@@ -18,6 +18,15 @@ public class WsjtxMsgHandler : WsjtxUdpServerBaseAsyncMessageHandler
 
     private readonly MainViewModel _model = MainViewModel.GetInstance();
 
+    private static List<string> _dxccList = new List<string>();
+
+    public static void RefreshDxccList()
+    {
+        _dxccList.Clear();
+        _dxccList.AddRange(Application.Context.GetSharedPreferences(Application.Context.GetString(ResourceConstant.String.storage_key),
+                FileCreationMode.Private).GetStringSet("prefered_dxcc", new List<string>()));
+    }
+
     // 声明一个事件
     public event MessageReceivedHandler<DecodedMsg> OnDecodeMessageReceived;
 
@@ -74,10 +83,7 @@ public class WsjtxMsgHandler : WsjtxUdpServerBaseAsyncMessageHandler
                     .PopCommonNotification(Application.Context.GetString(ResourceConstant.String.included_in_msg) +
                                            message.Message);
         }
-        var wantedDxcc =
-            Application.Context.GetSharedPreferences(Application.Context.GetString(ResourceConstant.String.storage_key),
-                FileCreationMode.Private).GetStringSet("prefered_dxcc", new List<string>()).ToList();
-        if (wantedDxcc.Contains(msg.FromLocationCountryId.ToString()))
+        if (_dxccList.Contains(msg.FromLocationCountryId.ToString()))
         {
             if (SettingsVariables.VibrateOnDxcc) Vibrate.DoVibrate();
             if (SettingsVariables.SendNotificationOnDxcc)

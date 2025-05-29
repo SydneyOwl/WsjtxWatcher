@@ -13,7 +13,7 @@ public class DatabaseHandler
     private static readonly string Tag = "DBHandler";
 
     public static Dictionary<string, string> Countries;
-    private SQLiteAsyncConnection _db;
+    private SQLiteConnection _db;
     private readonly Context _ctx;
 
     private bool _dbExists;
@@ -46,30 +46,28 @@ public class DatabaseHandler
             }
 
             Serilog.Log.Debug("Creating db..");
-            _db = new SQLiteAsyncConnection(connectionString);
-            _db.CreateTableAsync<CallsignDatabase>().ContinueWith(_ => { Serilog.Log.Debug("CallsignDatabase Created!"); })
-                .ConfigureAwait(false).GetAwaiter().GetResult();
-            _db.CreateTableAsync<CountryDatabase>().ContinueWith(_ => { Serilog.Log.Debug("CountryDatabase Created!"); })
-                .ConfigureAwait(false).GetAwaiter().GetResult();
-            _db.CreateTableAsync<CallsignGridDatabase>().ContinueWith(_ =>
-            {
-                Serilog.Log.Debug("CallsignGridDatabase Created!");
-            }).ConfigureAwait(false).GetAwaiter().GetResult();
+            _db = new SQLiteConnection(connectionString);
+            _db.CreateTable<CallsignDatabase>();
+            Serilog.Log.Debug("CallsignDatabase Created!");
+            _db.CreateTable<CountryDatabase>();
+            Serilog.Log.Debug("CountryDatabase Created!");
+            _db.CreateTable<CallsignGridDatabase>();
+            Serilog.Log.Debug("CallsignGridDatabase Created!");
             InitTableData();
             _dbExists = true;
         }
         else
         {
             Serilog.Log.Debug("Same version. Skipping..");
-            _db = new SQLiteAsyncConnection(connectionString);
+            _db = new SQLiteConnection(connectionString);
         }
 
-        _db.EnableWriteAheadLoggingAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+        _db.EnableWriteAheadLogging();
     }
 
     public void ResetDatabase()
     {
-        _db.CloseAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+        _db.Close();
         try
         {
             UdpServer.GetInstance().StopServer();
@@ -83,15 +81,13 @@ public class DatabaseHandler
         var connectionString = new SQLiteConnectionString(_dbPath,
             SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.ProtectionComplete |
             SQLiteOpenFlags.SharedCache | SQLiteOpenFlags.FullMutex, true);
-        _db = new SQLiteAsyncConnection(connectionString);
-        _db.CreateTableAsync<CallsignDatabase>().ContinueWith(_ => { Serilog.Log.Debug("RST-CallsignDatabase Created!"); })
-            .ConfigureAwait(false).GetAwaiter().GetResult();
-        _db.CreateTableAsync<CountryDatabase>().ContinueWith(_ => { Serilog.Log.Debug("RST-CountryDatabase Created!"); })
-            .ConfigureAwait(false).GetAwaiter().GetResult();
-        _db.CreateTableAsync<CallsignGridDatabase>().ContinueWith(_ =>
-        {
-            Serilog.Log.Debug("RST-CallsignGridDatabase Created!");
-        }).ConfigureAwait(false).GetAwaiter().GetResult();
+        _db = new SQLiteConnection(connectionString);
+        _db.CreateTable<CallsignDatabase>();
+        Serilog.Log.Debug("RST-CallsignDatabase Created!");
+        _db.CreateTable<CountryDatabase>();
+        Serilog.Log.Debug("RST-CountryDatabase Created!");
+        _db.CreateTable<CallsignGridDatabase>();
+        Serilog.Log.Debug("RST-CallsignGridDatabase Created!");
         InitTableData();
         Serilog.Log.Debug("RST-Done!");
         _dbExists = true;
@@ -118,11 +114,11 @@ public class DatabaseHandler
         //         }
         //     }
         // });
-        _db.InsertOrReplaceAsync(new CallsignGridDatabase
+        _db.InsertOrReplace(new CallsignGridDatabase
         {
             Callsign = callsign,
             Grid = grid
-        }).ConfigureAwait(false);
+        });
         // _db.ExecuteAsync("DELETE FROM callsign_grid WHERE callsign=?", callsign).ConfigureAwait(false).GetAwaiter().GetResult();
         // _db.InsertAsync(new CallsignGridDatabase
         // {
@@ -135,8 +131,7 @@ public class DatabaseHandler
     public string QueryGrid(string callsign)
     {
         var grids = _db
-            .QueryAsync<CallsignGridDatabase>("SELECT * FROM callsign_grid WHERE callsign=? LIMIT 1", callsign)
-            .ConfigureAwait(false).GetAwaiter().GetResult();
+            .Query<CallsignGridDatabase>("SELECT * FROM callsign_grid WHERE callsign=? LIMIT 1", callsign);
         if (grids.Count == 0) return "";
         return grids[0].Grid;
     }
@@ -144,9 +139,9 @@ public class DatabaseHandler
     public CountryDatabase QueryCountryByCallsign(string callsign)
     {
         // 不能用LEFT JOIN
-        var countriesRes = _db.QueryAsync<CountryDatabase>(
+        var countriesRes = _db.Query<CountryDatabase>(
             "select a.*,b.* from callsigns as a left join countries as b on a.country_id =b.id WHERE (SUBSTR(?,1,LENGTH(callsign))=callsign) OR (callsign='='||?) order by LENGTH(callsign) desc LIMIT 1",
-            callsign, callsign).ConfigureAwait(false).GetAwaiter().GetResult();
+            callsign, callsign);
         if (countriesRes.Count == 0) return new CountryDatabase();
         // var cal = _db.Query<CallsignDatabase>($"SELECT callsign FROM callsigns WHERE (SUBSTR(\"{callsign}\", 1, LENGTH(callsign)) = callsign) OR (callsign = \"=\" || \"{callsign}\")) LIMIT 1");
         // if (cal.Count == 0)
@@ -167,9 +162,7 @@ public class DatabaseHandler
     public CountryDatabase QueryCountryByName(string countryEnName)
     {
         var countryRes =
-            _db.QueryAsync<CountryDatabase>("SELECT * FROM countries WHERE country_en=? LIMIT 1", countryEnName)
-                .ConfigureAwait(false)
-                .GetAwaiter().GetResult();
+            _db.Query<CountryDatabase>("SELECT * FROM countries WHERE country_en=? LIMIT 1", countryEnName);
         if (countryRes.Count == 0) return new CountryDatabase();
 
         return countryRes[0];
@@ -177,12 +170,12 @@ public class DatabaseHandler
     
     public List<CountryDatabase> QueryCountriesByNameOrDxcc(string query)
     {
-        return _db.QueryAsync<CountryDatabase>("SELECT * FROM countries WHERE country_en LIKE '%' || ? || '%' or country_cn LIKE '%' || ? || '%' or dxcc LIKE '%' || ? || '%'",query,query,query).GetAwaiter().GetResult();
+        return _db.Query<CountryDatabase>("SELECT * FROM countries WHERE country_en LIKE '%' || ? || '%' or country_cn LIKE '%' || ? || '%' or dxcc LIKE '%' || ? || '%'",query,query,query);
     }
 
     public List<CountryDatabase> QueryAllCountries()
     {
-        return _db.QueryAsync<CountryDatabase>("SELECT * FROM countries").GetAwaiter().GetResult();
+        return _db.Query<CountryDatabase>("SELECT * FROM countries");
     }
 
     private void InitTableData()
@@ -190,44 +183,59 @@ public class DatabaseHandler
         // 国家信息
         InitCountryDic();
         Serilog.Log.Debug("RST->initCountryDic!");
-        InitCountryData();
-        Serilog.Log.Debug("RST->initInitCountryData!");
-        InitCallsign();
+        InitPrefixAndCountry();
         Serilog.Log.Debug("RST->initInitCallsign!");
     }
 
-    private void InitCallsign()
+    private void InitPrefixAndCountry()
     {
         var assetManager = _ctx.Assets;
         try
         {
-            var a = 0;
             var inputStream = assetManager.Open("cty.dat");
-            using (var reader = new StreamReader(inputStream))
+            using var reader = new StreamReader(inputStream);
+            var result = reader.ReadToEnd();
+            var callsigns = new List<CallsignDatabase>();
+            var countries = new List<CountryDatabase>();
+            var st = result.Split(";");
+            for (var i = 0; i < st.Length; i++)
             {
-                var result = reader.ReadToEnd();
-                var st = result.Split(";");
-                for (var j = 0; j < st.Length; j++)
+                if (!st[i].Contains(":")) continue;
+                var cdb = new CountryDatabase(st[i]);
+                cdb.CountryNameCn = SearchEnForCountryNameCn(cdb.CountryNameEn);
+                cdb.Id = i + 1;
+
+                countries.Add(cdb);
+                // await _conn!.InsertAsync(cdb);
+                // calculate callsig
+
+                # region callsign
+
+                if (!st[i].Contains(":")) continue;
+                var info = st[i].Split(":");
+                if (info.Length < 9) continue;
+                var ls = info[8].Replace("\n", "").Split(",");
+                // await _conn.RunInTransactionAsync(tran =>
+                // {
+                for (var j = 0; j < ls.Length; j++)
                 {
-                    if (!st[j].Contains(":")) continue;
-                    var info = st[j].Split(":");
-                    if (info.Length < 9) continue;
-                    var ls = info[8].Replace("\n", "").Split(",");
-                    _db.RunInTransactionAsync(tran =>
+                    if (ls[j].Contains(")")) ls[j] = ls[j].Substring(0, ls[j].IndexOf("("));
+                    if (ls[j].Contains("[")) ls[j] = ls[j].Substring(0, ls[j].IndexOf("["));
+                    callsigns.Add(new CallsignDatabase
                     {
-                        for (var i = 0; i < ls.Length; i++)
-                        {
-                            if (ls[i].Contains(")")) ls[i] = ls[i].Substring(0, ls[i].IndexOf("("));
-                            if (ls[i].Contains("[")) ls[i] = ls[i].Substring(0, ls[i].IndexOf("["));
-                            tran.Insert(new CallsignDatabase
-                            {
-                                Callsign = ls[i].Trim(),
-                                CountryId = j + 1
-                            });
-                        }
-                    }).ConfigureAwait(false).GetAwaiter().GetResult();
+                        Callsign = ls[j].Trim(),
+                        CountryId = i + 1
+                    });
                 }
+                // });
+
+                # endregion
+
+                // _db.InsertAsync(cdb).GetAwaiter().GetResult();
             }
+
+            _db.InsertAll(countries);
+            _db.InsertAll(callsigns);
         }
         catch (Exception e)
         {
@@ -255,37 +263,12 @@ public class DatabaseHandler
                 }
             }
         }
-        catch (IOException e)
-        {
-        }
-    }
-
-    private void InitCountryData()
-    {
-        var assetManager = _ctx.Assets;
-        try
-        {
-            var inputStream = assetManager.Open("cty.dat");
-            using (var reader = new StreamReader(inputStream))
-            {
-                var result = reader.ReadToEnd();
-                var st = result.Split(";");
-                for (var i = 0; i < st.Length; i++)
-                {
-                    if (!st[i].Contains(":")) continue;
-                    var cdb = new CountryDatabase(st[i]);
-                    cdb.CountryNameCn = SearchEnForCountryNameCn(cdb.CountryNameEn);
-                    cdb.Id = i + 1;
-                    _db.InsertAsync(cdb).ConfigureAwait(false).GetAwaiter().GetResult();
-                }
-            }
-        }
         catch (Exception e)
         {
             Serilog.Log.Warning(e.Message);
-            //ignored
         }
     }
+    
 
     private string SearchEnForCountryNameCn(string country)
     {

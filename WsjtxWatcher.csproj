@@ -18,11 +18,17 @@
         <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
         <PackageReference Include="Serilog.Sinks.Xamarin" Version="1.0.0" />
         <PackageReference Include="sqlite-net-pcl" Version="1.9.172"/>
-        <PackageReference Include="WsjtxUtils.WsjtxMessages" Version="1.0.0.67"/>
-        <PackageReference Include="WsjtxUtils.WsjtxUdpServer" Version="1.0.0.67"/>
+        <PackageReference Include="WsjtxUtils.WsjtxMessages" Version="1.0.0.69" />
+        <PackageReference Include="WsjtxUtils.WsjtxUdpServer" Version="1.0.0.69" />
         <PackageReference Include="Xamarin.AndroidX.Core" Version="1.13.1.5" />
     </ItemGroup>
     <ItemGroup>
       <Folder Include="Resources\drawable-night\" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Remove="Assets\country_en2cn.dat" />
+      <AndroidAsset Include="Assets\country_en2cn.dat" />
+      <None Remove="Assets\cty.dat" />
+      <AndroidAsset Include="Assets\cty.dat" />
     </ItemGroup>
 </Project>

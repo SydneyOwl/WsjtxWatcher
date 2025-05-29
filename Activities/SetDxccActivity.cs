@@ -72,6 +72,14 @@ public class SetDxccActivity : Activity
         {
             _data.Clear();
             var result = DatabaseHandler.GetInstance(null).QueryCountriesByNameOrDxcc(args.Text.ToString());
+            
+            var sp =
+                GetSharedPreferences(GetString(ResourceConstant.String.storage_key), FileCreationMode.Private);
+            var spl = sp.GetStringSet("prefered_dxcc", new List<string>()).ToList();
+            
+            for (var i = 0; i < result.Count; i++)
+                if (spl.Contains(result[i].Id.ToString()))
+                    result[i].Checked = true;
             _data.AddRange(result);
             _adapter.NotifyDataSetChanged();
         };

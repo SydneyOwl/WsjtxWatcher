@@ -1,3 +1,4 @@
+using System.Net;
 using _Microsoft.Android.Resource.Designer;
 using Android;
 using Android.Content;
@@ -222,6 +223,7 @@ public class MainActivity : Activity
                 StartActivity(intent);
                 break;
             case ResourceConstant.Id.start_server:
+                WsjtxMsgHandler.RefreshDxccList();
                 var handler = new WsjtxMsgHandler();
                 handler.OnDecodeMessageReceived += msg =>
                 {
@@ -240,8 +242,8 @@ public class MainActivity : Activity
                 {
                     Handler = handler,
                     Port = SettingsVariables.Port,
-                    Ip = Wifi.GetLocalIpAddress(this)
-                    // ip = IPAddress.Any.ToString()
+                    // Ip = Wifi.GetLocalIpAddress(this)
+                    Ip = IPAddress.Any.ToString()
                 };
                 var serviceIntent = new Intent(this, typeof(MsgPushService));
                 try
