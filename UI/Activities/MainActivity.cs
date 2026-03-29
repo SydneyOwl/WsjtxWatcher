@@ -26,6 +26,7 @@ public sealed class MainActivity : LocalizedActivity
     private IMenuItem? _startServerMenuItem;
     private IMenuItem? _stopServerMenuItem;
     private TextView _totalRecord = null!;
+    private Animation _transmitBlinkAnimation = null!;
     private RelativeLayout _transmitLayout = null!;
     private TextView _transmitMessage = null!;
 
@@ -118,8 +119,7 @@ public sealed class MainActivity : LocalizedActivity
         _listView.Adapter = _adapter;
         _callsignSearch.TextChanged += (_, _) => _adapter.ApplyFilter(_callsignSearch.Text ?? string.Empty);
 
-        var blinkAnimation = AnimationUtils.LoadAnimation(this, Resource.Animation.view_blink);
-        _transmitMessage.StartAnimation(blinkAnimation);
+        _transmitBlinkAnimation = AnimationUtils.LoadAnimation(this, Resource.Animation.view_blink)!;
     }
 
     private void BindViewModel()
@@ -170,6 +170,18 @@ public sealed class MainActivity : LocalizedActivity
     private void SetBanner(string text, bool visible)
     {
         _transmitMessage.Text = text;
+        if (visible)
+        {
+            if (_transmitMessage.Animation is null)
+            {
+                _transmitMessage.StartAnimation(_transmitBlinkAnimation);
+            }
+        }
+        else
+        {
+            _transmitMessage.ClearAnimation();
+        }
+
         _transmitLayout.Visibility = visible ? ViewStates.Visible : ViewStates.Gone;
     }
 
