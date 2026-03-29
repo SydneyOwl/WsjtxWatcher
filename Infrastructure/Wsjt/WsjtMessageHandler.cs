@@ -22,6 +22,7 @@ public sealed class WsjtMessageHandler : WsjtxUdpServerBaseAsyncMessageHandler
         EndPoint endPoint,
         CancellationToken cancellationToken = default)
     {
+        await _eventSink.FeedTimeoutDogAsync();
         await _eventSink.OnDecodeAsync(new WsjtDecodeEvent
         {
             ClientId = message.Id,
@@ -46,6 +47,7 @@ public sealed class WsjtMessageHandler : WsjtxUdpServerBaseAsyncMessageHandler
         EndPoint endPoint,
         CancellationToken cancellationToken = default)
     {
+        await _eventSink.FeedTimeoutDogAsync();
         await _eventSink.OnStatusAsync(new WsjtStatusEvent
         {
             ClientId = message.Id,
@@ -65,6 +67,7 @@ public sealed class WsjtMessageHandler : WsjtxUdpServerBaseAsyncMessageHandler
         EndPoint endPoint,
         CancellationToken cancellationToken = default)
     {
+        await _eventSink.FeedTimeoutDogAsync();
         await PublishSessionActivityAsync(message.Id, endPoint, cancellationToken).ConfigureAwait(false);
         await base.HandleHeartbeatMessageAsync(server, message, endPoint, cancellationToken).ConfigureAwait(false);
     }
@@ -75,6 +78,7 @@ public sealed class WsjtMessageHandler : WsjtxUdpServerBaseAsyncMessageHandler
         EndPoint endPoint,
         CancellationToken cancellationToken = default)
     {
+        await _eventSink.FeedTimeoutDogAsync();
         await PublishSessionActivityAsync(message.Id, endPoint, cancellationToken).ConfigureAwait(false);
         await base.HandleClearMessageAsync(server, message, endPoint, cancellationToken).ConfigureAwait(false);
     }
@@ -85,6 +89,7 @@ public sealed class WsjtMessageHandler : WsjtxUdpServerBaseAsyncMessageHandler
         EndPoint endPoint,
         CancellationToken cancellationToken = default)
     {
+        await _eventSink.FeedTimeoutDogAsync();
         await PublishSessionActivityAsync(message.Id, endPoint, cancellationToken).ConfigureAwait(false);
         await base.HandleClosedMessageAsync(server, message, endPoint, cancellationToken).ConfigureAwait(false);
     }
@@ -95,6 +100,7 @@ public sealed class WsjtMessageHandler : WsjtxUdpServerBaseAsyncMessageHandler
         EndPoint endPoint,
         CancellationToken cancellationToken = default)
     {
+        await _eventSink.FeedTimeoutDogAsync();
         await PublishSessionActivityAsync(message.Id, endPoint, cancellationToken).ConfigureAwait(false);
         await base.HandleLoggedAdifMessageAsync(server, message, endPoint, cancellationToken).ConfigureAwait(false);
     }
@@ -105,6 +111,7 @@ public sealed class WsjtMessageHandler : WsjtxUdpServerBaseAsyncMessageHandler
         EndPoint endPoint,
         CancellationToken cancellationToken = default)
     {
+        await _eventSink.FeedTimeoutDogAsync();
         await PublishSessionActivityAsync(message.Id, endPoint, cancellationToken).ConfigureAwait(false);
         await base.HandleQsoLoggedMessageAsync(server, message, endPoint, cancellationToken).ConfigureAwait(false);
     }
@@ -115,6 +122,7 @@ public sealed class WsjtMessageHandler : WsjtxUdpServerBaseAsyncMessageHandler
         EndPoint endPoint,
         CancellationToken cancellationToken = default)
     {
+        await _eventSink.FeedTimeoutDogAsync();
         await PublishSessionActivityAsync(message.Id, endPoint, cancellationToken).ConfigureAwait(false);
         await base.HandleWSPRDecodeMessageAsync(server, message, endPoint, cancellationToken).ConfigureAwait(false);
     }

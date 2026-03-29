@@ -58,6 +58,12 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
 
     public AppSettings CurrentSettings => _settings.Clone();
 
+    public Task FeedTimeoutDogAsync()
+    {
+        _watchdogTimer.Feed();
+        return Task.CompletedTask;
+    }
+
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         _settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
@@ -145,7 +151,6 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
 
     public async Task OnSessionActivityAsync(WsjtSessionEvent sessionEvent, CancellationToken cancellationToken = default)
     {
-        _watchdogTimer.Feed();
         GetOrCreateSession(sessionEvent.ClientId);
         await _uiDispatcher.InvokeAsync(() =>
         {

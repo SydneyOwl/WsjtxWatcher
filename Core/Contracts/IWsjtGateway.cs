@@ -14,4 +14,5 @@ public interface IWsjtEventSink
     Task OnSessionActivityAsync(WsjtSessionEvent sessionEvent, CancellationToken cancellationToken = default);
     Task OnDecodeAsync(WsjtDecodeEvent decodeEvent, CancellationToken cancellationToken = default);
     Task OnStatusAsync(WsjtStatusEvent statusEvent, CancellationToken cancellationToken = default);
+    Task FeedTimeoutDogAsync();
 }
