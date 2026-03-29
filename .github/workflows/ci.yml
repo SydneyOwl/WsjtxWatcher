@@ -162,7 +162,6 @@ jobs:
             "-p:AndroidSigningKeyPass=$env:ANDROID_KEY_PASSWORD"
             "-p:ApplicationDisplayVersion=$env:CI_RELEASE_DISPLAY_VERSION"
             "-p:ApplicationVersion=$env:CI_RELEASE_VERSION_CODE"
-            "-p:AndroidPackageFormats=aab;apk"
           )
           dotnet @args
 
