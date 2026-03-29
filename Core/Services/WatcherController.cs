@@ -177,20 +177,37 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         await OnSessionActivityAsync(statusEvent, cancellationToken).ConfigureAwait(false);
         var session = GetOrCreateSession(statusEvent.ClientId);
         bool shouldAddTransmitMessage;
+        string switchNotice;
         lock (_sessionSync)
         {
             shouldAddTransmitMessage = !string.IsNullOrWhiteSpace(statusEvent.TxMode)
                                        && !session.IsTransmitting
                                        && statusEvent.Transmitting;
+            switchNotice = BuildStatusSwitchNotice(
+                session.CurrentBand,
+                statusEvent.DialFrequencyHz,
+                session.CurrentMode,
+                statusEvent.Mode,
+                statusEvent.TxMode);
             session.DialFrequencyHz = statusEvent.DialFrequencyHz;
             session.IsTransmitting = statusEvent.Transmitting;
             session.TransmitMessage = statusEvent.TransmitMessage ?? string.Empty;
+            session.CurrentBand = RadioBandUtility.GetBandName(statusEvent.DialFrequencyHz);
+            session.CurrentMode = ResolveStatusMode(statusEvent.Mode, statusEvent.TxMode);
         }
 
         await _uiDispatcher.InvokeAsync(() =>
         {
             State.CurrentFrequencyHz = statusEvent.DialFrequencyHz;
         }).ConfigureAwait(false);
+
+        if (!string.IsNullOrWhiteSpace(switchNotice))
+        {
+            await _uiDispatcher.InvokeAsync(() =>
+            {
+                State.AddMessage(DecodedRadioMessage.CreateSystemNotice(switchNotice));
+            }).ConfigureAwait(false);
+        }
 
         if (shouldAddTransmitMessage)
         {
@@ -374,6 +391,57 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
             : throw new InvalidOperationException($"Invalid WSJT-X port: {value}");
     }
 
+    private string BuildStatusSwitchNotice(
+        string previousBand,
+        double currentFrequencyHz,
+        string previousMode,
+        string rawMode,
+        string rawTxMode)
+    {
+        var currentBand = RadioBandUtility.GetBandName(currentFrequencyHz);
+        var currentMode = ResolveStatusMode(rawMode, rawTxMode);
+
+        if (string.IsNullOrWhiteSpace(previousBand) && string.IsNullOrWhiteSpace(previousMode))
+        {
+            return string.Empty;
+        }
+
+        var bandChanged = !string.IsNullOrWhiteSpace(currentBand)
+                          && !string.Equals(previousBand, currentBand, StringComparison.OrdinalIgnoreCase);
+        var modeChanged = !string.IsNullOrWhiteSpace(currentMode)
+                          && !string.Equals(previousMode, currentMode, StringComparison.OrdinalIgnoreCase);
+        if (!bandChanged && !modeChanged)
+        {
+            return string.Empty;
+        }
+
+        var language = AppLanguageUtility.Parse(_settings.Language, AppLanguage.English);
+        if (language == AppLanguage.SimplifiedChinese)
+        {
+            return (bandChanged, modeChanged) switch
+            {
+                (true, true) => $"切换到{currentBand}波段/{currentMode}模式",
+                (true, false) => $"切换到{currentBand}波段",
+                (false, true) => $"切换到{currentMode}模式",
+                _ => string.Empty
+            };
+        }
+
+        return (bandChanged, modeChanged) switch
+        {
+            (true, true) => $"Switched to {currentBand} band / {currentMode} mode",
+            (true, false) => $"Switched to {currentBand} band",
+            (false, true) => $"Switched to {currentMode} mode",
+            _ => string.Empty
+        };
+    }
+
+    private static string ResolveStatusMode(string rawMode, string rawTxMode)
+    {
+        var mode = !string.IsNullOrWhiteSpace(rawMode) ? rawMode : rawTxMode;
+        return WsjtxMessageParser.DecodeModeNotationsToString(mode);
+    }
+
     private static bool TryGetGridUpdate(WsjtDecodeEvent decodeEvent, out string callsign, out string gridSquare)
     {
         callsign = string.Empty;
@@ -471,6 +539,8 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         public double DialFrequencyHz { get; set; }
         public bool IsTransmitting { get; set; }
         public string TransmitMessage { get; set; } = string.Empty;
+        public string CurrentBand { get; set; } = string.Empty;
+        public string CurrentMode { get; set; } = string.Empty;
         public DateTimeOffset LastActivityUtc { get; set; }
     }
 }

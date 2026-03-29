@@ -52,6 +52,7 @@ public sealed class WsjtMessageHandler : WsjtxUdpServerBaseAsyncMessageHandler
         {
             ClientId = message.Id,
             SessionEndPoint = endPoint,
+            Mode = message.Mode,
             TxMode = message.TXMode,
             Transmitting = message.Transmitting,
             TransmitMessage = message.TXMessage ?? string.Empty,

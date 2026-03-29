@@ -6,7 +6,8 @@ public static class WsjtxMessageParser
     
     public static string DecodeModeNotationsToString(string mode)
     {
-        return mode switch
+        var normalizedMode = (mode ?? string.Empty).Trim().ToUpperInvariant();
+        return normalizedMode switch
         {
             "`" => "FST4",
             "+" => "FT4",
@@ -16,7 +17,7 @@ public static class WsjtxMessageParser
             "#" => "JT65",
             ":" => "Q65",
             "&" => "MSK144",
-            _ => "?"
+            _ => normalizedMode
         };
     }
 

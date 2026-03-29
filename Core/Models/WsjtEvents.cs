@@ -27,6 +27,7 @@ public sealed class WsjtDecodeEvent : WsjtSessionEvent
 
 public sealed class WsjtStatusEvent : WsjtSessionEvent
 {
+    public string Mode { get; init; } = string.Empty;
     public string TxMode { get; init; } = string.Empty;
     public bool Transmitting { get; init; }
     public string TransmitMessage { get; init; } = string.Empty;

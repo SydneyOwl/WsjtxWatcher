@@ -3,6 +3,7 @@ namespace WsjtxWatcher.Core.Models;
 public sealed class DecodedRadioMessage
 {
     public bool IsUserTransmit { get; init; }
+    public bool IsSystemNotice { get; init; }
     public string DecodeTimeUtc { get; init; } = string.Empty;
     public int Snr { get; init; }
     public double OffsetTimeSeconds { get; init; }
@@ -32,6 +33,15 @@ public sealed class DecodedRadioMessage
             IsUserTransmit = true,
             Message = message,
             Mode = mode ?? string.Empty
+        };
+    }
+
+    public static DecodedRadioMessage CreateSystemNotice(string message)
+    {
+        return new DecodedRadioMessage
+        {
+            IsSystemNotice = true,
+            Message = message ?? string.Empty
         };
     }
 }

@@ -66,15 +66,16 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         var settings = _settingsProvider();
         var languageCode = Java.Util.Locale.Default?.Language ?? "en";
         var isTransmit = message.IsUserTransmit;
+        var isCompactMessage = message.IsUserTransmit || message.IsSystemNotice;
 
-        holder.Snr.Visibility = isTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.DeltaTime.Visibility = isTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.Offset.Visibility = isTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.Band.Visibility = isTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.Utc.Visibility = isTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.ToCountry.Visibility = isTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.FromCountry.Visibility = isTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.Distance.Visibility = isTransmit ? ViewStates.Gone : ViewStates.Visible;
+        holder.Snr.Visibility = isCompactMessage ? ViewStates.Gone : ViewStates.Visible;
+        holder.DeltaTime.Visibility = isCompactMessage ? ViewStates.Gone : ViewStates.Visible;
+        holder.Offset.Visibility = isCompactMessage ? ViewStates.Gone : ViewStates.Visible;
+        holder.Band.Visibility = isCompactMessage ? ViewStates.Gone : ViewStates.Visible;
+        holder.Utc.Visibility = isCompactMessage ? ViewStates.Gone : ViewStates.Visible;
+        holder.ToCountry.Visibility = isCompactMessage ? ViewStates.Gone : ViewStates.Visible;
+        holder.FromCountry.Visibility = isCompactMessage ? ViewStates.Gone : ViewStates.Visible;
+        holder.Distance.Visibility = isCompactMessage ? ViewStates.Gone : ViewStates.Visible;
 
         holder.Message.Text = isTransmit
             ? FormatTransmitMessage(message)
@@ -83,7 +84,7 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         holder.Message.PaintFlags = PaintFlags.LinearText;
         holder.Message.SetTextColor(GetColor(Resource.Color.text_view_color));
 
-        if (!isTransmit)
+        if (!isCompactMessage)
         {
             holder.Snr.Text = message.Snr.ToString();
             holder.DeltaTime.Text = message.OffsetTimeSeconds.ToString("F1");
@@ -114,7 +115,15 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         {
             holder.LowConfidence.TextFormatted = new Java.Lang.String(string.Empty);
             holder.LowConfidence.Visibility = ViewStates.Gone;
-            view.SetBackgroundColor(GetColor(Resource.Color.my_transmit_period));
+            if (message.IsSystemNotice)
+            {
+                holder.Message.SetTextColor(GetColor(Resource.Color.fromcall_is_qso_text_color));
+                view.SetBackgroundColor(GetColor(Resource.Color.system_notice_period));
+            }
+            else
+            {
+                view.SetBackgroundColor(GetColor(Resource.Color.my_transmit_period));
+            }
         }
 
         return view;
