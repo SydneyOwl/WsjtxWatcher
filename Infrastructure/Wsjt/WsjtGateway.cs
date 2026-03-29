@@ -46,30 +46,39 @@ public sealed class WsjtGateway : IWsjtGateway
 
     private Task StopCoreAsync()
     {
-        try
-        {
-            _cancellationTokenSource?.Cancel();
-            if (_server?.IsRunning == true)
-            {
-                _server.Stop();
-            }
+        var server = _server;
+        var cancellationTokenSource = _cancellationTokenSource;
+        _server = null;
+        _cancellationTokenSource = null;
 
-            if (_server is not null && !_server.IsDisposed)
-            {
-                _server.Dispose();
-            }
-        }
-        catch (Exception exception)
+        if (server is null && cancellationTokenSource is null)
         {
-            Log.Warning(exception, "Failed to stop WSJT-X UDP listener cleanly.");
-        }
-        finally
-        {
-            _server = null;
-            _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = null;
+            return Task.CompletedTask;
         }
 
-        return Task.CompletedTask;
+        return Task.Run(() =>
+        {
+            try
+            {
+                cancellationTokenSource?.Cancel();
+                if (server?.IsRunning == true)
+                {
+                    server.Stop();
+                }
+
+                if (server is not null && !server.IsDisposed)
+                {
+                    server.Dispose();
+                }
+            }
+            catch (Exception exception)
+            {
+                Log.Warning(exception, "Failed to stop WSJT-X UDP listener cleanly.");
+            }
+            finally
+            {
+                cancellationTokenSource?.Dispose();
+            }
+        });
     }
 }

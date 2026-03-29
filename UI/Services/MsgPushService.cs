@@ -12,6 +12,8 @@ namespace WsjtxWatcher.UI.Services;
     Exported = false)]
 public sealed class MsgPushService : Service
 {
+    private CancellationTokenSource? _serviceLifetimeCts;
+
     public override IBinder? OnBind(Intent? intent)
     {
         return null;
@@ -20,38 +22,54 @@ public sealed class MsgPushService : Service
     public override void OnCreate()
     {
         base.OnCreate();
+        _serviceLifetimeCts = new CancellationTokenSource();
         StartForegroundInternal();
     }
 
     public override StartCommandResult OnStartCommand(Intent? intent, StartCommandFlags flags, int startId)
     {
+        _ = StartWatcherAsync(startId, _serviceLifetimeCts?.Token ?? CancellationToken.None);
+        return StartCommandResult.Sticky;
+    }
+
+    public override void OnDestroy()
+    {
+        _serviceLifetimeCts?.Cancel();
+        _ = StopWatcherAsync();
+        _serviceLifetimeCts?.Dispose();
+        _serviceLifetimeCts = null;
+
+        StopForeground(StopForegroundFlags.Remove);
+        base.OnDestroy();
+    }
+
+    private async Task StartWatcherAsync(int startId, CancellationToken cancellationToken)
+    {
         try
         {
-            AppHost.Current.GetRequiredService<WatcherController>().StartAsync().GetAwaiter().GetResult();
-            return StartCommandResult.Sticky;
+            await AppHost.Current.GetRequiredService<WatcherController>().StartAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (System.OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
         }
         catch (Exception exception)
         {
             Serilog.Log.Error(exception, "Failed to start WSJT-X watcher service.");
             StopForeground(StopForegroundFlags.Remove);
-            StopSelf();
-            return StartCommandResult.NotSticky;
+            StopSelfResult(startId);
         }
     }
 
-    public override void OnDestroy()
+    private static async Task StopWatcherAsync()
     {
         try
         {
-            AppHost.Current.GetRequiredService<WatcherController>().StopAsync().GetAwaiter().GetResult();
+            await AppHost.Current.GetRequiredService<WatcherController>().StopAsync().ConfigureAwait(false);
         }
         catch (Exception exception)
         {
             Serilog.Log.Warning(exception, "Failed to stop WSJT-X watcher service cleanly.");
         }
-
-        StopForeground(StopForegroundFlags.Remove);
-        base.OnDestroy();
     }
 
     private void StartForegroundInternal()

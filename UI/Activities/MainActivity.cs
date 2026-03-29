@@ -9,6 +9,7 @@ using Android.Views.Animations;
 using Android.Widget;
 using Serilog;
 using WsjtxWatcher.App;
+using WsjtxWatcher.Core.Services;
 using WsjtxWatcher.Core.ViewModels;
 using WsjtxWatcher.UI.Adapters;
 using WsjtxWatcher.UI.Services;
@@ -29,6 +30,7 @@ public sealed class MainActivity : LocalizedActivity
     private Animation _transmitBlinkAnimation = null!;
     private RelativeLayout _transmitLayout = null!;
     private TextView _transmitMessage = null!;
+    private bool _isStoppingService;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -67,7 +69,7 @@ public sealed class MainActivity : LocalizedActivity
                 StartWatcherService();
                 return true;
             case Resource.Id.stop_server:
-                StopWatcherService();
+                _ = StopWatcherServiceAsync();
                 return true;
             default:
                 return item is not null && base.OnMenuItemSelected(featureId, item);
@@ -167,10 +169,10 @@ public sealed class MainActivity : LocalizedActivity
         UpdateMenuState();
     }
 
-    private void SetBanner(string text, bool visible)
+    private void SetBanner(string text, bool visible, bool animate = true)
     {
         _transmitMessage.Text = text;
-        if (visible)
+        if (visible && animate)
         {
             if (_transmitMessage.Animation is null)
             {
@@ -193,8 +195,8 @@ public sealed class MainActivity : LocalizedActivity
         }
 
         var isRunning = _viewModel.State.IsServiceRunning;
-        _startServerMenuItem.SetEnabled(!isRunning);
-        _stopServerMenuItem.SetEnabled(isRunning);
+        _startServerMenuItem.SetEnabled(!isRunning && !_isStoppingService);
+        _stopServerMenuItem.SetEnabled(isRunning && !_isStoppingService);
     }
 
     private void StartWatcherService()
@@ -218,16 +220,36 @@ public sealed class MainActivity : LocalizedActivity
         }
     }
 
-    private void StopWatcherService()
+    private async Task StopWatcherServiceAsync()
     {
+        if (_isStoppingService)
+        {
+            return;
+        }
+
+        _isStoppingService = true;
+        RunOnUiThread(UpdateMenuState);
         try
         {
-            StopService(new Intent(this, typeof(MsgPushService)));
+            await Task.Run(async () =>
+            {
+                await AppHost.Current.GetRequiredService<WatcherController>().StopAsync().ConfigureAwait(false);
+            }).ConfigureAwait(false);
+
+            RunOnUiThread(() => StopService(new Intent(this, typeof(MsgPushService))));
         }
         catch (Exception exception)
         {
             Log.Warning(exception, "Failed to stop watcher service.");
-            Toast.MakeText(this, GetString(Resource.String.stop_service_failed), ToastLength.Short)?.Show();
+            RunOnUiThread(() =>
+            {
+                Toast.MakeText(this, GetString(Resource.String.stop_service_failed), ToastLength.Short)?.Show();
+            });
+        }
+        finally
+        {
+            _isStoppingService = false;
+            RunOnUiThread(Render);
         }
     }
 
