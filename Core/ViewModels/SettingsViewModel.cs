@@ -1,0 +1,154 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using WsjtxWatcher.Core.Contracts;
+using WsjtxWatcher.Core.Models;
+
+namespace WsjtxWatcher.Core.ViewModels;
+
+public partial class SettingsViewModel : ObservableObject
+{
+    private readonly IAppInfoService _appInfoService;
+    private readonly IBackgroundAccessService _backgroundAccessService;
+    private readonly IGridCacheStore _gridCacheStore;
+    private readonly ILogFileService _logFileService;
+    private readonly INetworkInfoService _networkInfoService;
+    private readonly ISettingsStore _settingsStore;
+    private readonly Services.WatcherController _watcherController;
+    [ObservableProperty]
+    private bool notifyOnAnyMessage;
+
+    [ObservableProperty]
+    private bool notifyOnMyCall;
+
+    [ObservableProperty]
+    private bool notifyOnSelectedDxcc;
+
+    [ObservableProperty]
+    private string port = "2237";
+
+    [ObservableProperty]
+    private string myCallsign = string.Empty;
+
+    [ObservableProperty]
+    private string myGrid = string.Empty;
+
+    [ObservableProperty]
+    private bool vibrateOnAnyMessage;
+
+    [ObservableProperty]
+    private bool vibrateOnMyCall;
+
+    [ObservableProperty]
+    private bool vibrateOnSelectedDxcc;
+
+    [ObservableProperty]
+    private int selectedDxccCount;
+
+    public SettingsViewModel(
+        ISettingsStore settingsStore,
+        IGridCacheStore gridCacheStore,
+        INetworkInfoService networkInfoService,
+        IBackgroundAccessService backgroundAccessService,
+        ILogFileService logFileService,
+        IAppInfoService appInfoService,
+        Services.WatcherController watcherController)
+    {
+        _settingsStore = settingsStore;
+        _gridCacheStore = gridCacheStore;
+        _networkInfoService = networkInfoService;
+        _backgroundAccessService = backgroundAccessService;
+        _logFileService = logFileService;
+        _appInfoService = appInfoService;
+        _watcherController = watcherController;
+    }
+
+    public string LocalIpAddress => _networkInfoService.IsWifiConnected() ? _networkInfoService.GetLocalIpAddress() : string.Empty;
+
+    public string VersionName => _appInfoService.VersionName;
+
+    public bool IsIgnoringBatteryOptimizations => _backgroundAccessService.IsIgnoringBatteryOptimizations();
+
+    public async Task LoadAsync(CancellationToken cancellationToken = default)
+    {
+        var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
+        Port = settings.Port;
+        MyCallsign = settings.MyCallsign;
+        MyGrid = settings.MyGrid;
+        NotifyOnMyCall = settings.NotifyOnMyCall;
+        NotifyOnAnyMessage = settings.NotifyOnAnyMessage;
+        NotifyOnSelectedDxcc = settings.NotifyOnSelectedDxcc;
+        VibrateOnMyCall = settings.VibrateOnMyCall;
+        VibrateOnAnyMessage = settings.VibrateOnAnyMessage;
+        VibrateOnSelectedDxcc = settings.VibrateOnSelectedDxcc;
+        SelectedDxccCount = settings.PreferredDxccIds.Count;
+        OnPropertyChanged(nameof(LocalIpAddress));
+        OnPropertyChanged(nameof(IsIgnoringBatteryOptimizations));
+    }
+
+    public async Task SaveAsync(CancellationToken cancellationToken = default)
+    {
+        var existingSettings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
+        var normalizedSettings = CreateSettings(existingSettings.PreferredDxccIds);
+        var restartRequired = !string.Equals(existingSettings.Port, normalizedSettings.Port, StringComparison.Ordinal);
+
+        await _settingsStore.SaveAsync(normalizedSettings, cancellationToken).ConfigureAwait(false);
+
+        if (restartRequired)
+        {
+            await _watcherController.RestartAsync(cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await _watcherController.ReloadSettingsAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    public async Task ResetCacheAsync(CancellationToken cancellationToken = default)
+    {
+        await _gridCacheStore.ResetAsync(cancellationToken).ConfigureAwait(false);
+        await _watcherController.ResetCacheAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task ResetAllAsync(CancellationToken cancellationToken = default)
+    {
+        await _watcherController.ResetAllAsync(cancellationToken).ConfigureAwait(false);
+        await LoadAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public void OpenLogFile()
+    {
+        _logFileService.OpenLogFile();
+    }
+
+    public void RequestIgnoreBatteryOptimizations()
+    {
+        _backgroundAccessService.RequestIgnoreBatteryOptimizations();
+        OnPropertyChanged(nameof(IsIgnoringBatteryOptimizations));
+    }
+
+    public void OpenBackgroundSettings()
+    {
+        _backgroundAccessService.OpenBackgroundSettings();
+    }
+
+    private AppSettings CreateSettings(IReadOnlyCollection<int> preferredDxccIds)
+    {
+        return new AppSettings
+        {
+            Port = NormalizePort(Port),
+            MyCallsign = (MyCallsign ?? string.Empty).Trim().ToUpperInvariant(),
+            MyGrid = (MyGrid ?? string.Empty).Trim().ToUpperInvariant(),
+            NotifyOnMyCall = NotifyOnMyCall,
+            NotifyOnAnyMessage = NotifyOnAnyMessage,
+            NotifyOnSelectedDxcc = NotifyOnSelectedDxcc,
+            VibrateOnMyCall = VibrateOnMyCall,
+            VibrateOnAnyMessage = VibrateOnAnyMessage,
+            VibrateOnSelectedDxcc = VibrateOnSelectedDxcc,
+            PreferredDxccIds = new HashSet<int>(preferredDxccIds)
+        };
+    }
+
+    private static string NormalizePort(string? value)
+    {
+        return int.TryParse(value, out var port) && port is > 0 and < 65536 ? port.ToString() : "2237";
+    }
+}

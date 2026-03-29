@@ -62,4 +62,9 @@
     <string name="start_service_failed">Failed to start service. See logs for more...</string>
     <string name="stop_service_failed">Failed to stop service. See logs for more...</string>
     <string name="no_app_found">There\'s no suitable app found to open log!</string>
+    <string name="unknown_band">Unknown</string>
+    <string name="reset_database_confirm">Clear local grid cache and current message list?</string>
+    <string name="reset_all_confirm">Reset settings, clear cached data, and stop the listener service?</string>
+    <string name="background_help_title">Background Running</string>
+    <string name="background_help_message">If your phone does not open the correct screen automatically, open the app details page manually and allow background activity, auto-start, and battery optimization exemptions for Wsjtx Watcher.</string>
 </resources>

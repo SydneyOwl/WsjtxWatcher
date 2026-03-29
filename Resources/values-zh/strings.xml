@@ -59,4 +59,9 @@
     <string name="start_service_failed">服务启动失败，请查看日志...</string>
     <string name="stop_service_failed">服务停止失败，请查看日志...</string>
     <string name="no_app_found">没有能够打开日志的软件...</string>
+    <string name="unknown_band">未知</string>
+    <string name="reset_database_confirm">清空本地网格缓存和当前消息列表？</string>
+    <string name="reset_all_confirm">重置设置、清空缓存数据，并停止监听服务？</string>
+    <string name="background_help_title">后台运行</string>
+    <string name="background_help_message">如果系统没有自动打开正确的设置页，请手动进入应用详情，为 Wsjtx 助手开启后台活动、自启动和电池优化豁免等权限。</string>
 </resources>

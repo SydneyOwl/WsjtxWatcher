@@ -36,7 +36,7 @@
 
         <EditText
                 android:id="@+id/port_value"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="number"
                 android:textSize="16dp"
@@ -54,7 +54,7 @@
 
         <EditText
                 android:id="@+id/callsign_value"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="text"
                 android:textSize="16dp"
@@ -72,7 +72,7 @@
 
         <EditText
                 android:id="@+id/location_value"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="text"
                 android:textSize="16dp"
