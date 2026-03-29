@@ -39,5 +39,6 @@ public sealed class WsjtxWatcherApplication : Application
         };
 
         AppHost.Initialize(this);
+        AppHost.Current.GetRequiredService<AndroidAppLanguageManager>().ApplyCurrentLanguage();
     }
 }

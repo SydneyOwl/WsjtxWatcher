@@ -2,13 +2,15 @@ using Android.App;
 using Android.OS;
 using Android.Widget;
 using WsjtxWatcher.App;
+using WsjtxWatcher.Core.Models;
 using WsjtxWatcher.Core.ViewModels;
 
 namespace WsjtxWatcher.UI.Activities;
 
 [Activity(Label = "@string/settings", Exported = false)]
-public sealed class SettingsActivity : Activity
+public sealed class SettingsActivity : LocalizedActivity
 {
+    private readonly AppLanguage[] _supportedLanguages = [AppLanguage.SimplifiedChinese, AppLanguage.English];
     private SettingsViewModel _viewModel = null!;
     private bool _isBinding;
     private Button _addBackgroundButton = null!;
@@ -17,6 +19,7 @@ public sealed class SettingsActivity : Activity
     private TextView _ipAddressValue = null!;
     private Button _openLogButton = null!;
     private EditText _locationValue = null!;
+    private Spinner _languageSpinner = null!;
     private EditText _portValue = null!;
     private Button _resetAllButton = null!;
     private Button _resetDatabaseButton = null!;
@@ -34,8 +37,10 @@ public sealed class SettingsActivity : Activity
         base.OnCreate(savedInstanceState);
         SetContentView(Resource.Layout.activity_settings);
 
-        _viewModel = AppHost.Current.SettingsViewModel;
+        _viewModel = AppHost.Current.GetRequiredService<SettingsViewModel>();
+        _isBinding = true;
         BindViews();
+        InitializeLanguageSpinner();
         BindEvents();
         _ = LoadAsync();
     }
@@ -63,6 +68,7 @@ public sealed class SettingsActivity : Activity
         _callsignValue = FindViewById<EditText>(Resource.Id.callsign_value)!;
         _locationValue = FindViewById<EditText>(Resource.Id.location_value)!;
         _versionValue = FindViewById<TextView>(Resource.Id.version_value)!;
+        _languageSpinner = FindViewById<Spinner>(Resource.Id.language_spinner)!;
         _sendNotificationCheckbox = FindViewById<CheckBox>(Resource.Id.send_notification_checkbox)!;
         _vibrationCheckbox = FindViewById<CheckBox>(Resource.Id.vibration_checkbox)!;
         _sendNotificationAllCheckbox = FindViewById<CheckBox>(Resource.Id.send_notification_all_checkbox)!;
@@ -77,8 +83,36 @@ public sealed class SettingsActivity : Activity
         _setDxccButton = FindViewById<Button>(Resource.Id.set_dxcc)!;
     }
 
+    private void InitializeLanguageSpinner()
+    {
+        var labels = _supportedLanguages.Select(GetLanguageLabel).ToArray();
+        var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, labels);
+        adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
+        _languageSpinner.Adapter = adapter;
+    }
+
     private void BindEvents()
     {
+        _languageSpinner.ItemSelected += (_, args) =>
+        {
+            if (_isBinding)
+            {
+                return;
+            }
+
+            var selectedLanguage = _supportedLanguages[Math.Clamp(args.Position, 0, _supportedLanguages.Length - 1)];
+            if (_viewModel.SelectedLanguage == selectedLanguage)
+            {
+                return;
+            }
+
+            _viewModel.SelectedLanguage = selectedLanguage;
+            if (_viewModel.IsLanguageChangePending)
+            {
+                Toast.MakeText(this, GetString(Resource.String.language_restart_required), ToastLength.Long)?.Show();
+            }
+        };
+
         _portValue.TextChanged += (_, _) =>
         {
             if (!_isBinding)
@@ -208,6 +242,7 @@ public sealed class SettingsActivity : Activity
             _callsignValue.Text = _viewModel.MyCallsign;
             _locationValue.Text = _viewModel.MyGrid;
             _versionValue.Text = _viewModel.VersionName;
+            _languageSpinner.SetSelection(GetLanguageIndex(_viewModel.SelectedLanguage));
             _sendNotificationCheckbox.Checked = _viewModel.NotifyOnMyCall;
             _vibrationCheckbox.Checked = _viewModel.VibrateOnMyCall;
             _sendNotificationAllCheckbox.Checked = _viewModel.NotifyOnAnyMessage;
@@ -218,6 +253,21 @@ public sealed class SettingsActivity : Activity
             _setDxccButton.Text = $"{GetString(Resource.String.set_dxcc_entity)} ({_viewModel.SelectedDxccCount})";
             _isBinding = false;
         });
+    }
+
+    private int GetLanguageIndex(AppLanguage language)
+    {
+        var index = Array.IndexOf(_supportedLanguages, language);
+        return index >= 0 ? index : 0;
+    }
+
+    private string GetLanguageLabel(AppLanguage language)
+    {
+        return language switch
+        {
+            AppLanguage.SimplifiedChinese => GetString(Resource.String.simplified_chinese),
+            _ => GetString(Resource.String.english)
+        };
     }
 
     private Task<bool> ConfirmAsync(int titleResId, int messageResId)

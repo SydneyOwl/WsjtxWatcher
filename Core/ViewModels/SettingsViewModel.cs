@@ -1,11 +1,13 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using WsjtxWatcher.Core.Contracts;
 using WsjtxWatcher.Core.Models;
+using WsjtxWatcher.Core.Utilities;
 
 namespace WsjtxWatcher.Core.ViewModels;
 
 public partial class SettingsViewModel : ObservableObject
 {
+    private readonly IAppLanguageService _appLanguageService;
     private readonly IAppInfoService _appInfoService;
     private readonly IBackgroundAccessService _backgroundAccessService;
     private readonly IGridCacheStore _gridCacheStore;
@@ -43,6 +45,9 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private int selectedDxccCount;
 
+    [ObservableProperty]
+    private AppLanguage selectedLanguage = AppLanguage.English;
+
     public SettingsViewModel(
         ISettingsStore settingsStore,
         IGridCacheStore gridCacheStore,
@@ -50,6 +55,7 @@ public partial class SettingsViewModel : ObservableObject
         IBackgroundAccessService backgroundAccessService,
         ILogFileService logFileService,
         IAppInfoService appInfoService,
+        IAppLanguageService appLanguageService,
         Services.WatcherController watcherController)
     {
         _settingsStore = settingsStore;
@@ -58,6 +64,7 @@ public partial class SettingsViewModel : ObservableObject
         _backgroundAccessService = backgroundAccessService;
         _logFileService = logFileService;
         _appInfoService = appInfoService;
+        _appLanguageService = appLanguageService;
         _watcherController = watcherController;
     }
 
@@ -67,10 +74,15 @@ public partial class SettingsViewModel : ObservableObject
 
     public bool IsIgnoringBatteryOptimizations => _backgroundAccessService.IsIgnoringBatteryOptimizations();
 
+    public AppLanguage CurrentAppLanguage => _appLanguageService.CurrentLanguage;
+
+    public bool IsLanguageChangePending => SelectedLanguage != CurrentAppLanguage;
+
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
         var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
         Port = settings.Port;
+        SelectedLanguage = _appLanguageService.ResolveConfiguredLanguage(settings.Language);
         MyCallsign = settings.MyCallsign;
         MyGrid = settings.MyGrid;
         NotifyOnMyCall = settings.NotifyOnMyCall;
@@ -82,6 +94,8 @@ public partial class SettingsViewModel : ObservableObject
         SelectedDxccCount = settings.PreferredDxccIds.Count;
         OnPropertyChanged(nameof(LocalIpAddress));
         OnPropertyChanged(nameof(IsIgnoringBatteryOptimizations));
+        OnPropertyChanged(nameof(CurrentAppLanguage));
+        OnPropertyChanged(nameof(IsLanguageChangePending));
     }
 
     public async Task SaveAsync(CancellationToken cancellationToken = default)
@@ -135,6 +149,7 @@ public partial class SettingsViewModel : ObservableObject
         return new AppSettings
         {
             Port = NormalizePort(Port),
+            Language = SelectedLanguage.ToStorageValue(),
             MyCallsign = (MyCallsign ?? string.Empty).Trim().ToUpperInvariant(),
             MyGrid = (MyGrid ?? string.Empty).Trim().ToUpperInvariant(),
             NotifyOnMyCall = NotifyOnMyCall,
@@ -150,5 +165,10 @@ public partial class SettingsViewModel : ObservableObject
     private static string NormalizePort(string? value)
     {
         return int.TryParse(value, out var port) && port is > 0 and < 65536 ? port.ToString() : "2237";
+    }
+
+    partial void OnSelectedLanguageChanged(AppLanguage value)
+    {
+        OnPropertyChanged(nameof(IsLanguageChangePending));
     }
 }

@@ -3,6 +3,7 @@ namespace WsjtxWatcher.Core.Models;
 public sealed class AppSettings
 {
     public string Port { get; set; } = "2237";
+    public string Language { get; set; } = string.Empty;
     public string MyCallsign { get; set; } = string.Empty;
     public string MyGrid { get; set; } = string.Empty;
     public bool NotifyOnMyCall { get; set; }
@@ -32,6 +33,7 @@ public sealed class AppSettings
         return new AppSettings
         {
             Port = Port,
+            Language = Language,
             MyCallsign = MyCallsign,
             MyGrid = MyGrid,
             NotifyOnMyCall = NotifyOnMyCall,

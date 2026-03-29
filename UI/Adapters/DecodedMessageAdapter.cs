@@ -86,12 +86,8 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
             holder.DeltaTime.Text = message.OffsetTimeSeconds.ToString("F1");
             holder.Offset.Text = message.OffsetFrequencyHz.ToString();
             holder.Utc.Text = message.DecodeTimeUtc;
-            holder.ToCountry.Text = languageCode.StartsWith("zh", StringComparison.OrdinalIgnoreCase)
-                ? message.ToCountryChinese
-                : message.ToCountryEnglish;
-            holder.FromCountry.Text = languageCode.StartsWith("zh", StringComparison.OrdinalIgnoreCase)
-                ? message.FromCountryChinese
-                : message.FromCountryEnglish;
+            holder.ToCountry.Text = GetCountryName(languageCode, message.ToCountryEnglish, message.ToCountryChinese);
+            holder.FromCountry.Text = GetCountryName(languageCode, message.FromCountryEnglish, message.FromCountryChinese);
             holder.Distance.Text = message.DistanceText;
             holder.Band.Text = message.DialFrequencyHz > 0d
                 ? $"{message.DialFrequencyHz / 1_000_000d:F3}MHz"
@@ -119,6 +115,13 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         }
 
         return view;
+    }
+
+    private static string GetCountryName(string languageCode, string englishName, string chineseName)
+    {
+        return languageCode.StartsWith("zh", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(chineseName)
+            ? chineseName
+            : englishName;
     }
 
     private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)

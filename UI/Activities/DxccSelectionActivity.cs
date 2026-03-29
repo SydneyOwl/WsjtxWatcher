@@ -8,7 +8,7 @@ using WsjtxWatcher.UI.Adapters;
 namespace WsjtxWatcher.UI.Activities;
 
 [Activity(Label = "@string/set_dxcc_entity", Exported = false)]
-public sealed class DxccSelectionActivity : Activity
+public sealed class DxccSelectionActivity : LocalizedActivity
 {
     private CountrySelectionAdapter _adapter = null!;
     private CheckBox _selectAll = null!;
@@ -20,7 +20,7 @@ public sealed class DxccSelectionActivity : Activity
         base.OnCreate(savedInstanceState);
         SetContentView(Resource.Layout.activity_set_dxcc);
 
-        _viewModel = AppHost.Current.DxccSelectionViewModel;
+        _viewModel = AppHost.Current.GetRequiredService<DxccSelectionViewModel>();
 
         var listView = FindViewById<ListView>(Resource.Id.lv_data)!;
         _selectAll = FindViewById<CheckBox>(Resource.Id.che_all)!;

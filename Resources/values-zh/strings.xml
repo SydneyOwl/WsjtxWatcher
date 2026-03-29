@@ -24,6 +24,7 @@
     <string name="simplified_chinese">中文</string>
     <string name="english">英语</string>
     <string name="version">版本</string>
+    <string name="language_restart_required">语言切换将在重启应用后生效。</string>
     <string name="when_callsign_included">当信息中包含我的呼号时：</string>
     <string name="send_notification">发送通知</string>
     <string name="vibration">振动</string>

@@ -16,7 +16,7 @@ using WsjtxWatcher.UI.Services;
 namespace WsjtxWatcher.UI.Activities;
 
 [Activity(Label = "@string/app_name", MainLauncher = true, Exported = true, LaunchMode = LaunchMode.SingleTop)]
-public sealed class MainActivity : Activity
+public sealed class MainActivity : LocalizedActivity
 {
     private MainViewModel _viewModel = null!;
     private DecodedMessageAdapter _adapter = null!;
@@ -35,7 +35,7 @@ public sealed class MainActivity : Activity
         SetContentView(Resource.Layout.activity_main);
         Window?.AddFlags(WindowManagerFlags.KeepScreenOn);
 
-        _viewModel = AppHost.Current.MainViewModel;
+        _viewModel = AppHost.Current.GetRequiredService<MainViewModel>();
         BindViews();
         BindViewModel();
         RequestNotificationPermissionIfNeeded();

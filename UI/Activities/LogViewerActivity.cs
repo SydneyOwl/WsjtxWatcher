@@ -5,7 +5,7 @@ using Android.Widget;
 namespace WsjtxWatcher.UI.Activities;
 
 [Activity(Label = "@string/open_log", Exported = false)]
-public sealed class LogViewerActivity : Activity
+public sealed class LogViewerActivity : LocalizedActivity
 {
     public const string LogFilePathExtra = "log_file_path";
 

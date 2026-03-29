@@ -1,7 +1,10 @@
 using Android.App;
+using Android.Content;
+using Android.Content.Res;
 using Serilog;
 using WsjtxWatcher.Core.Contracts;
 using WsjtxWatcher.Core.Models;
+using WsjtxWatcher.Core.Utilities;
 
 namespace WsjtxWatcher.Infrastructure.Platform;
 
@@ -35,10 +38,10 @@ public sealed class AssetCountryCatalog : ICountryCatalog
                 return;
             }
 
-            var cnDictionary = await LoadChineseNamesAsync().ConfigureAwait(false);
             using var stream = _application.Assets!.Open("cty.dat");
             using var reader = new StreamReader(stream);
             var contents = await reader.ReadToEndAsync().ConfigureAwait(false);
+            var chineseContext = CreateLocalizedContext("zh-CN");
 
             var countries = new List<CountryInfo>();
             var blocks = contents.Split(';', StringSplitOptions.RemoveEmptyEntries);
@@ -67,7 +70,7 @@ public sealed class AssetCountryCatalog : ICountryCatalog
                 {
                     Id = nextId++,
                     EnglishName = englishName,
-                    ChineseName = cnDictionary.TryGetValue(englishName, out var cnName) ? cnName : string.Empty,
+                    ChineseName = ResolveLocalizedDxccName(chineseContext, englishName),
                     CqZone = ParseInt(parts[1]),
                     ItuZone = ParseInt(parts[2]),
                     Continent = ParseString(parts[3]),
@@ -147,30 +150,26 @@ public sealed class AssetCountryCatalog : ICountryCatalog
         return _countriesByEnglishName.TryGetValue(englishName, out var country) ? country : null;
     }
 
-    private async Task<Dictionary<string, string>> LoadChineseNamesAsync()
+    private Context CreateLocalizedContext(string languageTag)
     {
-        using var stream = _application.Assets!.Open("country_en2cn.dat");
-        using var reader = new StreamReader(stream);
-        var contents = await reader.ReadToEndAsync().ConfigureAwait(false);
-        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var locale = Java.Util.Locale.ForLanguageTag(languageTag) ?? new Java.Util.Locale("zh", "CN");
+        var existingConfiguration = _application.Resources?.Configuration;
+        var configuration = existingConfiguration is null ? new Configuration() : new Configuration(existingConfiguration);
+        configuration.SetLocale(locale);
+        configuration.SetLayoutDirection(locale);
+        return _application.CreateConfigurationContext(configuration) ?? _application;
+    }
 
-        foreach (var line in contents.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+    private string ResolveLocalizedDxccName(Context context, string englishName)
+    {
+        var resourceKey = DxccTranslationKeyNormalizer.Normalize(englishName);
+        if (string.IsNullOrWhiteSpace(resourceKey))
         {
-            var separatorIndex = line.IndexOf(':');
-            if (separatorIndex <= 0)
-            {
-                continue;
-            }
-
-            var englishName = line[..separatorIndex].Trim();
-            var chineseName = line[(separatorIndex + 1)..].Trim();
-            if (!string.IsNullOrWhiteSpace(englishName))
-            {
-                result[englishName] = chineseName;
-            }
+            return string.Empty;
         }
 
-        return result;
+        var resourceId = _application.Resources?.GetIdentifier(resourceKey, "string", _application.PackageName) ?? 0;
+        return resourceId > 0 ? context.GetString(resourceId) ?? string.Empty : string.Empty;
     }
 
     private void RegisterPrefixes(CountryInfo country, string rawPrefixes)

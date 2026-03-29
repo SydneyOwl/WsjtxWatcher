@@ -10,7 +10,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
     private const string StorageKey = "8fdad8ad";
     private readonly ISharedPreferences _sharedPreferences;
 
-    public AndroidSettingsStore(Application application, IAppInfoService appInfoService)
+    public AndroidSettingsStore(Application application)
     {
         _sharedPreferences = application.GetSharedPreferences(StorageKey, FileCreationMode.Private)!;
     }
@@ -23,6 +23,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
         var settings = new AppSettings
         {
             Port = _sharedPreferences.GetString("port", "2237") ?? "2237",
+            Language = _sharedPreferences.GetString("language", string.Empty) ?? string.Empty,
             MyCallsign = _sharedPreferences.GetString("callsign", string.Empty) ?? string.Empty,
             MyGrid = _sharedPreferences.GetString("grid", string.Empty) ?? string.Empty,
             NotifyOnMyCall = _sharedPreferences.GetBoolean("notify_on_my_call", false),
@@ -41,6 +42,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
     {
         var editor = _sharedPreferences.Edit()!;
         editor.PutString("port", settings.Port);
+        editor.PutString("language", settings.Language);
         editor.PutString("callsign", settings.MyCallsign);
         editor.PutString("grid", settings.MyGrid);
         editor.PutBoolean("notify_on_my_call", settings.NotifyOnMyCall);

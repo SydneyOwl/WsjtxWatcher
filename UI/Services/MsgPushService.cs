@@ -3,6 +3,7 @@ using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using WsjtxWatcher.App;
+using WsjtxWatcher.Core.Services;
 
 namespace WsjtxWatcher.UI.Services;
 
@@ -26,7 +27,7 @@ public sealed class MsgPushService : Service
     {
         try
         {
-            AppHost.Current.WatcherController.StartAsync().GetAwaiter().GetResult();
+            AppHost.Current.GetRequiredService<WatcherController>().StartAsync().GetAwaiter().GetResult();
             return StartCommandResult.Sticky;
         }
         catch (Exception exception)
@@ -42,7 +43,7 @@ public sealed class MsgPushService : Service
     {
         try
         {
-            AppHost.Current.WatcherController.StopAsync().GetAwaiter().GetResult();
+            AppHost.Current.GetRequiredService<WatcherController>().StopAsync().GetAwaiter().GetResult();
         }
         catch (Exception exception)
         {

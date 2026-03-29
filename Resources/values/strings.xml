@@ -24,6 +24,7 @@
     <string name="simplified_chinese">Simplified Chinese</string>
     <string name="english">English</string>
     <string name="version">Version</string>
+    <string name="language_restart_required">Language changes take effect after you restart the app.</string>
     <string name="when_callsign_included">When my callsign is included in the message:</string>
     <string name="send_notification">Send notification</string>
     <string name="vibration">Vibration</string>
