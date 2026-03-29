@@ -1,6 +1,7 @@
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
+using Android.Graphics.Drawables;
 using Android.OS;
 using WsjtxWatcher.App;
 using WsjtxWatcher.Core.Services;
@@ -89,12 +90,24 @@ public sealed class MsgPushService : Service
             0,
             launchIntent,
             PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
+        var stopIntent = new Intent(this, typeof(StopWatcherActionReceiver));
+        var stopPendingIntent = PendingIntent.GetBroadcast(
+            this,
+            1,
+            stopIntent,
+            PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable)!;
+        var stopAction = new Notification.Action.Builder(
+                Icon.CreateWithResource(this, Android.Resource.Drawable.IcMediaPause),
+                GetString(Resource.String.stop_server),
+                stopPendingIntent)
+            .Build();
 
         var notification = new Notification.Builder(this, GetString(Resource.String.notification_channel_id2))
             .SetContentTitle(GetString(Resource.String.service_running))
             .SetContentText(GetString(Resource.String.listening_msg))
             .SetSmallIcon(Resource.Mipmap.appicon)
             .SetContentIntent(pendingIntent)
+            .AddAction(stopAction)
             .SetOngoing(true)
             .Build();
 
