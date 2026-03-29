@@ -1,129 +1,141 @@
-﻿<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:id="@+id/callListHolderConstraintLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="1dp"
-                android:background="@drawable/calling_list_cell_style"
-                android:clickable="true"
-                android:focusable="true">
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/callListHolderConstraintLayout"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_margin="1dp"
+              android:background="@drawable/calling_list_cell_style"
+              android:clickable="true"
+              android:focusable="true"
+              android:orientation="vertical"
+              android:paddingStart="6dp"
+              android:paddingTop="4dp"
+              android:paddingEnd="6dp"
+              android:paddingBottom="4dp">
 
-    <!-- Containing layout for the text views -->
-    <RelativeLayout
+    <LinearLayout
             android:id="@+id/topView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
-            android:layout_marginEnd="5dp">
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <!-- Existing LinearLayout with text views -->
-        <LinearLayout
-                android:id="@+id/textViewsLinearLayout"
-                android:layout_width="wrap_content"
+        <TextView
+                android:id="@+id/callingListIdBTextView"
+                android:layout_width="40dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true">
+                android:fontFamily="monospace"
+                android:gravity="left"
+                android:text="-12"
+                android:textSize="12sp"/>
 
-            <TextView
-                    android:id="@+id/callingListIdBTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    android:layout_marginEnd="15dp"
-                    android:text="-12"/>
+        <TextView
+                android:id="@+id/callListDtTextView"
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:gravity="left"
+                android:paddingEnd="4dp"
+                android:text="-1.2"
+                android:textSize="12sp"/>
 
-            <TextView
-                    android:id="@+id/callListDtTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="15dp"
-                    android:textSize="12sp"
-                    android:text="-1.2"/>
+        <TextView
+                android:id="@+id/callingListFreqTextView"
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:gravity="left"
+                android:paddingEnd="8dp"
+                android:text="1234"
+                android:textSize="12sp"/>
 
-            <TextView
-                    android:id="@+id/callingListFreqTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="15dp"
-                    android:textSize="12sp"
-                    android:text="1234Hz"/>
+        <TextView
+                android:id="@+id/callListMessageTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="monospace"
+                android:gravity="start"
+                android:maxLines="1"
+                android:text="CQ DX AB1CDE AB12"
+                android:textSize="13sp"/>
 
-            <TextView
-                    android:id="@+id/callListMessageTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:textSize="13sp"
-                    android:text="CQ DX AB1CDE AB12"/>
-        </LinearLayout>
-
-        <!-- bandItemTextView aligned to the right and centered vertically -->
         <TextView
                 android:id="@+id/bandItemTextView"
-                android:layout_width="wrap_content"
+                android:layout_width="60dp"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_marginEnd="5dp"
-                android:layout_centerVertical="true"
-                android:layout_toEndOf="@id/callListMessageTextView"
-                android:textSize="9sp"
-                android:text="14.074MHz"/>
-    </RelativeLayout>
+                android:fontFamily="monospace"
+                android:gravity="end"
+                android:text="2144.074MHz"
+                android:textSize="9sp"/>
+    </LinearLayout>
 
-    <!-- Below layout (for additional views) -->
     <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/topView"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="5dp"
-            android:paddingEnd="5dp">
+            android:paddingTop="2dp">
 
         <TextView
                 android:id="@+id/callingUtcTextView"
-                android:layout_width="wrap_content"
+                android:layout_width="52dp"
                 android:layout_height="wrap_content"
-                android:textSize="10sp"
-                android:layout_marginStart="6dp"
-                android:layout_marginEnd="6dp"
-                android:text="123456"/>
+                android:fontFamily="monospace"
+                android:gravity="start"
+                android:text="12:11:22"
+                android:textSize="10sp"/>
 
         <TextView
                 android:id="@+id/lowTrustTextview"
-                android:layout_width="wrap_content"
+                android:layout_width="72dp"
                 android:layout_height="wrap_content"
-                android:textSize="10sp"
-                android:layout_marginStart="10dp"
+                android:ellipsize="end"
+                android:fontFamily="monospace"
+                android:maxLines="1"
+                android:paddingEnd="8dp"
+                android:text="@string/low_reliability"
                 android:textColor="@color/ruler_text_color"
-                android:text="@string/low_reliability"/>
+                android:textSize="10sp"/>
 
         <TextView
                 android:id="@+id/callToItemTextView"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textAlignment="textStart"
-                android:textSize="10sp"
-                android:layout_marginStart="10dp"
-                android:text="TOOOOO"/>
+                android:ellipsize="end"
+                android:fontFamily="monospace"
+                android:maxLines="1"
+                android:text="TOOOOO"
+                android:textAlignment="viewStart"
+                android:textSize="10sp"/>
 
         <TextView
                 android:id="@+id/CallFromItemTextView"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textAlignment="textStart"
+                android:ellipsize="end"
+                android:fontFamily="monospace"
+                android:maxLines="1"
+                android:paddingStart="8dp"
+                android:text="FROMMMMM"
+                android:textAlignment="viewStart"
                 android:textSize="10sp"
-                android:textStyle="normal"
-                android:text="FROMMMMM"/>
+                android:textStyle="normal"/>
 
         <TextView
                 android:id="@+id/callingListDistTextView"
-                android:layout_width="wrap_content"
+                android:layout_width="64dp"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="20dp"
-                android:textSize="9sp"
-                android:text="12345km"/>
+                android:fontFamily="monospace"
+                android:gravity="end"
+                android:paddingStart="8dp"
+                android:text="12345km"
+                android:textSize="9sp"/>
     </LinearLayout>
 
-</RelativeLayout>
+</LinearLayout>
