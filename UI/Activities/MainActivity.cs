@@ -83,6 +83,9 @@ public sealed class MainActivity : LocalizedActivity
             case Resource.Id.stop_server:
                 _ = StopWatcherServiceAsync();
                 return true;
+            case Resource.Id.clear_record:
+                _viewModel.ClearMessages();
+                return true;
             default:
                 return item is not null && base.OnMenuItemSelected(featureId, item);
         }

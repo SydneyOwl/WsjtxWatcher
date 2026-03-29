@@ -36,6 +36,11 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(SettingsSnapshot));
     }
 
+    public void ClearMessages()
+    {
+        State.ClearMessages();
+    }
+
     private void OnStatePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         OnPropertyChanged(e.PropertyName);
