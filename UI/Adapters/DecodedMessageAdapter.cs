@@ -6,7 +6,6 @@ using Android.Text;
 using Android.Text.Style;
 using Android.Views;
 using Android.Widget;
-using WsjtxUtils.WsjtxMessages.Messages;
 using WsjtxWatcher.Core.Models;
 using WsjtxWatcher.Core.Utilities;
 
@@ -86,6 +85,9 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
 
         if (!isCompactMessage)
         {
+            var matchesWatchedCallsign = CallsignPatternMatcher.IsMatch(message.Message, settings.WatchedCallsignPatterns);
+            var matchesSelectedDxcc = MatchesSelectedDxcc(message, settings);
+
             holder.Snr.Text = message.Snr.ToString();
             holder.DeltaTime.Text = message.OffsetTimeSeconds.ToString("F1");
             holder.Offset.Text = message.OffsetFrequencyHz.ToString();
@@ -104,12 +106,12 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
                 holder.Message.SetTextColor(GetColor(Resource.Color.tracker_new_cq_win_end_color));
             }
 
-            if (CallsignPatternMatcher.IsMatch(message.Message, settings.WatchedCallsignPatterns))
+            if (matchesWatchedCallsign)
             {
                 holder.Message.SetTextColor(GetColor(Resource.Color.message_in_my_call_text_color));
             }
 
-            view.SetBackgroundColor(GetColor(GetRowColor(message.DecodeTimeUtc)));
+            view.SetBackgroundColor(GetColor(GetRowColor(message.DecodeTimeUtc, matchesWatchedCallsign, matchesSelectedDxcc)));
         }
         else
         {
@@ -127,6 +129,11 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         }
 
         return view;
+    }
+
+    private static bool MatchesSelectedDxcc(DecodedRadioMessage message, AppSettings settings)
+    {
+        return message.FromCountryId > 0 && settings.PreferredDxccIds.Contains(message.FromCountryId);
     }
 
     private static string GetCountryName(string languageCode, string englishName, string chineseName)
@@ -223,8 +230,18 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         ApplyFilter(_query);
     }
 
-    private static int GetRowColor(string decodeTime)
+    private static int GetRowColor(string decodeTime, bool matchesWatchedCallsign, bool matchesSelectedDxcc)
     {
+        if (matchesWatchedCallsign)
+        {
+            return Resource.Color.highlight_callsign_period;
+        }
+
+        if (matchesSelectedDxcc)
+        {
+            return Resource.Color.highlight_alert_period;
+        }
+
         if (decodeTime.Length < 2 || !int.TryParse(decodeTime[^2..], out var seconds))
         {
             return Resource.Color.even_period;

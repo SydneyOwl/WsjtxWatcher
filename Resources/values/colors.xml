@@ -184,6 +184,8 @@
     <color name="odd_period">#d9e1eb</color>
     <color name="even_period">#f9f6ef</color>
     <color name="my_transmit_period">#dae4e2</color>
+    <color name="highlight_callsign_period">#ffdfe7</color>
+    <color name="highlight_alert_period">#fff0cf</color>
     <color name="system_notice_period">#e6edf8</color>
 
 
