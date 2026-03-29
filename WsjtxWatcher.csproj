@@ -25,6 +25,7 @@
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
         <PackageReference Include="Serilog" Version="4.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+        <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
         <PackageReference Include="WsjtxUtils.WsjtxMessages" Version="1.0.0.69" />
         <PackageReference Include="WsjtxUtils.WsjtxUdpServer" Version="1.0.0.69" />
     </ItemGroup>

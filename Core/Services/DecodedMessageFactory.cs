@@ -22,8 +22,8 @@ public sealed class DecodedMessageFactory
         CancellationToken cancellationToken = default)
     {
         var messageText = (decodeEvent.Message ?? string.Empty).Trim();
-        var participants = ParseParticipants(messageText);
-        var transmitterGrid = await ResolveGridAsync(messageText, cancellationToken).ConfigureAwait(false);
+        var participants = WsjtxMessageParser.ParseParticipants(messageText);
+        var transmitterGrid = await ResolveGridAsync(messageText, participants.Transmitter, cancellationToken).ConfigureAwait(false);
         var fromCountry = string.IsNullOrWhiteSpace(participants.Transmitter)
             ? null
             : await _countryCatalog.FindCountryByCallsignAsync(participants.Transmitter, cancellationToken).ConfigureAwait(false);
@@ -44,7 +44,7 @@ public sealed class DecodedMessageFactory
             Receiver = participants.Receiver,
             Transmitter = participants.Transmitter,
             TransmitterGrid = transmitterGrid,
-            DistanceText = await CalculateDistanceAsync(settings.MyGrid, transmitterGrid, fromCountry).ConfigureAwait(false),
+            DistanceText = CalculateDistance(settings.MyGrid, transmitterGrid, fromCountry),
             ToCountryEnglish = toCountry?.EnglishName ?? string.Empty,
             ToCountryChinese = toCountry?.ChineseName ?? string.Empty,
             FromCountryEnglish = fromCountry?.EnglishName ?? string.Empty,
@@ -57,103 +57,53 @@ public sealed class DecodedMessageFactory
         };
     }
 
-    private async Task<string> ResolveGridAsync(string messageText, CancellationToken cancellationToken)
+    private async Task<string> ResolveGridAsync(string messageText, string transmitter, CancellationToken cancellationToken)
     {
-        var tokens = SplitTokens(messageText);
-        if (tokens.Length < 3)
+        var gridUpdate = WsjtxMessageParser.ExtractGridUpdate(messageText);
+        if (gridUpdate is not null)
+        {
+            return gridUpdate.Value.GridSquare;
+        }
+
+        if (string.IsNullOrWhiteSpace(transmitter))
         {
             return string.Empty;
         }
 
-        var candidateCallsign = tokens[^2];
-        if (candidateCallsign.Contains("...", StringComparison.Ordinal))
-        {
-            return string.Empty;
-        }
-
-        var lastToken = tokens[^1];
-        if (MaidenheadLocator.IsValid(lastToken))
-        {
-            await _gridCacheStore.SaveGridAsync(candidateCallsign, lastToken.ToUpperInvariant(), cancellationToken).ConfigureAwait(false);
-            return lastToken.ToUpperInvariant();
-        }
-
-        var cachedGrid = await _gridCacheStore.GetGridAsync(candidateCallsign, cancellationToken).ConfigureAwait(false);
+        var cachedGrid = await _gridCacheStore.GetGridAsync(transmitter, cancellationToken).ConfigureAwait(false);
         return cachedGrid?.ToUpperInvariant() ?? string.Empty;
     }
 
-    private static Task<string> CalculateDistanceAsync(string myGrid, string transmitterGrid, CountryInfo? fromCountry)
+    private static string CalculateDistance(string myGrid, string transmitterGrid, CountryInfo? fromCountry)
     {
         if (!MaidenheadLocator.IsValid(myGrid))
         {
-            return Task.FromResult(string.Empty);
+            return string.Empty;
         }
 
         if (MaidenheadLocator.IsValid(transmitterGrid))
         {
-            return Task.FromResult(MaidenheadLocator.FormatDistance(MaidenheadLocator.GetDistanceKilometers(myGrid, transmitterGrid)));
+            return MaidenheadLocator.FormatDistance(MaidenheadLocator.GetDistanceKilometers(myGrid, transmitterGrid));
         }
 
         if (fromCountry is null)
         {
-            return Task.FromResult(string.Empty);
+            return string.Empty;
         }
 
         var myPoint = MaidenheadLocator.ToPoint(myGrid);
         if (myPoint is null)
         {
-            return Task.FromResult(string.Empty);
+            return string.Empty;
         }
 
         var countryPoint = new GeoPoint(fromCountry.Latitude, fromCountry.Longitude);
-        return Task.FromResult(MaidenheadLocator.FormatDistance(MaidenheadLocator.GetDistanceKilometers(countryPoint, myPoint)));
-    }
-
-    private static (string Transmitter, string Receiver) ParseParticipants(string messageText)
-    {
-        var tokens = SplitTokens(messageText);
-        if (tokens.Length == 0)
-        {
-            return (string.Empty, string.Empty);
-        }
-
-        if (messageText.StartsWith("CQ", StringComparison.OrdinalIgnoreCase))
-        {
-            if (tokens.Length == 1)
-            {
-                return (string.Empty, string.Empty);
-            }
-
-            var transmitter = MaidenheadLocator.IsValid(tokens[^1]) && tokens.Length >= 2 ? tokens[^2] : tokens[^1];
-            return (NormalizeCallsign(transmitter), string.Empty);
-        }
-
-        if (tokens.Length >= 3)
-        {
-            return (NormalizeCallsign(tokens[^2]), NormalizeCallsign(tokens[^3]));
-        }
-
-        if (tokens.Length == 2)
-        {
-            return (NormalizeCallsign(tokens[^1]), NormalizeCallsign(tokens[^2]));
-        }
-
-        return (string.Empty, string.Empty);
-    }
-
-    private static string NormalizeCallsign(string value)
-    {
-        return (value ?? string.Empty).Trim().ToUpperInvariant();
+        return MaidenheadLocator.FormatDistance(MaidenheadLocator.GetDistanceKilometers(countryPoint, myPoint));
     }
 
     private static bool ContainsIgnoreCase(string source, string target)
     {
         return !string.IsNullOrWhiteSpace(target) && source.Contains(target.Trim(), StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string[] SplitTokens(string messageText)
-    {
-        return messageText.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 
     private static string FormatUtcTime(long milliseconds)

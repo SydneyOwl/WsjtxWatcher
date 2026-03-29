@@ -22,12 +22,9 @@ internal static class ServiceCollectionExtensions
         services.AddSingleton<ISettingsStore, AndroidSettingsStore>();
         services.AddSingleton<AndroidAppLanguageManager>();
         services.AddSingleton<IAppLanguageService>(serviceProvider => serviceProvider.GetRequiredService<AndroidAppLanguageManager>());
-        services.AddSingleton<ICountryCatalog, AssetCountryCatalog>();
-        services.AddSingleton<IGridCacheStore>(serviceProvider =>
-        {
-            var appInfo = serviceProvider.GetRequiredService<IAppInfoService>();
-            return new JsonGridCacheStore(Path.Combine(appInfo.AppDataDirectory, "grid-cache.json"));
-        });
+        services.AddSingleton<WatcherDatabaseService>();
+        services.AddSingleton<ICountryCatalog, SqliteCountryCatalog>();
+        services.AddSingleton<IGridCacheStore, SqliteGridCacheStore>();
         services.AddSingleton<INotificationService, AndroidNotificationService>();
         services.AddSingleton<IDeviceFeedbackService, AndroidDeviceFeedbackService>();
         services.AddSingleton<INetworkInfoService, AndroidNetworkInfoService>();
