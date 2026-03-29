@@ -198,7 +198,9 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         {
             "FT8" => Resource.Color.mode_ft8_color,
             "FT4" => Resource.Color.mode_ft4_color,
+            "FT2" => Resource.Color.mode_ft4_color,
             "JT9" => Resource.Color.mode_jt9_color,
+            "JT65" => Resource.Color.mode_jt9_color,
             "Q65" => Resource.Color.mode_q65_color,
             "WSPR" => Resource.Color.mode_wspr_color,
             _ => Resource.Color.mode_default_color
