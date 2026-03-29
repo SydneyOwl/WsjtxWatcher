@@ -6,7 +6,9 @@ using Android.Text;
 using Android.Text.Style;
 using Android.Views;
 using Android.Widget;
+using WsjtxUtils.WsjtxMessages.Messages;
 using WsjtxWatcher.Core.Models;
+using WsjtxWatcher.Core.Utilities;
 
 namespace WsjtxWatcher.UI.Adapters;
 
@@ -159,6 +161,9 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
             target.Visibility = ViewStates.Invisible;
             return;
         }
+        
+        // translate mode
+        mode = WsjtxMessageParser.DecodeModeNotationsToString(mode);
 
         var builder = new SpannableStringBuilder();
         if (!string.IsNullOrWhiteSpace(mode))
@@ -198,9 +203,7 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         {
             "FT8" => Resource.Color.mode_ft8_color,
             "FT4" => Resource.Color.mode_ft4_color,
-            "FT2" => Resource.Color.mode_ft4_color,
             "JT9" => Resource.Color.mode_jt9_color,
-            "JT65" => Resource.Color.mode_jt9_color,
             "Q65" => Resource.Color.mode_q65_color,
             "WSPR" => Resource.Color.mode_wspr_color,
             _ => Resource.Color.mode_default_color

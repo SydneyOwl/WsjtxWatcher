@@ -3,6 +3,22 @@ namespace WsjtxWatcher.Core.Utilities;
 public static class WsjtxMessageParser
 {
     private static readonly string[] ControlTokens = ["CQ", "QRZ", "DE", "DX", "TEST", "POTA", "SOTA", "OTA"];
+    
+    public static string DecodeModeNotationsToString(string mode)
+    {
+        return mode switch
+        {
+            "`" => "FST4",
+            "+" => "FT4",
+            "~" => "FT8",
+            "$" => "JT4",
+            "@" => "JT9",
+            "#" => "JT65",
+            ":" => "Q65",
+            "&" => "MSK144",
+            _ => "?"
+        };
+    }
 
     public static (string Transmitter, string Receiver) ParseParticipants(string messageText)
     {
