@@ -83,6 +83,7 @@ public sealed class MsgPushService : Service
 
         var launchIntent = new Intent(this, typeof(Activities.MainActivity));
         launchIntent.AddFlags(ActivityFlags.SingleTop | ActivityFlags.ClearTop);
+        launchIntent.PutExtra(Activities.MainActivity.ScrollToBottomFromNotificationExtra, true);
         var pendingIntent = PendingIntent.GetActivity(
             this,
             0,

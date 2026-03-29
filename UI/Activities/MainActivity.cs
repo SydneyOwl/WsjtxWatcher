@@ -4,6 +4,7 @@ using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
+using Android.Runtime;
 using Android.Views;
 using Android.Views.Animations;
 using Android.Widget;
@@ -19,10 +20,19 @@ namespace WsjtxWatcher.UI.Activities;
 [Activity(Label = "@string/app_name", MainLauncher = true, Exported = true, LaunchMode = LaunchMode.SingleTop)]
 public sealed class MainActivity : LocalizedActivity
 {
+    public const string ScrollToBottomFromNotificationExtra = "wsjtxwatcher.scroll_to_bottom_from_notification";
+
     private MainViewModel _viewModel = null!;
     private DecodedMessageAdapter _adapter = null!;
     private TextView _aboutMe = null!;
     private EditText _callsignSearch = null!;
+    private int _dragTouchSlop;
+    private float _jumpButtonStartRawX;
+    private float _jumpButtonStartRawY;
+    private float _jumpButtonStartX;
+    private float _jumpButtonStartY;
+    private bool _isDraggingJumpButton;
+    private ImageButton _jumpToBottomButton = null!;
     private ListView _listView = null!;
     private IMenuItem? _startServerMenuItem;
     private IMenuItem? _stopServerMenuItem;
@@ -31,6 +41,7 @@ public sealed class MainActivity : LocalizedActivity
     private RelativeLayout _transmitLayout = null!;
     private TextView _transmitMessage = null!;
     private bool _isStoppingService;
+    private bool _pendingScrollToBottom;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -41,6 +52,7 @@ public sealed class MainActivity : LocalizedActivity
         _viewModel = AppHost.Current.GetRequiredService<MainViewModel>();
         BindViews();
         BindViewModel();
+        HandleLaunchIntent(Intent);
         RequestNotificationPermissionIfNeeded();
         _ = InitializeAsync();
     }
@@ -79,7 +91,16 @@ public sealed class MainActivity : LocalizedActivity
     protected override void OnResume()
     {
         base.OnResume();
+        MaybeScrollToBottom();
         _ = RefreshAsync();
+    }
+
+    protected override void OnNewIntent(Intent? intent)
+    {
+        base.OnNewIntent(intent);
+        Intent = intent;
+        HandleLaunchIntent(intent);
+        MaybeScrollToBottom();
     }
 
     protected override void OnDestroy()
@@ -95,7 +116,11 @@ public sealed class MainActivity : LocalizedActivity
     private async Task InitializeAsync()
     {
         await _viewModel.InitializeAsync().ConfigureAwait(false);
-        RunOnUiThread(Render);
+        RunOnUiThread(() =>
+        {
+            Render();
+            MaybeScrollToBottom();
+        });
     }
 
     private async Task RefreshAsync()
@@ -105,6 +130,7 @@ public sealed class MainActivity : LocalizedActivity
         {
             _adapter.NotifyDataSetChanged();
             Render();
+            MaybeScrollToBottom();
         });
     }
 
@@ -114,12 +140,16 @@ public sealed class MainActivity : LocalizedActivity
         _aboutMe = FindViewById<TextView>(Resource.Id.about_me)!;
         _totalRecord = FindViewById<TextView>(Resource.Id.total_record)!;
         _callsignSearch = FindViewById<EditText>(Resource.Id.callsign_search)!;
+        _jumpToBottomButton = FindViewById<ImageButton>(Resource.Id.jump_to_bottom_button)!;
         _transmitLayout = FindViewById<RelativeLayout>(Resource.Id.transmittingLayout)!;
         _transmitMessage = FindViewById<TextView>(Resource.Id.transmittingMessageTextView)!;
 
         _adapter = new DecodedMessageAdapter(this, _viewModel.Messages, () => _viewModel.SettingsSnapshot);
         _listView.Adapter = _adapter;
         _callsignSearch.TextChanged += (_, _) => _adapter.ApplyFilter(_callsignSearch.Text ?? string.Empty);
+        _jumpToBottomButton.Click += (_, _) => ScrollToBottom();
+        _dragTouchSlop = ViewConfiguration.Get(this)?.ScaledTouchSlop ?? 8;
+        _jumpToBottomButton.Touch += OnJumpToBottomButtonTouch;
 
         _transmitBlinkAnimation = AnimationUtils.LoadAnimation(this, Resource.Animation.view_blink)!;
     }
@@ -264,5 +294,93 @@ public sealed class MainActivity : LocalizedActivity
         {
             RequestPermissions(new[] { Manifest.Permission.PostNotifications }, 1001);
         }
+    }
+
+    private void ScrollToBottom()
+    {
+        if (_adapter.Count == 0)
+        {
+            return;
+        }
+
+        _listView.Post(() => _listView.SetSelection(_adapter.Count - 1));
+    }
+
+    private void HandleLaunchIntent(Intent? intent)
+    {
+        if (intent?.GetBooleanExtra(ScrollToBottomFromNotificationExtra, false) == true)
+        {
+            _pendingScrollToBottom = true;
+            intent.RemoveExtra(ScrollToBottomFromNotificationExtra);
+        }
+    }
+
+    private void MaybeScrollToBottom()
+    {
+        if (!_pendingScrollToBottom || _adapter.Count == 0)
+        {
+            return;
+        }
+
+        _pendingScrollToBottom = false;
+        ScrollToBottom();
+    }
+
+    private void OnJumpToBottomButtonTouch(object? sender, View.TouchEventArgs e)
+    {
+        if (sender is not View view || e.Event is null)
+        {
+            e.Handled = false;
+            return;
+        }
+
+        switch (e.Event.ActionMasked)
+        {
+            case MotionEventActions.Down:
+                _isDraggingJumpButton = false;
+                _jumpButtonStartRawX = e.Event.RawX;
+                _jumpButtonStartRawY = e.Event.RawY;
+                _jumpButtonStartX = view.GetX();
+                _jumpButtonStartY = view.GetY();
+                e.Handled = true;
+                return;
+
+            case MotionEventActions.Move:
+                var deltaX = e.Event.RawX - _jumpButtonStartRawX;
+                var deltaY = e.Event.RawY - _jumpButtonStartRawY;
+                if (!_isDraggingJumpButton &&
+                    (Math.Abs(deltaX) > _dragTouchSlop || Math.Abs(deltaY) > _dragTouchSlop))
+                {
+                    _isDraggingJumpButton = true;
+                }
+
+                if (_isDraggingJumpButton && view.Parent is View parentView)
+                {
+                    var maxX = Math.Max(0, parentView.Width - view.Width);
+                    var maxY = Math.Max(0, parentView.Height - view.Height);
+                    view.SetX(Math.Clamp(_jumpButtonStartX + deltaX, 0f, maxX));
+                    view.SetY(Math.Clamp(_jumpButtonStartY + deltaY, 0f, maxY));
+                }
+
+                e.Handled = true;
+                return;
+
+            case MotionEventActions.Up:
+                if (!_isDraggingJumpButton)
+                {
+                    view.PerformClick();
+                }
+
+                _isDraggingJumpButton = false;
+                e.Handled = true;
+                return;
+
+            case MotionEventActions.Cancel:
+                _isDraggingJumpButton = false;
+                e.Handled = true;
+                return;
+        }
+
+        e.Handled = false;
     }
 }

@@ -31,6 +31,7 @@ public sealed class AndroidNotificationService : INotificationService
         _lastNotificationAt = DateTimeOffset.UtcNow;
         var intent = new Intent(_application, typeof(UI.Activities.MainActivity));
         intent.AddFlags(ActivityFlags.SingleTop | ActivityFlags.ClearTop);
+        intent.PutExtra(UI.Activities.MainActivity.ScrollToBottomFromNotificationExtra, true);
         var pendingIntent = PendingIntent.GetActivity(
             _application,
             0,

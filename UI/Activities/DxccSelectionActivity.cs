@@ -33,7 +33,11 @@ public sealed class DxccSelectionActivity : LocalizedActivity
             async (item, isChecked) =>
             {
                 await _viewModel.ToggleAsync(item, isChecked).ConfigureAwait(false);
-                RunOnUiThread(UpdateSelectAllState);
+                RunOnUiThread(() =>
+                {
+                    _adapter.NotifyDataSetChanged();
+                    UpdateSelectAllState();
+                });
             });
 
         listView.Adapter = _adapter;

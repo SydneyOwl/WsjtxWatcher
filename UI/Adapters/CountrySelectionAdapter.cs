@@ -55,12 +55,22 @@ public sealed class CountrySelectionAdapter : BaseAdapter<CountrySelectionItem>
             holder.CheckBox.CheckedChange -= holder.CheckedChangedHandler;
         }
 
+        if (holder.RowClickHandler is not null)
+        {
+            view.Click -= holder.RowClickHandler;
+        }
+
         holder.CheckBox.Checked = item.IsSelected;
         holder.CheckedChangedHandler = async (_, args) =>
         {
             await _onCheckedChanged(item, args.IsChecked).ConfigureAwait(false);
         };
         holder.CheckBox.CheckedChange += holder.CheckedChangedHandler;
+        holder.RowClickHandler = (_, _) =>
+        {
+            holder.CheckBox.Checked = !holder.CheckBox.Checked;
+        };
+        view.Click += holder.RowClickHandler;
 
         return view;
     }
@@ -84,5 +94,6 @@ public sealed class CountrySelectionAdapter : BaseAdapter<CountrySelectionItem>
         public TextView Cq { get; }
         public CheckBox CheckBox { get; }
         public EventHandler<CompoundButton.CheckedChangeEventArgs>? CheckedChangedHandler { get; set; }
+        public EventHandler? RowClickHandler { get; set; }
     }
 }

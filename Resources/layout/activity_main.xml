@@ -81,6 +81,20 @@
                 android:hint="@string/search_callsign"
                 android:inputType="text"
                 android:maxLines="1"/>
+
+        <ImageButton
+                android:id="@+id/jump_to_bottom_button"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="bottom|end"
+                android:layout_marginEnd="12dp"
+                android:layout_marginBottom="76dp"
+                android:background="@drawable/floating_jump_button_background"
+                android:contentDescription="@string/jump_to_bottom"
+                android:elevation="6dp"
+                android:padding="12dp"
+                android:src="@android:drawable/arrow_down_float"
+                android:tint="@android:color/white"/>
     </FrameLayout>
 
 </LinearLayout>
