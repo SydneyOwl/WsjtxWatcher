@@ -1,62 +1,64 @@
 # WsjtxWatcher
 
-![Static Badge](https://img.shields.io/badge/.NET-8-purple?style=for-the-badge)
+## Introduction
 
-[Read it in English](./readme_en.md)
+WsjtxWatcher is an simple Android companion app for `WSJT-X` and `JTDX`.
 
-## 简介
+It listens to WSJT-X UDP messages on your local network and shows decoded traffic on your phone in real time.
+Users can view real-time FT8 information within the software and can also specify scenarios that require notifications (e.g. when a message matches your watched callsign patterns or selected DXCC entities), making it especially suitable for VHF DX.
 
-本软件利用`Wsjtx`(或`JTDX`，以下均称`wsjtx`)内置的UDP服务器功能，实现了与wsjtx的数据交互，用户可在软件中查看实时的ft8信息，并可进行取消发送、设置提醒等操作（**部分功能在低版本jtdx上不可用！**），也可指定需要发送通知进行提醒的场景，尤其适合VHF DX。
+When the software is running in the foreground, you can view the received FT8 information in real time. When the software goes to the background or the phone is locked, 
+the software will push notifications to you when receiving specified FT8 information based on your settings.
 
-当软件处于前台运行时，您可以实时查看收到的FT8信息；当软件进入后台，或手机锁屏时，软件将根据您的设置，在收到指定FT8信息时向您推送。
+Currently, the software supports Simplified Chinese and English.
 
-目前支持简体中文和英语两种语言。
+<img src="./md_assets/page3.png" style="zoom: 60%;" />
 
-<img src="./md_assets/page6.png" style="zoom: 67%;" />
+## Supported System Versions
 
-## 支持的系统版本
++ Android 8.0 and above
 
-+ Android 8.0+
+## How to Use
 
-## 使用方法
+**Note: Before using the software, if your phone has battery saver mode enabled, please make sure to disable it. Otherwise, it may cause frequent disconnections!**
 
-**注意：使用前，如果您的手机开启了省电模式，请务必关闭，否则将造成频繁断联！！**
+1. Click the menu in the upper-right corner and select the settings page. Enter your callsign and Maidenhead locator
+   coordinates on the settings page, and adjust other settings as needed. Note the IP address and port number displayed
+   on this page.
 
-1. 点击右上角菜单，选择进入设置页面，在设置页面中填写呼号以及梅登海格坐标，并按需修改其他设置。请记下设置页中展示的ip地址和端口号。
+2. Return to the main interface and click the menu again, then select "Start Service."
 
-2. 回到主界面后，再次点击右上角菜单，点击“开启服务”。
-
-3. 在电脑的jtdx/wsjtx软件中填写对应的ip和端口，如下图所示：
+3. In your computer's JTDX/WSJTX software, enter the corresponding IP address and port number as shown below:
 
    <img src="./md_assets/page4.png" style="zoom: 67%;" />
 
-   并请勾选“接受UDP请求”！
+   ~~Please check "accept udp requests" checkbox as well! (NOT NEEDED NOW)~~
 
-   **确保运行wsjtx的电脑与手机在同一个局域网环境中，例如连接着同一个wifi!**
+   **Ensure that the computer running wsjtx and your phone are on the same local network, such as being connected to the
+   same Wi-Fi!**
 
-4. 等待信息在软件界面中出现！
+4. Wait for the information to appear on the software interface!
 
 ## Todos
 
-+ 增加更多的信息支持（ft4/wspr）
-+ 其他...
++ ~~Add support for more message types(done)~~
++ Third-party data source / CLH Plugin support
++ Sync QSO Records from cloudlog/wavelog
++ Other enhancements...
 
-## 致谢
+## Acknowledgments
 
-+ [ft8cn](https://github.com/N0BOY/FT8CN)项目，借鉴了一些界面的配置以及一些工具类，也从其中学到了不少开发知识，感谢！
-+ [WsjtxUtils](https://github.com/KC3PIB/WsjtxUtils)，也是我没有选择用java开发的原因，因为没有合适的wsjtx解码库！
++ Thanks to the [ft8cn](https://github.com/N0BOY/FT8CN) project, from which some interface configurations and utility
+  classes were borrowed.
++ WsjtxUtils (https://github.com/KC3PIB/WsjtxUtils) for WSJT-X UDP message handling libraries
++ codex - Extensive refactoring was performed on the legacy codebase using Codex.
 
-## 版本日志
 
-`v0.0.1` Demo版本的WsjtxWatcher
+## License
 
-`v0.1.0` 加入呼号搜索、自定义DXCC以及其他功能，修正了一堆bug，优化数据库结构以及读写速度。
+This project is licensed under `The Unlicense`.
 
-## 许可证
-
-本项目使用`The Unlicense`进行许可。
-
-```markdown
+``````
 This is free and unencumbered software released into the public domain.
 
 Anyone is free to copy, modify, publish, use, compile, sell, or
@@ -81,7 +83,5 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 For more information, please refer to <https://unlicense.org>
-```
-
-
+``````
 
