@@ -52,7 +52,7 @@ public sealed class DecodedMessageFactory
             FromCountryChinese = fromCountry?.ChineseName ?? string.Empty,
             ToCountryId = toCountry?.Id ?? 0,
             FromCountryId = fromCountry?.Id ?? 0,
-            ContainsMyCallsign = ContainsIgnoreCase(messageText, settings.MyCallsign),
+            ContainsMyCallsign = CallsignPatternMatcher.IsMatch(messageText, settings.WatchedCallsignPatterns),
             MatchesSelectedDxcc = fromCountry is not null && settings.PreferredDxccIds.Contains(fromCountry.Id),
             DialFrequencyHz = effectiveFrequencyHz
         };
@@ -119,11 +119,6 @@ public sealed class DecodedMessageFactory
 
         var countryPoint = new GeoPoint(fromCountry.Latitude, fromCountry.Longitude);
         return MaidenheadLocator.FormatDistance(MaidenheadLocator.GetDistanceKilometers(countryPoint, myPoint));
-    }
-
-    private static bool ContainsIgnoreCase(string source, string target)
-    {
-        return !string.IsNullOrWhiteSpace(target) && source.Contains(target.Trim(), StringComparison.OrdinalIgnoreCase);
     }
 
     private static string FormatUtcTime(long milliseconds)

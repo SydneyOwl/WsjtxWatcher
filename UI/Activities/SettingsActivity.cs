@@ -17,6 +17,7 @@ public sealed class SettingsActivity : LocalizedActivity
     private Button _addWhitelistButton = null!;
     private EditText _callsignValue = null!;
     private TextView _ipAddressValue = null!;
+    private Button _manageCallsignPatternsButton = null!;
     private Button _openLogButton = null!;
     private EditText _locationValue = null!;
     private Spinner _languageSpinner = null!;
@@ -69,6 +70,7 @@ public sealed class SettingsActivity : LocalizedActivity
         _locationValue = FindViewById<EditText>(Resource.Id.location_value)!;
         _versionValue = FindViewById<TextView>(Resource.Id.version_value)!;
         _languageSpinner = FindViewById<Spinner>(Resource.Id.language_spinner)!;
+        _manageCallsignPatternsButton = FindViewById<Button>(Resource.Id.manage_callsign_patterns)!;
         _sendNotificationCheckbox = FindViewById<CheckBox>(Resource.Id.send_notification_checkbox)!;
         _vibrationCheckbox = FindViewById<CheckBox>(Resource.Id.vibration_checkbox)!;
         _sendNotificationAllCheckbox = FindViewById<CheckBox>(Resource.Id.send_notification_all_checkbox)!;
@@ -226,6 +228,7 @@ public sealed class SettingsActivity : LocalizedActivity
             ShowBackgroundHelpDialog();
         };
 
+        _manageCallsignPatternsButton.Click += (_, _) => StartActivity(typeof(CallsignPatternActivity));
         _setDxccButton.Click += (_, _) => StartActivity(typeof(DxccSelectionActivity));
     }
 
@@ -243,6 +246,7 @@ public sealed class SettingsActivity : LocalizedActivity
             _locationValue.Text = _viewModel.MyGrid;
             _versionValue.Text = _viewModel.VersionName;
             _languageSpinner.SetSelection(GetLanguageIndex(_viewModel.SelectedLanguage));
+            _manageCallsignPatternsButton.Text = $"{GetString(Resource.String.manage_callsign_patterns)} ({_viewModel.WatchedCallsignPatternCount})";
             _sendNotificationCheckbox.Checked = _viewModel.NotifyOnMyCall;
             _vibrationCheckbox.Checked = _viewModel.VibrateOnMyCall;
             _sendNotificationAllCheckbox.Checked = _viewModel.NotifyOnAnyMessage;

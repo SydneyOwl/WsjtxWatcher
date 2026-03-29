@@ -1,7 +1,9 @@
 using Android.App;
 using Android.Content;
+using System.Text.Json;
 using WsjtxWatcher.Core.Contracts;
 using WsjtxWatcher.Core.Models;
+using WsjtxWatcher.Core.Utilities;
 
 namespace WsjtxWatcher.Infrastructure.Platform;
 
@@ -19,13 +21,16 @@ public sealed class AndroidSettingsStore : ISettingsStore
     {
         var preferredDxcc = _sharedPreferences.GetStringSet("preferred_dxcc", AppSettings.DefaultPreferredDxccIds.Select(id => id.ToString()).ToHashSet())
                             ?? AppSettings.DefaultPreferredDxccIds.Select(id => id.ToString()).ToHashSet();
+        var callsign = _sharedPreferences.GetString("callsign", string.Empty) ?? string.Empty;
+        var watchedPatterns = LoadWatchedCallsignPatterns(callsign);
 
         var settings = new AppSettings
         {
             Port = _sharedPreferences.GetString("port", "2237") ?? "2237",
             Language = _sharedPreferences.GetString("language", string.Empty) ?? string.Empty,
-            MyCallsign = _sharedPreferences.GetString("callsign", string.Empty) ?? string.Empty,
+            MyCallsign = callsign,
             MyGrid = _sharedPreferences.GetString("grid", string.Empty) ?? string.Empty,
+            WatchedCallsignPatterns = [.. watchedPatterns],
             NotifyOnMyCall = _sharedPreferences.GetBoolean("notify_on_my_call", false),
             NotifyOnAnyMessage = _sharedPreferences.GetBoolean("notify_on_any", false),
             NotifyOnSelectedDxcc = _sharedPreferences.GetBoolean("notify_on_dxcc", false),
@@ -45,6 +50,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
         editor.PutString("language", settings.Language);
         editor.PutString("callsign", settings.MyCallsign);
         editor.PutString("grid", settings.MyGrid);
+        editor.PutString("callsign_patterns", JsonSerializer.Serialize(CallsignPatternMatcher.NormalizePatterns(settings.WatchedCallsignPatterns)));
         editor.PutBoolean("notify_on_my_call", settings.NotifyOnMyCall);
         editor.PutBoolean("notify_on_any", settings.NotifyOnAnyMessage);
         editor.PutBoolean("notify_on_dxcc", settings.NotifyOnSelectedDxcc);
@@ -62,5 +68,28 @@ public sealed class AndroidSettingsStore : ISettingsStore
         editor.Clear();
         editor.Apply();
         return SaveAsync(new AppSettings(), cancellationToken);
+    }
+
+    private List<string> LoadWatchedCallsignPatterns(string callsign)
+    {
+        var json = _sharedPreferences.GetString("callsign_patterns", string.Empty) ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(json))
+        {
+            try
+            {
+                var patterns = JsonSerializer.Deserialize<List<string>>(json);
+                return [.. CallsignPatternMatcher.NormalizePatterns(patterns)];
+            }
+            catch (JsonException)
+            {
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(callsign))
+        {
+            return [];
+        }
+
+        return [CallsignPatternMatcher.CreateDefaultPattern(callsign)];
     }
 }

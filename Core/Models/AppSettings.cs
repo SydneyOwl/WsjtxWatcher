@@ -6,6 +6,7 @@ public sealed class AppSettings
     public string Language { get; set; } = string.Empty;
     public string MyCallsign { get; set; } = string.Empty;
     public string MyGrid { get; set; } = string.Empty;
+    public List<string> WatchedCallsignPatterns { get; set; } = [];
     public bool NotifyOnMyCall { get; set; }
     public bool NotifyOnAnyMessage { get; set; }
     public bool NotifyOnSelectedDxcc { get; set; }
@@ -36,6 +37,7 @@ public sealed class AppSettings
             Language = Language,
             MyCallsign = MyCallsign,
             MyGrid = MyGrid,
+            WatchedCallsignPatterns = [.. WatchedCallsignPatterns],
             NotifyOnMyCall = NotifyOnMyCall,
             NotifyOnAnyMessage = NotifyOnAnyMessage,
             NotifyOnSelectedDxcc = NotifyOnSelectedDxcc,

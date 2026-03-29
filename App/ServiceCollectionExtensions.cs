@@ -35,6 +35,7 @@ internal static class ServiceCollectionExtensions
         services.AddSingleton<WatcherController>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<SettingsViewModel>();
+        services.AddSingleton<CallsignPatternViewModel>();
         services.AddSingleton<DxccSelectionViewModel>();
         return services;
     }

@@ -103,8 +103,7 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
                 holder.Message.SetTextColor(GetColor(Resource.Color.tracker_new_cq_win_end_color));
             }
 
-            if (!string.IsNullOrWhiteSpace(settings.MyCallsign) &&
-                message.Message.Contains(settings.MyCallsign, StringComparison.OrdinalIgnoreCase))
+            if (CallsignPatternMatcher.IsMatch(message.Message, settings.WatchedCallsignPatterns))
             {
                 holder.Message.SetTextColor(GetColor(Resource.Color.message_in_my_call_text_color));
             }

@@ -48,6 +48,9 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private AppLanguage selectedLanguage = AppLanguage.English;
 
+    [ObservableProperty]
+    private int watchedCallsignPatternCount;
+
     public SettingsViewModel(
         ISettingsStore settingsStore,
         IGridCacheStore gridCacheStore,
@@ -85,6 +88,7 @@ public partial class SettingsViewModel : ObservableObject
         SelectedLanguage = _appLanguageService.ResolveConfiguredLanguage(settings.Language);
         MyCallsign = settings.MyCallsign;
         MyGrid = settings.MyGrid;
+        WatchedCallsignPatternCount = settings.WatchedCallsignPatterns.Count;
         NotifyOnMyCall = settings.NotifyOnMyCall;
         NotifyOnAnyMessage = settings.NotifyOnAnyMessage;
         NotifyOnSelectedDxcc = settings.NotifyOnSelectedDxcc;
@@ -101,7 +105,7 @@ public partial class SettingsViewModel : ObservableObject
     public async Task SaveAsync(CancellationToken cancellationToken = default)
     {
         var existingSettings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-        var normalizedSettings = CreateSettings(existingSettings.PreferredDxccIds);
+        var normalizedSettings = CreateSettings(existingSettings.PreferredDxccIds, existingSettings.WatchedCallsignPatterns);
         var restartRequired = !string.Equals(existingSettings.Port, normalizedSettings.Port, StringComparison.Ordinal);
 
         await _settingsStore.SaveAsync(normalizedSettings, cancellationToken).ConfigureAwait(false);
@@ -144,7 +148,7 @@ public partial class SettingsViewModel : ObservableObject
         _backgroundAccessService.OpenBackgroundSettings();
     }
 
-    private AppSettings CreateSettings(IReadOnlyCollection<int> preferredDxccIds)
+    private AppSettings CreateSettings(IReadOnlyCollection<int> preferredDxccIds, IReadOnlyCollection<string> watchedCallsignPatterns)
     {
         return new AppSettings
         {
@@ -152,6 +156,7 @@ public partial class SettingsViewModel : ObservableObject
             Language = SelectedLanguage.ToStorageValue(),
             MyCallsign = (MyCallsign ?? string.Empty).Trim().ToUpperInvariant(),
             MyGrid = (MyGrid ?? string.Empty).Trim().ToUpperInvariant(),
+            WatchedCallsignPatterns = [.. CallsignPatternMatcher.NormalizePatterns(watchedCallsignPatterns)],
             NotifyOnMyCall = NotifyOnMyCall,
             NotifyOnAnyMessage = NotifyOnAnyMessage,
             NotifyOnSelectedDxcc = NotifyOnSelectedDxcc,
