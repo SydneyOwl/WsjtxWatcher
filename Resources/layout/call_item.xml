@@ -96,7 +96,7 @@
                 android:ellipsize="end"
                 android:fontFamily="monospace"
                 android:maxLines="1"
-                android:paddingEnd="8dp"
+                android:paddingStart="10dp"
                 android:text="FT4 LB"
                 android:textColor="@color/ruler_text_color"
                 android:textSize="10sp"/>
