@@ -179,7 +179,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         bool shouldAddTransmitMessage;
         lock (_sessionSync)
         {
-            shouldAddTransmitMessage = string.Equals(statusEvent.TxMode, "FT8", StringComparison.OrdinalIgnoreCase)
+            shouldAddTransmitMessage = !string.IsNullOrWhiteSpace(statusEvent.TxMode)
                                        && !session.IsTransmitting
                                        && statusEvent.Transmitting;
             session.DialFrequencyHz = statusEvent.DialFrequencyHz;
@@ -199,7 +199,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
                 : statusEvent.TransmitMessage;
             await _uiDispatcher.InvokeAsync(() =>
             {
-                State.AddMessage(DecodedRadioMessage.CreateUserTransmit(transmitMessage));
+                State.AddMessage(DecodedRadioMessage.CreateUserTransmit(transmitMessage, statusEvent.TxMode));
             }).ConfigureAwait(false);
         }
 
@@ -276,10 +276,9 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         var gridUpdates = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var item in batch)
         {
-            var gridUpdate = WsjtxMessageParser.ExtractGridUpdate(item.DecodeEvent.Message ?? string.Empty);
-            if (gridUpdate is not null)
+            if (TryGetGridUpdate(item.DecodeEvent, out var callsign, out var gridSquare))
             {
-                gridUpdates[gridUpdate.Value.Callsign] = gridUpdate.Value.GridSquare;
+                gridUpdates[callsign] = gridSquare;
             }
         }
 
@@ -373,6 +372,29 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         return int.TryParse(value, out var port) && port is > 0 and < 65536
             ? port
             : throw new InvalidOperationException($"Invalid WSJT-X port: {value}");
+    }
+
+    private static bool TryGetGridUpdate(WsjtDecodeEvent decodeEvent, out string callsign, out string gridSquare)
+    {
+        callsign = string.Empty;
+        gridSquare = string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(decodeEvent.RemoteCallsign) && MaidenheadLocator.IsValid(decodeEvent.RemoteGrid))
+        {
+            callsign = WsjtxMessageParser.NormalizeCallsign(decodeEvent.RemoteCallsign);
+            gridSquare = decodeEvent.RemoteGrid.Trim().ToUpperInvariant();
+            return true;
+        }
+
+        var gridUpdate = WsjtxMessageParser.ExtractGridUpdate(decodeEvent.Message ?? string.Empty);
+        if (gridUpdate is null)
+        {
+            return false;
+        }
+
+        callsign = gridUpdate.Value.Callsign;
+        gridSquare = gridUpdate.Value.GridSquare;
+        return true;
     }
 
     private void ResetRuntimeState()

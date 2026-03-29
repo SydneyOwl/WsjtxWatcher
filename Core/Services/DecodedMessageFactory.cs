@@ -22,14 +22,15 @@ public sealed class DecodedMessageFactory
         CancellationToken cancellationToken = default)
     {
         var messageText = (decodeEvent.Message ?? string.Empty).Trim();
-        var participants = WsjtxMessageParser.ParseParticipants(messageText);
-        var transmitterGrid = await ResolveGridAsync(messageText, participants.Transmitter, cancellationToken).ConfigureAwait(false);
+        var participants = ResolveParticipants(decodeEvent, messageText);
+        var transmitterGrid = await ResolveGridAsync(decodeEvent, messageText, participants.Transmitter, cancellationToken).ConfigureAwait(false);
         var fromCountry = string.IsNullOrWhiteSpace(participants.Transmitter)
             ? null
             : await _countryCatalog.FindCountryByCallsignAsync(participants.Transmitter, cancellationToken).ConfigureAwait(false);
         var toCountry = string.IsNullOrWhiteSpace(participants.Receiver)
             ? null
             : await _countryCatalog.FindCountryByCallsignAsync(participants.Receiver, cancellationToken).ConfigureAwait(false);
+        var effectiveFrequencyHz = decodeEvent.ReportedFrequencyHz > 0d ? decodeEvent.ReportedFrequencyHz : dialFrequencyHz;
 
         return new DecodedRadioMessage
         {
@@ -53,12 +54,31 @@ public sealed class DecodedMessageFactory
             FromCountryId = fromCountry?.Id ?? 0,
             ContainsMyCallsign = ContainsIgnoreCase(messageText, settings.MyCallsign),
             MatchesSelectedDxcc = fromCountry is not null && settings.PreferredDxccIds.Contains(fromCountry.Id),
-            DialFrequencyHz = dialFrequencyHz
+            DialFrequencyHz = effectiveFrequencyHz
         };
     }
 
-    private async Task<string> ResolveGridAsync(string messageText, string transmitter, CancellationToken cancellationToken)
+    private static (string Transmitter, string Receiver) ResolveParticipants(WsjtDecodeEvent decodeEvent, string messageText)
     {
+        if (!string.IsNullOrWhiteSpace(decodeEvent.RemoteCallsign))
+        {
+            return (WsjtxMessageParser.NormalizeCallsign(decodeEvent.RemoteCallsign), string.Empty);
+        }
+
+        return WsjtxMessageParser.ParseParticipants(messageText);
+    }
+
+    private async Task<string> ResolveGridAsync(
+        WsjtDecodeEvent decodeEvent,
+        string messageText,
+        string transmitter,
+        CancellationToken cancellationToken)
+    {
+        if (MaidenheadLocator.IsValid(decodeEvent.RemoteGrid))
+        {
+            return decodeEvent.RemoteGrid.Trim().ToUpperInvariant();
+        }
+
         var gridUpdate = WsjtxMessageParser.ExtractGridUpdate(messageText);
         if (gridUpdate is not null)
         {

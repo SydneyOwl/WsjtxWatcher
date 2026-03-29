@@ -6,7 +6,7 @@ public sealed class DecodedRadioMessage
     public string DecodeTimeUtc { get; init; } = string.Empty;
     public int Snr { get; init; }
     public double OffsetTimeSeconds { get; init; }
-    public uint OffsetFrequencyHz { get; init; }
+    public int OffsetFrequencyHz { get; init; }
     public string Mode { get; init; } = string.Empty;
     public string Message { get; init; } = string.Empty;
     public bool LowConfidence { get; init; }
@@ -25,12 +25,13 @@ public sealed class DecodedRadioMessage
     public bool MatchesSelectedDxcc { get; init; }
     public double DialFrequencyHz { get; init; }
 
-    public static DecodedRadioMessage CreateUserTransmit(string message)
+    public static DecodedRadioMessage CreateUserTransmit(string message, string mode)
     {
         return new DecodedRadioMessage
         {
             IsUserTransmit = true,
-            Message = message
+            Message = message,
+            Mode = mode ?? string.Empty
         };
     }
 }

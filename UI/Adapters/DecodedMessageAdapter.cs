@@ -2,6 +2,8 @@ using System.Collections.Specialized;
 using Android.Content;
 using Android.Graphics;
 using Android.OS;
+using Android.Text;
+using Android.Text.Style;
 using Android.Views;
 using Android.Widget;
 using WsjtxWatcher.Core.Models;
@@ -68,13 +70,12 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         holder.Offset.Visibility = isTransmit ? ViewStates.Gone : ViewStates.Visible;
         holder.Band.Visibility = isTransmit ? ViewStates.Gone : ViewStates.Visible;
         holder.Utc.Visibility = isTransmit ? ViewStates.Gone : ViewStates.Visible;
-        holder.LowConfidence.Visibility = isTransmit || !message.LowConfidence ? ViewStates.Invisible : ViewStates.Visible;
         holder.ToCountry.Visibility = isTransmit ? ViewStates.Gone : ViewStates.Visible;
         holder.FromCountry.Visibility = isTransmit ? ViewStates.Gone : ViewStates.Visible;
         holder.Distance.Visibility = isTransmit ? ViewStates.Gone : ViewStates.Visible;
 
         holder.Message.Text = isTransmit
-            ? string.IsNullOrWhiteSpace(message.Message) ? _context.GetString(Resource.String.user_tx_period) : message.Message
+            ? FormatTransmitMessage(message)
             : message.Message;
 
         holder.Message.PaintFlags = PaintFlags.LinearText;
@@ -89,9 +90,8 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
             holder.ToCountry.Text = GetCountryName(languageCode, message.ToCountryEnglish, message.ToCountryChinese);
             holder.FromCountry.Text = GetCountryName(languageCode, message.FromCountryEnglish, message.FromCountryChinese);
             holder.Distance.Text = message.DistanceText;
-            holder.Band.Text = message.DialFrequencyHz > 0d
-                ? $"{message.DialFrequencyHz / 1_000_000d:F3}MHz"
-                : _context.GetString(Resource.String.unknown_band);
+            ApplyModeStatus(holder.LowConfidence, message);
+            holder.Band.Text = FormatFrequency(message);
 
             if (message.Message.Contains("RR73", StringComparison.OrdinalIgnoreCase) ||
                 message.Message.Contains(" RRR", StringComparison.OrdinalIgnoreCase) ||
@@ -111,6 +111,8 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         }
         else
         {
+            holder.LowConfidence.TextFormatted = new Java.Lang.String(string.Empty);
+            holder.LowConfidence.Visibility = ViewStates.Gone;
             view.SetBackgroundColor(GetColor(Resource.Color.my_transmit_period));
         }
 
@@ -122,6 +124,85 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         return languageCode.StartsWith("zh", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(chineseName)
             ? chineseName
             : englishName;
+    }
+
+    private string FormatFrequency(DecodedRadioMessage message)
+    {
+        var frequency = message.DialFrequencyHz > 0d
+            ? $"{message.DialFrequencyHz / 1_000_000d:F3}MHz"
+            : string.Empty;
+
+        return !string.IsNullOrWhiteSpace(frequency)
+            ? frequency
+            : _context.GetString(Resource.String.unknown_band);
+    }
+
+    private string FormatTransmitMessage(DecodedRadioMessage message)
+    {
+        if (!string.IsNullOrWhiteSpace(message.Message))
+        {
+            return message.Message;
+        }
+
+        var fallback = _context.GetString(Resource.String.user_tx_period);
+        return string.IsNullOrWhiteSpace(message.Mode)
+            ? fallback
+            : $"{message.Mode.ToUpperInvariant()} {fallback}";
+    }
+
+    private void ApplyModeStatus(TextView target, DecodedRadioMessage message)
+    {
+        var mode = (message.Mode ?? string.Empty).Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(mode) && !message.LowConfidence)
+        {
+            target.TextFormatted = new Java.Lang.String(string.Empty);
+            target.Visibility = ViewStates.Invisible;
+            return;
+        }
+
+        var builder = new SpannableStringBuilder();
+        if (!string.IsNullOrWhiteSpace(mode))
+        {
+            var modeStart = builder.Length();
+            builder.Append(mode);
+            builder.SetSpan(
+                new ForegroundColorSpan(GetColor(GetModeColor(mode))),
+                modeStart,
+                builder.Length(),
+                SpanTypes.ExclusiveExclusive);
+        }
+
+        if (message.LowConfidence)
+        {
+            if (builder.Length() > 0)
+            {
+                builder.Append(" ");
+            }
+
+            var lbStart = builder.Length();
+            builder.Append("LB");
+            builder.SetSpan(
+                new ForegroundColorSpan(GetColor(Resource.Color.mode_lb_color)),
+                lbStart,
+                builder.Length(),
+                SpanTypes.ExclusiveExclusive);
+        }
+
+        target.TextFormatted = builder;
+        target.Visibility = ViewStates.Visible;
+    }
+
+    private static int GetModeColor(string mode)
+    {
+        return mode switch
+        {
+            "FT8" => Resource.Color.mode_ft8_color,
+            "FT4" => Resource.Color.mode_ft4_color,
+            "JT9" => Resource.Color.mode_jt9_color,
+            "Q65" => Resource.Color.mode_q65_color,
+            "WSPR" => Resource.Color.mode_wspr_color,
+            _ => Resource.Color.mode_default_color
+        };
     }
 
     private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)

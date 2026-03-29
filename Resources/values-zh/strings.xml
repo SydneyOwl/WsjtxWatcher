@@ -28,7 +28,7 @@
     <string name="when_callsign_included">当信息中包含我的呼号时：</string>
     <string name="send_notification">发送通知</string>
     <string name="vibration">振动</string>
-    <string name="user_ft8_msg_available">有一条重要FT8信息！</string>
+    <string name="user_ft8_msg_available">有一条重要解码信息！</string>
     <string name="reset_database">重置数据库</string>
     <string name="reset_all">重置应用</string>
     <string name="total_record">总记录数：</string>
@@ -40,19 +40,19 @@
     <string name="denied_notification">请在设置中启用“通知”权限！</string>
     <string name="denied_vibrate">请在设置中启用“振动”权限！</string>
     <string name="explain_settings">为了软件更好地运行，建议执行以下设置：</string>
-    <string name="no_power_save">1. 请勿开启省电模式：如开启省电模式，可能造成收到ft8消息时无法向您推送等问题</string>
+    <string name="no_power_save">1. 请勿开启省电模式：如开启省电模式，可能造成收到解码消息时无法向您推送等问题</string>
     <string name="white_list">2. 将应用加入电池优化白名单： 系统为省电，可能会误杀后台UDP服务器，造成无法正常接收信息。
     </string>
     <string name="add_to_whitelist">加入白名单</string>
     <string name="background">3.后台运行权限：如未开启后台运行权限，可能将导致软件进入后台时收到信息无法及时推送！</string>
     <string name="add_to_background">后台运行权限</string>
     <string name="service_running">服务运行中</string>
-    <string name="listening_msg">正在监听FT8信息...</string>
+    <string name="listening_msg">正在监听WSJT-X信息...</string>
     <string name="on_dxcc">当选中的dxcc出现时：</string>
     <string name="set_dxcc_entity">选择dxcc</string>
     <string name="select_all">全选</string>
     <string name="selected_dxcc">选中的DXCC：</string>
-    <string name="received_msg">收到FT8信息：</string>
+    <string name="received_msg">收到解码信息：</string>
     <string name="included_in_msg">我参与此信息：</string>
     <string name="search">输入搜索内容...</string>
     <string name="search_callsign">搜索呼号...</string>

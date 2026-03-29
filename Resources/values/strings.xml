@@ -28,7 +28,7 @@
     <string name="when_callsign_included">When my callsign is included in the message:</string>
     <string name="send_notification">Send notification</string>
     <string name="vibration">Vibration</string>
-    <string name="user_ft8_msg_available">There\'s an important ft8 msg!</string>
+    <string name="user_ft8_msg_available">There\'s an important decoded msg!</string>
     <string name="reset_database">Reset Database</string>
     <string name="reset_all">Reset All</string>
     <string name="total_record">Total record:</string>
@@ -36,7 +36,7 @@
     <string name="halt_tx">Halt Tx</string>
     <string name="re_decode">Decode Again</string>
     <string name="clear_record">Clear Record</string>
-    <string name="when_call_all">When ft8 message is received(for VHF DX)</string>
+    <string name="when_call_all">When a WSJT-X message is received (for VHF DX)</string>
     <string name="denied_notification">Please enable notification access in settings!</string>
     <string name="denied_vibrate">Please enable vibrate access in settings!</string>
     <string name="explain_settings">It\'s recommanded to execute those settings to make app run well:</string>
@@ -46,7 +46,7 @@
     <string name="background">3.Background Running</string>
     <string name="add_to_background">Add background</string>
     <string name="service_running">Service Running</string>
-    <string name="listening_msg">Listening ft8 message...</string>
+    <string name="listening_msg">Listening WSJT-X messages...</string>
     <string name="notify_id1" translatable="false">9232</string>
     <string name="notification_channel_id1" translatable="false">2341</string>
     <string name="notification_channel_id2" translatable="false">4214</string>
@@ -55,7 +55,7 @@
     <string name="set_dxcc_entity">Select DXCC</string>
     <string name="select_all">Select All</string>
     <string name="selected_dxcc">Selected Dxcc:</string>
-    <string name="received_msg">Received msg:</string>
+    <string name="received_msg">Received decoded msg:</string>
     <string name="included_in_msg">I am included in the msg:</string>
     <string name="search">Input to search...</string>
     <string name="search_callsign">Search Callsign</string>

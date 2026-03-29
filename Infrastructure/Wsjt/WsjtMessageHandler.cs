@@ -31,7 +31,7 @@ public sealed class WsjtMessageHandler : WsjtxUdpServerBaseAsyncMessageHandler
             TimeMilliseconds = message.Time,
             Snr = message.Snr,
             OffsetTimeSeconds = message.OffsetTimeSeconds,
-            OffsetFrequencyHz = message.OffsetFrequencyHz,
+            OffsetFrequencyHz = unchecked((int)message.OffsetFrequencyHz),
             Mode = message.Mode,
             Message = message.Message,
             LowConfidence = message.LowConfidence,
@@ -123,8 +123,41 @@ public sealed class WsjtMessageHandler : WsjtxUdpServerBaseAsyncMessageHandler
         CancellationToken cancellationToken = default)
     {
         await _eventSink.FeedTimeoutDogAsync();
-        await PublishSessionActivityAsync(message.Id, endPoint, cancellationToken).ConfigureAwait(false);
+        await _eventSink.OnDecodeAsync(new WsjtDecodeEvent
+        {
+            ClientId = message.Id,
+            SessionEndPoint = endPoint,
+            IsNew = message.New,
+            TimeMilliseconds = message.Time,
+            Snr = message.Snr,
+            OffsetTimeSeconds = message.DeltaTimeSeconds,
+            OffsetFrequencyHz = message.FrequencyDriftHz,
+            Mode = "WSPR",
+            Message = BuildWsprDisplayMessage(message),
+            OffAir = message.OffAir,
+            RemoteCallsign = message.Callsign ?? string.Empty,
+            RemoteGrid = message.Grid ?? string.Empty,
+            DetailText = $"{message.Power}dBm",
+            ReportedFrequencyHz = message.FrequencyHz
+        }, cancellationToken).ConfigureAwait(false);
         await base.HandleWSPRDecodeMessageAsync(server, message, endPoint, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static string BuildWsprDisplayMessage(WSPRDecode message)
+    {
+        var parts = new List<string>(3);
+        if (!string.IsNullOrWhiteSpace(message.Callsign))
+        {
+            parts.Add(message.Callsign.Trim().ToUpperInvariant());
+        }
+
+        if (!string.IsNullOrWhiteSpace(message.Grid))
+        {
+            parts.Add(message.Grid.Trim().ToUpperInvariant());
+        }
+
+        parts.Add($"{message.Power}dBm");
+        return string.Join(' ', parts);
     }
 
     private async Task PublishSessionActivityAsync(string clientId, EndPoint endPoint, CancellationToken cancellationToken)

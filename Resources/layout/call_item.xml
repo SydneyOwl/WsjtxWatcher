@@ -97,7 +97,7 @@
                 android:fontFamily="monospace"
                 android:maxLines="1"
                 android:paddingEnd="8dp"
-                android:text="@string/low_reliability"
+                android:text="FT4 LB"
                 android:textColor="@color/ruler_text_color"
                 android:textSize="10sp"/>
 

@@ -41,6 +41,13 @@
 
     <color name="text_view_color">#636363</color>
     <color name="text_view_error_color">#FB0000</color>
+    <color name="mode_default_color">#636363</color>
+    <color name="mode_ft8_color">#1976D2</color>
+    <color name="mode_ft4_color">#00897B</color>
+    <color name="mode_jt9_color">#6A1B9A</color>
+    <color name="mode_q65_color">#EF6C00</color>
+    <color name="mode_wspr_color">#2E7D32</color>
+    <color name="mode_lb_color">#D50000</color>
 
     <color name="transparent">#00000000</color>
     <color name="image_button_pressed">#ff53c1bd</color>
