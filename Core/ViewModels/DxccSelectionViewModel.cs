@@ -28,6 +28,7 @@ public partial class DxccSelectionViewModel : ObservableObject
         var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
         _selectedIds.Clear();
         _selectedIds.UnionWith(settings.PreferredDxccIds);
+        SearchText = string.Empty;
         await RefreshItemsAsync(cancellationToken).ConfigureAwait(false);
     }
 
