@@ -103,7 +103,7 @@ public sealed class SettingsActivity : LocalizedActivity
 
     private void BindEvents()
     {
-        _languageSpinner.ItemSelected += (_, args) =>
+        _languageSpinner.ItemSelected += async (_, args) =>
         {
             if (_isBinding)
             {
@@ -119,7 +119,17 @@ public sealed class SettingsActivity : LocalizedActivity
             _viewModel.SelectedLanguage = selectedLanguage;
             if (_viewModel.IsLanguageChangePending)
             {
-                Toast.MakeText(this, GetString(Resource.String.language_restart_required), ToastLength.Long)?.Show();
+                var shouldExit = await ConfirmAsync(
+                    Resource.String.language_restart_title,
+                    Resource.String.language_restart_message).ConfigureAwait(false);
+                if (!shouldExit)
+                {
+                    RunOnUiThread(RevertLanguageSelection);
+                    return;
+                }
+
+                await _viewModel.SaveAsync().ConfigureAwait(false);
+                RunOnUiThread(ExitApplication);
             }
         };
 
@@ -299,6 +309,7 @@ public sealed class SettingsActivity : LocalizedActivity
             builder.SetPositiveButton(Android.Resource.String.Ok, (_, _) => tcs.TrySetResult(true));
             builder.SetNegativeButton(Android.Resource.String.Cancel, (_, _) => tcs.TrySetResult(false));
             var dialog = builder.Create() ?? throw new InvalidOperationException("Failed to create confirmation dialog.");
+            dialog.CancelEvent += (_, _) => tcs.TrySetResult(false);
             dialog.Show();
         });
         return tcs.Task;
@@ -311,5 +322,22 @@ public sealed class SettingsActivity : LocalizedActivity
         builder.SetMessage(Resource.String.background_help_message);
         builder.SetPositiveButton(Android.Resource.String.Ok, (_, _) => { });
         builder.Show();
+    }
+
+    private void RevertLanguageSelection()
+    {
+        _isBinding = true;
+        var originalLanguage = _viewModel.CurrentAppLanguage;
+        _viewModel.SelectedLanguage = originalLanguage;
+        _languageSpinner.SetSelection(GetLanguageIndex(originalLanguage));
+        _isBinding = false;
+    }
+
+    private void ExitApplication()
+    {
+        FinishAffinity();
+        FinishAndRemoveTask();
+        Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
+        Java.Lang.JavaSystem.Exit(0);
     }
 }

@@ -25,6 +25,8 @@
     <string name="english">英语</string>
     <string name="version">版本</string>
     <string name="language_restart_required">语言切换将在重启应用后生效。</string>
+    <string name="language_restart_title">程序将退出</string>
+    <string name="language_restart_message">程序将退出，请重启应用以使语言切换生效。</string>
     <string name="when_callsign_included">当信息包含指定呼号时：</string>
     <string name="send_notification">发送通知</string>
     <string name="vibration">振动</string>
