@@ -36,6 +36,7 @@ internal static class ServiceCollectionExtensions
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<CallsignPatternViewModel>();
+        services.AddSingleton<IgnoredCallsignViewModel>();
         services.AddSingleton<DxccSelectionViewModel>();
         return services;
     }

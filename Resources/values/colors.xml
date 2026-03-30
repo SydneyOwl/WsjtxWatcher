@@ -181,12 +181,23 @@
     <color name="char_bar_16">#61024D</color>
 
 
-    <color name="odd_period">#d9e1eb</color>
-    <color name="even_period">#f9f6ef</color>
-    <color name="my_transmit_period">#dae4e2</color>
-    <color name="highlight_callsign_period">#ffdfe7</color>
-    <color name="highlight_alert_period">#fff0cf</color>
-    <color name="system_notice_period">#e6edf8</color>
+    <color name="odd_period">#E8EEF6</color>
+    <color name="odd_period_stroke">#B6C5D8</color>
+    <color name="even_period">#FBF7EE</color>
+    <color name="even_period_stroke">#D8CCBC</color>
+    <color name="my_transmit_period">#E0EBE7</color>
+    <color name="my_transmit_period_stroke">#9FB7AE</color>
+    <color name="system_notice_period">#EDF3FB</color>
+    <color name="system_notice_period_stroke">#A8B8CE</color>
+    <color name="decoded_match_any_fill">#EAF4FF</color>
+    <color name="decoded_match_any_stroke">#8FB3D1</color>
+    <color name="decoded_match_callsign_fill">#FFF2DA</color>
+    <color name="decoded_match_callsign_stroke">#C28B47</color>
+    <color name="decoded_match_dxcc_fill">#E5F5EE</color>
+    <color name="decoded_match_dxcc_stroke">#64A07D</color>
+    <color name="decoded_match_multi_fill">#F7ECD9</color>
+    <color name="decoded_match_multi_stroke">#9E7440</color>
+    <color name="decoded_message_my_callsign_text">#A63A27</color>
 
 
 </resources>

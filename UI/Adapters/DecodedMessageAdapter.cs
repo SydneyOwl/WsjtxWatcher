@@ -1,11 +1,13 @@
 using System.Collections.Specialized;
 using Android.Content;
 using Android.Graphics;
+using Android.Graphics.Drawables;
 using Android.OS;
 using Android.Text;
 using Android.Text.Style;
 using Android.Views;
 using Android.Widget;
+using WsjtxUtils.WsjtxMessages.Messages;
 using WsjtxWatcher.Core.Models;
 using WsjtxWatcher.Core.Utilities;
 
@@ -66,6 +68,9 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         var languageCode = Java.Util.Locale.Default?.Language ?? "en";
         var isTransmit = message.IsUserTransmit;
         var isCompactMessage = message.IsUserTransmit || message.IsSystemNotice;
+        var displayMessage = isTransmit
+            ? FormatTransmitMessage(message)
+            : message.Message;
 
         holder.Snr.Visibility = isCompactMessage ? ViewStates.Gone : ViewStates.Visible;
         holder.DeltaTime.Visibility = isCompactMessage ? ViewStates.Gone : ViewStates.Visible;
@@ -76,18 +81,12 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         holder.FromCountry.Visibility = isCompactMessage ? ViewStates.Gone : ViewStates.Visible;
         holder.Distance.Visibility = isCompactMessage ? ViewStates.Gone : ViewStates.Visible;
 
-        holder.Message.Text = isTransmit
-            ? FormatTransmitMessage(message)
-            : message.Message;
-
         holder.Message.PaintFlags = PaintFlags.LinearText;
         holder.Message.SetTextColor(GetColor(Resource.Color.text_view_color));
+        holder.Message.TextFormatted = BuildMessageText(displayMessage, message, settings);
 
         if (!isCompactMessage)
         {
-            var matchesWatchedCallsign = CallsignPatternMatcher.IsMatch(message.Message, settings.WatchedCallsignPatterns);
-            var matchesSelectedDxcc = MatchesSelectedDxcc(message, settings);
-
             holder.Snr.Text = message.Snr.ToString();
             holder.DeltaTime.Text = message.OffsetTimeSeconds.ToString("F1");
             holder.Offset.Text = message.OffsetFrequencyHz.ToString();
@@ -97,21 +96,16 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
             holder.Distance.Text = message.DistanceText;
             ApplyModeStatus(holder.LowConfidence, message);
             holder.Band.Text = FormatFrequency(message);
+            holder.Message.SetTextColor(GetColor(GetMessageTextColor(message)));
 
             if (message.Message.Contains("RR73", StringComparison.OrdinalIgnoreCase) ||
                 message.Message.Contains(" RRR", StringComparison.OrdinalIgnoreCase) ||
                 message.Message.EndsWith(" 73", StringComparison.OrdinalIgnoreCase))
             {
                 holder.Message.PaintFlags |= PaintFlags.StrikeThruText;
-                holder.Message.SetTextColor(GetColor(Resource.Color.tracker_new_cq_win_end_color));
             }
 
-            if (matchesWatchedCallsign)
-            {
-                holder.Message.SetTextColor(GetColor(Resource.Color.message_in_my_call_text_color));
-            }
-
-            view.SetBackgroundColor(GetColor(GetRowColor(message.DecodeTimeUtc, matchesWatchedCallsign, matchesSelectedDxcc)));
+            ApplyRowBackground(view, message, settings);
         }
         else
         {
@@ -120,20 +114,12 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
             if (message.IsSystemNotice)
             {
                 holder.Message.SetTextColor(GetColor(Resource.Color.fromcall_is_qso_text_color));
-                view.SetBackgroundColor(GetColor(Resource.Color.system_notice_period));
             }
-            else
-            {
-                view.SetBackgroundColor(GetColor(Resource.Color.my_transmit_period));
-            }
+
+            ApplyRowBackground(view, message, settings);
         }
 
         return view;
-    }
-
-    private static bool MatchesSelectedDxcc(DecodedRadioMessage message, AppSettings settings)
-    {
-        return message.FromCountryId > 0 && settings.PreferredDxccIds.Contains(message.FromCountryId);
     }
 
     private static string GetCountryName(string languageCode, string englishName, string chineseName)
@@ -212,6 +198,114 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         target.Visibility = ViewStates.Visible;
     }
 
+    private Java.Lang.ICharSequence BuildMessageText(string text, DecodedRadioMessage message, AppSettings settings)
+    {
+        if (message.IsUserTransmit || message.IsSystemNotice || !message.ContainsMyCallsign)
+        {
+            return new Java.Lang.String(text);
+        }
+
+        var ranges = CallsignPatternMatcher.FindCallsignTokenRanges(text, settings.MyCallsign);
+        if (ranges.Count == 0)
+        {
+            return new Java.Lang.String(text);
+        }
+
+        var builder = new SpannableStringBuilder(text);
+        foreach (var (start, length) in ranges)
+        {
+            builder.SetSpan(
+                new ForegroundColorSpan(GetColor(Resource.Color.decoded_message_my_callsign_text)),
+                start,
+                start + length,
+                SpanTypes.ExclusiveExclusive);
+            builder.SetSpan(
+                new StyleSpan(TypefaceStyle.Bold),
+                start,
+                start + length,
+                SpanTypes.ExclusiveExclusive);
+        }
+
+        return builder;
+    }
+
+    private void ApplyRowBackground(View view, DecodedRadioMessage message, AppSettings settings)
+    {
+        var (fillColor, strokeColor) = ResolveRowColors(message, settings);
+        view.Background = CreateRowBackground(fillColor, strokeColor);
+    }
+
+    private (int FillColor, int StrokeColor) ResolveRowColors(DecodedRadioMessage message, AppSettings settings)
+    {
+        if (message.IsSystemNotice)
+        {
+            return (Resource.Color.system_notice_period, Resource.Color.system_notice_period_stroke);
+        }
+
+        if (message.IsUserTransmit)
+        {
+            return (Resource.Color.my_transmit_period, Resource.Color.my_transmit_period_stroke);
+        }
+
+        if (IgnoredCallsignMatcher.IsIgnored(message, settings.IgnoredCallsigns))
+        {
+            return IsOddPeriod(message.DecodeTimeUtc)
+                ? (Resource.Color.odd_period, Resource.Color.odd_period_stroke)
+                : (Resource.Color.even_period, Resource.Color.even_period_stroke);
+        }
+
+        var matchesWatchedCallsign = message.MatchesWatchedCallsignPattern && IsWatchedCallsignHighlightEnabled(settings);
+        var matchesDxcc = message.MatchesSelectedDxcc && IsDxccHighlightEnabled(settings);
+        if (matchesWatchedCallsign && matchesDxcc)
+        {
+            return (Resource.Color.decoded_match_multi_fill, Resource.Color.decoded_match_multi_stroke);
+        }
+
+        if (matchesWatchedCallsign)
+        {
+            return (Resource.Color.decoded_match_callsign_fill, Resource.Color.decoded_match_callsign_stroke);
+        }
+
+        if (matchesDxcc)
+        {
+            return (Resource.Color.decoded_match_dxcc_fill, Resource.Color.decoded_match_dxcc_stroke);
+        }
+
+        if (IsAnyMessageHighlightEnabled(settings))
+        {
+            return (Resource.Color.decoded_match_any_fill, Resource.Color.decoded_match_any_stroke);
+        }
+
+        return IsOddPeriod(message.DecodeTimeUtc)
+            ? (Resource.Color.odd_period, Resource.Color.odd_period_stroke)
+            : (Resource.Color.even_period, Resource.Color.even_period_stroke);
+    }
+
+    private GradientDrawable CreateRowBackground(int fillColor, int strokeColor)
+    {
+        var drawable = new GradientDrawable();
+        drawable.SetShape(ShapeType.Rectangle);
+        drawable.SetColor(GetColor(fillColor));
+        drawable.SetStroke(Dp(1), GetColor(strokeColor));
+        drawable.SetCornerRadius(Dp(6));
+        return drawable;
+    }
+
+    private static bool IsAnyMessageHighlightEnabled(AppSettings settings)
+    {
+        return settings.NotifyOnAnyMessage || settings.VibrateOnAnyMessage;
+    }
+
+    private static bool IsWatchedCallsignHighlightEnabled(AppSettings settings)
+    {
+        return settings.NotifyOnMyCall || settings.VibrateOnMyCall;
+    }
+
+    private static bool IsDxccHighlightEnabled(AppSettings settings)
+    {
+        return settings.NotifyOnSelectedDxcc || settings.VibrateOnSelectedDxcc;
+    }
+
     private static int GetModeColor(string mode)
     {
         return mode switch
@@ -230,26 +324,29 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         ApplyFilter(_query);
     }
 
-    private static int GetRowColor(string decodeTime, bool matchesWatchedCallsign, bool matchesSelectedDxcc)
+    private static int GetMessageTextColor(DecodedRadioMessage message)
     {
-        if (matchesWatchedCallsign)
-        {
-            return Resource.Color.highlight_callsign_period;
-        }
+        return message.Message.Contains("RR73", StringComparison.OrdinalIgnoreCase) ||
+               message.Message.Contains(" RRR", StringComparison.OrdinalIgnoreCase) ||
+               message.Message.EndsWith(" 73", StringComparison.OrdinalIgnoreCase)
+            ? Resource.Color.tracker_new_cq_win_end_color
+            : Resource.Color.text_view_color;
+    }
 
-        if (matchesSelectedDxcc)
-        {
-            return Resource.Color.highlight_alert_period;
-        }
-
+    private static bool IsOddPeriod(string decodeTime)
+    {
         if (decodeTime.Length < 2 || !int.TryParse(decodeTime[^2..], out var seconds))
         {
-            return Resource.Color.even_period;
+            return false;
         }
 
-        return seconds is > 55 and < 60 or < 5 or > 25 and < 35
-            ? Resource.Color.odd_period
-            : Resource.Color.even_period;
+        return seconds is > 55 and < 60 or < 5 or > 25 and < 35;
+    }
+
+    private int Dp(int value)
+    {
+        var density = _context.Resources?.DisplayMetrics?.Density ?? 1f;
+        return Math.Max(1, (int)Math.Round(value * density));
     }
 
     private Color GetColor(int colorResource)

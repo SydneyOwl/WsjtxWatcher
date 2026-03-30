@@ -7,6 +7,7 @@ public sealed class AppSettings
     public string MyCallsign { get; set; } = string.Empty;
     public string MyGrid { get; set; } = string.Empty;
     public List<string> WatchedCallsignPatterns { get; set; } = [];
+    public List<IgnoredCallsignEntry> IgnoredCallsigns { get; set; } = [];
     public bool NotifyOnMyCall { get; set; }
     public bool NotifyOnAnyMessage { get; set; }
     public bool NotifyOnSelectedDxcc { get; set; }
@@ -38,6 +39,7 @@ public sealed class AppSettings
             MyCallsign = MyCallsign,
             MyGrid = MyGrid,
             WatchedCallsignPatterns = [.. WatchedCallsignPatterns],
+            IgnoredCallsigns = [.. IgnoredCallsigns],
             NotifyOnMyCall = NotifyOnMyCall,
             NotifyOnAnyMessage = NotifyOnAnyMessage,
             NotifyOnSelectedDxcc = NotifyOnSelectedDxcc,

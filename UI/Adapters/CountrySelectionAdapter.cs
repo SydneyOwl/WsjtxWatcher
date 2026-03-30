@@ -9,18 +9,18 @@ public sealed class CountrySelectionAdapter : BaseAdapter<CountrySelectionItem>
 {
     private readonly Context _context;
     private readonly IList<CountrySelectionItem> _items;
-    private readonly bool _useChineseNames;
+    private readonly string _languageCode;
     private readonly Func<CountrySelectionItem, bool, Task> _onCheckedChanged;
 
     public CountrySelectionAdapter(
         Context context,
         IList<CountrySelectionItem> items,
-        bool useChineseNames,
+        string languageCode,
         Func<CountrySelectionItem, bool, Task> onCheckedChanged)
     {
         _context = context;
         _items = items;
-        _useChineseNames = useChineseNames;
+        _languageCode = languageCode;
         _onCheckedChanged = onCheckedChanged;
     }
 
@@ -43,12 +43,9 @@ public sealed class CountrySelectionAdapter : BaseAdapter<CountrySelectionItem>
 
         var item = _items[position];
         holder.Dxcc.Text = item.Country.DxccPrefix;
-        holder.MainName.Text = _useChineseNames && !string.IsNullOrWhiteSpace(item.Country.ChineseName)
-            ? item.Country.ChineseName
-            : item.Country.EnglishName;
-        holder.SubName.Text = item.Country.EnglishName;
-        holder.Itu.Text = $"ITU:{item.Country.ItuZone}";
-        holder.Cq.Text = $"CQ:{item.Country.CqZone}";
+        holder.MainName.Text = item.Country.DisplayName(_languageCode);
+        holder.Itu.Text = $"ITU {item.Country.ItuZone}";
+        holder.Cq.Text = $"CQ {item.Country.CqZone}";
 
         if (holder.CheckedChangedHandler is not null)
         {
@@ -81,7 +78,6 @@ public sealed class CountrySelectionAdapter : BaseAdapter<CountrySelectionItem>
         {
             Dxcc = root.FindViewById<TextView>(Resource.Id.dxcc_dxcc)!;
             MainName = root.FindViewById<TextView>(Resource.Id.dxcc_main_name)!;
-            SubName = root.FindViewById<TextView>(Resource.Id.dxcc_sub_name)!;
             Itu = root.FindViewById<TextView>(Resource.Id.dxcc_itu)!;
             Cq = root.FindViewById<TextView>(Resource.Id.dxcc_cq)!;
             CheckBox = root.FindViewById<CheckBox>(Resource.Id.ch_delete)!;
@@ -89,7 +85,6 @@ public sealed class CountrySelectionAdapter : BaseAdapter<CountrySelectionItem>
 
         public TextView Dxcc { get; }
         public TextView MainName { get; }
-        public TextView SubName { get; }
         public TextView Itu { get; }
         public TextView Cq { get; }
         public CheckBox CheckBox { get; }

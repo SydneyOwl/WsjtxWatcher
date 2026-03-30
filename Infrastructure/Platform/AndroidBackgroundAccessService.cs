@@ -2,6 +2,7 @@ using Android.App;
 using Android.Content;
 using Android.OS;
 using Android.Provider;
+using Serilog;
 using Uri = Android.Net.Uri;
 using WsjtxWatcher.Core.Contracts;
 
@@ -106,8 +107,9 @@ public sealed class AndroidBackgroundAccessService : IBackgroundAccessService
             settingsIntent.AddFlags(ActivityFlags.NewTask);
             _application.StartActivity(settingsIntent);
         }
-        catch
+        catch (Exception ex)
         {
+            Log.Information(ex,"Error while OpenBackgroundSettings");
         }
     }
 

@@ -1,7 +1,9 @@
 using Android.App;
 using Android.OS;
+using Android.Views;
 using Android.Widget;
 using WsjtxWatcher.App;
+using WsjtxWatcher.Core.Contracts;
 using WsjtxWatcher.Core.Models;
 using WsjtxWatcher.Core.ViewModels;
 
@@ -17,7 +19,9 @@ public sealed class SettingsActivity : LocalizedActivity
     private Button _addWhitelistButton = null!;
     private EditText _callsignValue = null!;
     private TextView _ipAddressValue = null!;
+    private Button _manageIgnoredCallsignsButton = null!;
     private Button _manageCallsignPatternsButton = null!;
+    private Button _openNotificationSettingsButton = null!;
     private Button _openLogButton = null!;
     private EditText _locationValue = null!;
     private Spinner _languageSpinner = null!;
@@ -32,6 +36,7 @@ public sealed class SettingsActivity : LocalizedActivity
     private CheckBox _vibrationAllCheckbox = null!;
     private CheckBox _vibrationCheckbox = null!;
     private CheckBox _vibrationDxccCheckbox = null!;
+    private INotificationService _notificationService = null!;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -39,6 +44,7 @@ public sealed class SettingsActivity : LocalizedActivity
         SetContentView(Resource.Layout.activity_settings);
 
         _viewModel = AppHost.Current.GetRequiredService<SettingsViewModel>();
+        _notificationService = AppHost.Current.GetRequiredService<INotificationService>();
         _isBinding = true;
         BindViews();
         InitializeLanguageSpinner();
@@ -71,6 +77,8 @@ public sealed class SettingsActivity : LocalizedActivity
         _versionValue = FindViewById<TextView>(Resource.Id.version_value)!;
         _languageSpinner = FindViewById<Spinner>(Resource.Id.language_spinner)!;
         _manageCallsignPatternsButton = FindViewById<Button>(Resource.Id.manage_callsign_patterns)!;
+        _manageIgnoredCallsignsButton = FindViewById<Button>(Resource.Id.manage_ignored_callsigns)!;
+        _openNotificationSettingsButton = FindViewById<Button>(Resource.Id.open_notification_settings)!;
         _sendNotificationCheckbox = FindViewById<CheckBox>(Resource.Id.send_notification_checkbox)!;
         _vibrationCheckbox = FindViewById<CheckBox>(Resource.Id.vibration_checkbox)!;
         _sendNotificationAllCheckbox = FindViewById<CheckBox>(Resource.Id.send_notification_all_checkbox)!;
@@ -228,6 +236,8 @@ public sealed class SettingsActivity : LocalizedActivity
             ShowBackgroundHelpDialog();
         };
 
+        _openNotificationSettingsButton.Click += (_, _) => _notificationService.OpenNotificationSettings();
+        _manageIgnoredCallsignsButton.Click += (_, _) => StartActivity(typeof(IgnoredCallsignActivity));
         _manageCallsignPatternsButton.Click += (_, _) => StartActivity(typeof(CallsignPatternActivity));
         _setDxccButton.Click += (_, _) => StartActivity(typeof(DxccSelectionActivity));
     }
@@ -247,12 +257,16 @@ public sealed class SettingsActivity : LocalizedActivity
             _versionValue.Text = _viewModel.VersionName;
             _languageSpinner.SetSelection(GetLanguageIndex(_viewModel.SelectedLanguage));
             _manageCallsignPatternsButton.Text = $"{GetString(Resource.String.manage_callsign_patterns)} ({_viewModel.WatchedCallsignPatternCount})";
+            _manageIgnoredCallsignsButton.Text = $"{GetString(Resource.String.manage_ignored_callsigns)} ({_viewModel.IgnoredCallsignCount})";
             _sendNotificationCheckbox.Checked = _viewModel.NotifyOnMyCall;
             _vibrationCheckbox.Checked = _viewModel.VibrateOnMyCall;
             _sendNotificationAllCheckbox.Checked = _viewModel.NotifyOnAnyMessage;
             _vibrationAllCheckbox.Checked = _viewModel.VibrateOnAnyMessage;
             _sendNotificationDxccCheckbox.Checked = _viewModel.NotifyOnSelectedDxcc;
             _vibrationDxccCheckbox.Checked = _viewModel.VibrateOnSelectedDxcc;
+            _openNotificationSettingsButton.Visibility = _notificationService.AreNotificationsEnabled()
+                ? ViewStates.Gone
+                : ViewStates.Visible;
             _addWhitelistButton.Enabled = !_viewModel.IsIgnoringBatteryOptimizations;
             _setDxccButton.Text = $"{GetString(Resource.String.set_dxcc_entity)} ({_viewModel.SelectedDxccCount})";
             _isBinding = false;

@@ -1,6 +1,7 @@
 using Android.App;
 using Android.OS;
 using Android.Widget;
+using Java.Util;
 using WsjtxWatcher.App;
 using WsjtxWatcher.Core.ViewModels;
 using WsjtxWatcher.UI.Adapters;
@@ -29,7 +30,7 @@ public sealed class DxccSelectionActivity : LocalizedActivity
         _adapter = new CountrySelectionAdapter(
             this,
             _viewModel.Items,
-            Java.Util.Locale.Default?.Language?.StartsWith("zh", StringComparison.OrdinalIgnoreCase) ?? false,
+            ResolveCurrentLanguageCode(),
             async (item, isChecked) =>
             {
                 await _viewModel.ToggleAsync(item, isChecked).ConfigureAwait(false);
@@ -85,5 +86,12 @@ public sealed class DxccSelectionActivity : LocalizedActivity
         _suppressSelectAllEvents = true;
         _selectAll.Checked = _viewModel.AreAllDisplayedItemsSelected;
         _suppressSelectAllEvents = false;
+    }
+
+    private string ResolveCurrentLanguageCode()
+    {
+        return Resources?.Configuration?.Locales?.Get(0)?.Language
+               ?? Locale.Default?.Language
+               ?? string.Empty;
     }
 }

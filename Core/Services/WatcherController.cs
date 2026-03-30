@@ -338,6 +338,11 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
 
     private async Task NotifyForMessageAsync(DecodedRadioMessage message, AppSettings settingsSnapshot, CancellationToken cancellationToken)
     {
+        if (IgnoredCallsignMatcher.IsIgnored(message, settingsSnapshot.IgnoredCallsigns))
+        {
+            return;
+        }
+
         if (settingsSnapshot.VibrateOnAnyMessage)
         {
             await _deviceFeedbackService.VibrateAsync(cancellationToken).ConfigureAwait(false);
@@ -348,7 +353,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
             await _notificationService.ShowMessageAlertAsync(message.Message, cancellationToken).ConfigureAwait(false);
         }
 
-        if (message.ContainsMyCallsign)
+        if (message.MatchesWatchedCallsignPattern)
         {
             if (settingsSnapshot.VibrateOnMyCall)
             {

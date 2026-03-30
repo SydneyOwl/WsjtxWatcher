@@ -10,7 +10,9 @@ using Android.Views.Animations;
 using Android.Widget;
 using Serilog;
 using WsjtxWatcher.App;
+using WsjtxWatcher.Core.Contracts;
 using WsjtxWatcher.Core.Services;
+using WsjtxWatcher.Core.Utilities;
 using WsjtxWatcher.Core.ViewModels;
 using WsjtxWatcher.UI.Adapters;
 using WsjtxWatcher.UI.Services;
@@ -42,6 +44,7 @@ public sealed class MainActivity : LocalizedActivity
     private TextView _transmitMessage = null!;
     private bool _isStoppingService;
     private bool _pendingScrollToBottom;
+    private INotificationService _notificationService = null!;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -50,6 +53,7 @@ public sealed class MainActivity : LocalizedActivity
         Window?.AddFlags(WindowManagerFlags.KeepScreenOn);
 
         _viewModel = AppHost.Current.GetRequiredService<MainViewModel>();
+        _notificationService = AppHost.Current.GetRequiredService<INotificationService>();
         BindViews();
         BindViewModel();
         HandleLaunchIntent(Intent);
@@ -150,6 +154,7 @@ public sealed class MainActivity : LocalizedActivity
         _adapter = new DecodedMessageAdapter(this, _viewModel.Messages, () => _viewModel.SettingsSnapshot);
         _listView.Adapter = _adapter;
         _callsignSearch.TextChanged += (_, _) => _adapter.ApplyFilter(_callsignSearch.Text ?? string.Empty);
+        _listView.ItemLongClick += OnMessageItemLongClick;
         _jumpToBottomButton.Click += (_, _) => ScrollToBottom();
         _dragTouchSlop = ViewConfiguration.Get(this)?.ScaledTouchSlop ?? 8;
         _jumpToBottomButton.Touch += OnJumpToBottomButtonTouch;
@@ -299,6 +304,23 @@ public sealed class MainActivity : LocalizedActivity
         }
     }
 
+    public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
+    {
+        base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode != 1001)
+        {
+            return;
+        }
+
+        if (_notificationService.AreNotificationsEnabled())
+        {
+            return;
+        }
+
+        Toast.MakeText(this, GetString(Resource.String.denied_notification), ToastLength.Long)?.Show();
+    }
+
     private void ScrollToBottom()
     {
         if (_adapter.Count == 0)
@@ -307,6 +329,63 @@ public sealed class MainActivity : LocalizedActivity
         }
 
         _listView.Post(() => _listView.SetSelection(_adapter.Count - 1));
+    }
+
+    private void OnMessageItemLongClick(object? sender, AdapterView.ItemLongClickEventArgs e)
+    {
+        var message = _adapter[e.Position];
+        if (message.IsSystemNotice || message.IsUserTransmit)
+        {
+            return;
+        }
+
+        var band = IgnoredCallsignMatcher.NormalizeBand(RadioBandUtility.GetBandName(message.DialFrequencyHz));
+        if (string.IsNullOrWhiteSpace(band))
+        {
+            Toast.MakeText(this, Resource.String.ignored_callsign_unknown_band, ToastLength.Short)?.Show();
+            return;
+        }
+
+        var candidates = new List<string>();
+        AddIgnoreCandidate(candidates, message.Receiver);
+        AddIgnoreCandidate(candidates, message.Transmitter);
+        if (candidates.Count == 0)
+        {
+            return;
+        }
+
+        var popupMenu = new PopupMenu(this, e.View!);
+        for (var index = 0; index < candidates.Count; index++)
+        {
+            popupMenu.Menu?.Add(0, index, index, GetString(Resource.String.ignore_callsign_on_band, band, candidates[index]));
+        }
+
+        popupMenu.MenuItemClick += async (_, args) =>
+        {
+            var itemId = args.Item?.ItemId ?? -1;
+            if (itemId < 0 || itemId >= candidates.Count)
+            {
+                return;
+            }
+
+            var ignoredCallsign = candidates[itemId];
+            var added = await AppHost.Current.GetRequiredService<IgnoredCallsignViewModel>()
+                .AddAsync(ignoredCallsign, band)
+                .ConfigureAwait(false);
+
+            RunOnUiThread(() =>
+            {
+                Toast.MakeText(
+                    this,
+                    added
+                        ? GetString(Resource.String.ignored_callsign_added, band, ignoredCallsign)
+                        : GetString(Resource.String.duplicate_ignored_callsign),
+                    ToastLength.Short)?.Show();
+                _adapter.NotifyDataSetChanged();
+            });
+        };
+
+        popupMenu.Show();
     }
 
     private void HandleLaunchIntent(Intent? intent)
@@ -327,6 +406,17 @@ public sealed class MainActivity : LocalizedActivity
 
         _pendingScrollToBottom = false;
         ScrollToBottom();
+    }
+
+    private static void AddIgnoreCandidate(ICollection<string> candidates, string? callsign)
+    {
+        var normalized = IgnoredCallsignMatcher.NormalizeCallsign(callsign);
+        if (string.IsNullOrWhiteSpace(normalized) || candidates.Contains(normalized))
+        {
+            return;
+        }
+
+        candidates.Add(normalized);
     }
 
     private void OnJumpToBottomButtonTouch(object? sender, View.TouchEventArgs e)

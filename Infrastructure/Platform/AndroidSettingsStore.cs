@@ -23,6 +23,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
                             ?? AppSettings.DefaultPreferredDxccIds.Select(id => id.ToString()).ToHashSet();
         var callsign = _sharedPreferences.GetString("callsign", string.Empty) ?? string.Empty;
         var watchedPatterns = LoadWatchedCallsignPatterns(callsign);
+        var ignoredCallsigns = LoadIgnoredCallsigns();
 
         var settings = new AppSettings
         {
@@ -31,6 +32,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
             MyCallsign = callsign,
             MyGrid = _sharedPreferences.GetString("grid", string.Empty) ?? string.Empty,
             WatchedCallsignPatterns = [.. watchedPatterns],
+            IgnoredCallsigns = [.. ignoredCallsigns],
             NotifyOnMyCall = _sharedPreferences.GetBoolean("notify_on_my_call", false),
             NotifyOnAnyMessage = _sharedPreferences.GetBoolean("notify_on_any", false),
             NotifyOnSelectedDxcc = _sharedPreferences.GetBoolean("notify_on_dxcc", false),
@@ -51,6 +53,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
         editor.PutString("callsign", settings.MyCallsign);
         editor.PutString("grid", settings.MyGrid);
         editor.PutString("callsign_patterns", JsonSerializer.Serialize(CallsignPatternMatcher.NormalizePatterns(settings.WatchedCallsignPatterns)));
+        editor.PutString("ignored_callsigns", JsonSerializer.Serialize(IgnoredCallsignMatcher.NormalizeEntries(settings.IgnoredCallsigns)));
         editor.PutBoolean("notify_on_my_call", settings.NotifyOnMyCall);
         editor.PutBoolean("notify_on_any", settings.NotifyOnAnyMessage);
         editor.PutBoolean("notify_on_dxcc", settings.NotifyOnSelectedDxcc);
@@ -68,6 +71,25 @@ public sealed class AndroidSettingsStore : ISettingsStore
         editor.Clear();
         editor.Apply();
         return SaveAsync(new AppSettings(), cancellationToken);
+    }
+
+    private List<IgnoredCallsignEntry> LoadIgnoredCallsigns()
+    {
+        var json = _sharedPreferences.GetString("ignored_callsigns", string.Empty) ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        try
+        {
+            var entries = JsonSerializer.Deserialize<List<IgnoredCallsignEntry>>(json);
+            return IgnoredCallsignMatcher.NormalizeEntries(entries);
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
     }
 
     private List<string> LoadWatchedCallsignPatterns(string callsign)

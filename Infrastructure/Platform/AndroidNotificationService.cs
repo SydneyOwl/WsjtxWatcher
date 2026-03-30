@@ -1,5 +1,7 @@
 using Android.App;
 using Android.Content;
+using Android.Content.PM;
+using Android.Provider;
 using WsjtxWatcher.Core.Contracts;
 
 namespace WsjtxWatcher.Infrastructure.Platform;
@@ -21,8 +23,43 @@ public sealed class AndroidNotificationService : INotificationService
         _notificationManager.CreateNotificationChannel(channel);
     }
 
+    public bool AreNotificationsEnabled()
+    {
+        if (!_notificationManager.AreNotificationsEnabled())
+        {
+            return false;
+        }
+
+        return !OperatingSystem.IsAndroidVersionAtLeast(33)
+               || _application.CheckSelfPermission(Android.Manifest.Permission.PostNotifications) == Permission.Granted;
+    }
+
+    public void OpenNotificationSettings()
+    {
+        var settingsIntent = new Intent(Settings.ActionAppNotificationSettings);
+        settingsIntent.PutExtra(Settings.ExtraAppPackage, _application.PackageName);
+        settingsIntent.AddFlags(ActivityFlags.NewTask);
+
+        try
+        {
+            _application.StartActivity(settingsIntent);
+        }
+        catch
+        {
+            var appDetailsIntent = new Intent(Settings.ActionApplicationDetailsSettings);
+            appDetailsIntent.SetData(Android.Net.Uri.Parse("package:" + _application.PackageName));
+            appDetailsIntent.AddFlags(ActivityFlags.NewTask);
+            _application.StartActivity(appDetailsIntent);
+        }
+    }
+
     public Task ShowMessageAlertAsync(string message, CancellationToken cancellationToken = default)
     {
+        if (!AreNotificationsEnabled())
+        {
+            return Task.CompletedTask;
+        }
+
         if (DateTimeOffset.UtcNow - _lastNotificationAt < TimeSpan.FromSeconds(10))
         {
             return Task.CompletedTask;

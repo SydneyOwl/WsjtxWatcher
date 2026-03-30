@@ -158,12 +158,20 @@
                     android:text="@string/manage_callsign_patterns"/>
         </LinearLayout>
 
+        <Button
+                android:id="@+id/manage_ignored_callsigns"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/cboxLayout"
+                android:layout_marginTop="10dp"
+                android:text="@string/manage_ignored_callsigns"/>
+
         <TextView
                 android:id="@+id/on_call_all"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="16dp"
-                android:layout_below="@id/cboxLayout"
+                android:layout_below="@id/manage_ignored_callsigns"
                 android:layout_marginTop="20dp"
                 android:text="@string/when_call_all"/>
 
@@ -223,8 +231,17 @@
                     android:id="@+id/set_dxcc"/>
         </LinearLayout>
 
+        <Button
+                android:id="@+id/open_notification_settings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/cboxLayout_dxcc"
+                android:layout_marginTop="12dp"
+                android:text="@string/open_notification_settings"
+                android:visibility="gone"/>
+
         <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
-                      android:layout_below="@id/cboxLayout_dxcc"
+                      android:layout_below="@id/open_notification_settings"
                       android:id="@+id/db_op"
                       android:layout_marginTop="20dp">
             <Button android:layout_width="wrap_content" android:layout_height="wrap_content"

@@ -31,6 +31,8 @@ public sealed class DecodedMessageFactory
             ? null
             : await _countryCatalog.FindCountryByCallsignAsync(participants.Receiver, cancellationToken).ConfigureAwait(false);
         var effectiveFrequencyHz = decodeEvent.ReportedFrequencyHz > 0d ? decodeEvent.ReportedFrequencyHz : dialFrequencyHz;
+        var containsMyCallsign = CallsignPatternMatcher.ContainsCallsign(messageText, settings.MyCallsign);
+        var matchesWatchedCallsignPattern = CallsignPatternMatcher.IsMatch(messageText, settings.WatchedCallsignPatterns);
 
         return new DecodedRadioMessage
         {
@@ -52,7 +54,8 @@ public sealed class DecodedMessageFactory
             FromCountryChinese = fromCountry?.ChineseName ?? string.Empty,
             ToCountryId = toCountry?.Id ?? 0,
             FromCountryId = fromCountry?.Id ?? 0,
-            ContainsMyCallsign = CallsignPatternMatcher.IsMatch(messageText, settings.WatchedCallsignPatterns),
+            ContainsMyCallsign = containsMyCallsign,
+            MatchesWatchedCallsignPattern = matchesWatchedCallsignPattern,
             MatchesSelectedDxcc = fromCountry is not null && settings.PreferredDxccIds.Contains(fromCountry.Id),
             DialFrequencyHz = effectiveFrequencyHz
         };
