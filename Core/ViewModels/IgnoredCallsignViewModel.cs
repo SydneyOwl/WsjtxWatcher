@@ -25,7 +25,7 @@ public sealed class IgnoredCallsignViewModel
     {
         var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
         var entries = IgnoredCallsignMatcher.NormalizeEntries(settings.IgnoredCallsigns);
-        if (IgnoredCallsignMatcher.Contains(entries, callsign, band))
+        if (IgnoredCallsignMatcher.Contains(settings.IgnoredCallsignIndex, callsign, band))
         {
             return false;
         }
@@ -36,7 +36,7 @@ public sealed class IgnoredCallsignViewModel
             Band = IgnoredCallsignMatcher.NormalizeBand(band)
         });
 
-        settings.IgnoredCallsigns = IgnoredCallsignMatcher.NormalizeEntries(entries);
+        settings.IgnoredCallsigns = IgnoredCallsignMatcher.NormalizeEntries(entries).ToArray();
         await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(false);
         await _watcherController.ReloadSettingsAsync(cancellationToken).ConfigureAwait(false);
         return true;
@@ -48,12 +48,14 @@ public sealed class IgnoredCallsignViewModel
     {
         var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
         var existingEntries = IgnoredCallsignMatcher.NormalizeEntries(settings.IgnoredCallsigns);
+        var existingIndex = new HashSet<string>(settings.IgnoredCallsignIndex, StringComparer.Ordinal);
         var normalizedImportedEntries = IgnoredCallsignMatcher.NormalizeEntries(importedEntries);
         var addedCount = 0;
 
         foreach (var entry in normalizedImportedEntries)
         {
-            if (IgnoredCallsignMatcher.Contains(existingEntries, entry.Callsign, entry.Band))
+            var key = IgnoredCallsignMatcher.CreateLookupKey(entry.Callsign, entry.Band);
+            if (string.IsNullOrWhiteSpace(key) || !existingIndex.Add(key))
             {
                 continue;
             }
@@ -64,7 +66,7 @@ public sealed class IgnoredCallsignViewModel
 
         if (addedCount > 0)
         {
-            settings.IgnoredCallsigns = IgnoredCallsignMatcher.NormalizeEntries(existingEntries);
+            settings.IgnoredCallsigns = IgnoredCallsignMatcher.NormalizeEntries(existingEntries).ToArray();
             await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(false);
             await _watcherController.ReloadSettingsAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -85,7 +87,7 @@ public sealed class IgnoredCallsignViewModel
             .Where(existing =>
                 !string.Equals(existing.Callsign, entry.Callsign, StringComparison.OrdinalIgnoreCase) ||
                 !string.Equals(existing.Band, entry.Band, StringComparison.OrdinalIgnoreCase))
-            .ToList();
+            .ToArray();
         await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(false);
         await _watcherController.ReloadSettingsAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -93,7 +95,7 @@ public sealed class IgnoredCallsignViewModel
     public async Task ClearAsync(CancellationToken cancellationToken = default)
     {
         var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-        settings.IgnoredCallsigns = [];
+        settings.IgnoredCallsigns = Array.Empty<IgnoredCallsignEntry>();
         await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(false);
         await _watcherController.ReloadSettingsAsync(cancellationToken).ConfigureAwait(false);
     }

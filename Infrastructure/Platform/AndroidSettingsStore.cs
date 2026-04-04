@@ -52,7 +52,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
             MyCallsign = callsign,
             MyGrid = _sharedPreferences.GetString("grid", string.Empty) ?? string.Empty,
             WatchedCallsignPatterns = [.. watchedPatterns],
-            IgnoredCallsigns = [.. ignoredCallsigns],
+            IgnoredCallsigns = ignoredCallsigns.ToArray(),
             NotifyOnMyCall = _sharedPreferences.GetBoolean("notify_on_my_call", false),
             NotifyOnAnyMessage = _sharedPreferences.GetBoolean("notify_on_any", false),
             NotifyOnSelectedDxcc = _sharedPreferences.GetBoolean("notify_on_dxcc", false),

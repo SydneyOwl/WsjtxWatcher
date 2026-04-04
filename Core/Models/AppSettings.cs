@@ -1,13 +1,29 @@
+using WsjtxWatcher.Core.Utilities;
+
 namespace WsjtxWatcher.Core.Models;
 
 public sealed class AppSettings
 {
+    private IReadOnlyList<IgnoredCallsignEntry> _ignoredCallsigns = Array.Empty<IgnoredCallsignEntry>();
+    private IReadOnlySet<string> _ignoredCallsignIndex = new HashSet<string>(StringComparer.Ordinal);
+
     public string Port { get; set; } = "2237";
     public string Language { get; set; } = string.Empty;
     public string MyCallsign { get; set; } = string.Empty;
     public string MyGrid { get; set; } = string.Empty;
     public List<string> WatchedCallsignPatterns { get; set; } = [];
-    public List<IgnoredCallsignEntry> IgnoredCallsigns { get; set; } = [];
+    public IReadOnlyList<IgnoredCallsignEntry> IgnoredCallsigns
+    {
+        get => _ignoredCallsigns;
+        set
+        {
+            _ignoredCallsigns = value?.ToArray() ?? Array.Empty<IgnoredCallsignEntry>();
+            _ignoredCallsignIndex = IgnoredCallsignMatcher.CreateIndex(_ignoredCallsigns);
+        }
+    }
+
+    public IReadOnlySet<string> IgnoredCallsignIndex => _ignoredCallsignIndex;
+
     public bool NotifyOnMyCall { get; set; }
     public bool NotifyOnAnyMessage { get; set; }
     public bool NotifyOnSelectedDxcc { get; set; }
@@ -38,14 +54,13 @@ public sealed class AppSettings
 
     public AppSettings Clone()
     {
-        return new AppSettings
+        var clone = new AppSettings
         {
             Port = Port,
             Language = Language,
             MyCallsign = MyCallsign,
             MyGrid = MyGrid,
             WatchedCallsignPatterns = [.. WatchedCallsignPatterns],
-            IgnoredCallsigns = [.. IgnoredCallsigns],
             NotifyOnMyCall = NotifyOnMyCall,
             NotifyOnAnyMessage = NotifyOnAnyMessage,
             NotifyOnSelectedDxcc = NotifyOnSelectedDxcc,
@@ -60,5 +75,9 @@ public sealed class AppSettings
             SelectedDxccMatchTarget = SelectedDxccMatchTarget,
             PreferredDxccIds = new HashSet<int>(PreferredDxccIds)
         };
+
+        clone._ignoredCallsigns = _ignoredCallsigns;
+        clone._ignoredCallsignIndex = _ignoredCallsignIndex;
+        return clone;
     }
 }

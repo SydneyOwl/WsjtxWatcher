@@ -207,7 +207,7 @@ public partial class SettingsViewModel : ObservableObject
             MyCallsign = (MyCallsign ?? string.Empty).Trim().ToUpperInvariant(),
             MyGrid = (MyGrid ?? string.Empty).Trim().ToUpperInvariant(),
             WatchedCallsignPatterns = [.. CallsignPatternMatcher.NormalizePatterns(watchedCallsignPatterns)],
-            IgnoredCallsigns = [.. IgnoredCallsignMatcher.NormalizeEntries(ignoredCallsigns)],
+            IgnoredCallsigns = IgnoredCallsignMatcher.NormalizeEntries(ignoredCallsigns).ToArray(),
             NotifyOnMyCall = NotifyOnMyCall,
             NotifyOnAnyMessage = NotifyOnAnyMessage,
             NotifyOnSelectedDxcc = NotifyOnSelectedDxcc,

@@ -345,7 +345,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
 
     private async Task NotifyForMessageAsync(DecodedRadioMessage message, AppSettings settingsSnapshot, CancellationToken cancellationToken)
     {
-        if (IgnoredCallsignMatcher.IsIgnored(message, settingsSnapshot.IgnoredCallsigns, settingsSnapshot.IgnoredCallsignMatchTarget))
+        if (IgnoredCallsignMatcher.IsIgnored(message, settingsSnapshot))
         {
             return;
         }
@@ -497,7 +497,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
             return;
         }
 
-        if (IgnoredCallsignMatcher.Contains(settingsSnapshot.IgnoredCallsigns, callsign, band))
+        if (IgnoredCallsignMatcher.Contains(settingsSnapshot.IgnoredCallsignIndex, callsign, band))
         {
             return;
         }
@@ -507,7 +507,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         {
             var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
             if (!settings.AutoIgnoreLoggedQso ||
-                IgnoredCallsignMatcher.Contains(settings.IgnoredCallsigns, callsign, band))
+                IgnoredCallsignMatcher.Contains(settings.IgnoredCallsignIndex, callsign, band))
             {
                 return;
             }
@@ -518,7 +518,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
                     Callsign = callsign,
                     Band = band
                 });
-            settings.IgnoredCallsigns = IgnoredCallsignMatcher.NormalizeEntries(updatedEntries);
+            settings.IgnoredCallsigns = IgnoredCallsignMatcher.NormalizeEntries(updatedEntries).ToArray();
             await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(false);
             _settings = settings.Clone();
         }

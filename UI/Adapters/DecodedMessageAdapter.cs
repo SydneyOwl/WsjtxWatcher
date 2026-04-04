@@ -90,7 +90,7 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
     private void BindViewHolder(ViewHolder holder, DecodedRadioMessage message)
     {
         var settings = _settingsProvider();
-        var isIgnored = IgnoredCallsignMatcher.IsIgnored(message, settings.IgnoredCallsigns, settings.IgnoredCallsignMatchTarget);
+        var isIgnored = IgnoredCallsignMatcher.IsIgnored(message, settings);
         var languageCode = Java.Util.Locale.Default?.Language ?? "en";
         var isCompactMessage = message.IsUserTransmit || message.IsSystemNotice;
         var displayMessage = message.IsUserTransmit
@@ -293,7 +293,7 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
             return (Resource.Color.my_transmit_period, Resource.Color.my_transmit_period_stroke);
         }
 
-        if (IgnoredCallsignMatcher.IsIgnored(message, settings.IgnoredCallsigns, settings.IgnoredCallsignMatchTarget))
+        if (IgnoredCallsignMatcher.IsIgnored(message, settings))
         {
             return IsOddPeriod(message.DecodeTimeUtc)
                 ? (Resource.Color.odd_period, Resource.Color.odd_period_stroke)

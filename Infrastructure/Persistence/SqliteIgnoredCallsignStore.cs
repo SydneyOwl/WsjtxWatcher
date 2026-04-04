@@ -22,11 +22,13 @@ public sealed class SqliteIgnoredCallsignStore : IIgnoredCallsignStore
             .ToListAsync()
             .ConfigureAwait(false);
 
-        return IgnoredCallsignMatcher.NormalizeEntries(records.Select(record => new IgnoredCallsignEntry
-        {
-            Callsign = record.Callsign,
-            Band = record.Band
-        }));
+        return records
+            .Select(record => new IgnoredCallsignEntry
+            {
+                Callsign = record.Callsign,
+                Band = record.Band
+            })
+            .ToArray();
     }
 
     public async Task SaveAsync(IEnumerable<IgnoredCallsignEntry> entries, CancellationToken cancellationToken = default)
