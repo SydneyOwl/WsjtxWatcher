@@ -33,6 +33,10 @@
     <string name="vibration">振动</string>
     <string name="manage_callsign_patterns">正则</string>
     <string name="manage_ignored_callsigns">忽略呼号</string>
+    <string name="watched_callsign_match_target">指定呼号匹配目标</string>
+    <string name="watched_callsign_match_target_transmitter">仅发射方</string>
+    <string name="watched_callsign_match_target_receiver">仅接收方</string>
+    <string name="watched_callsign_match_target_both">接收方或发射方</string>
     <string name="ignored_callsign_match_target">忽略呼号匹配目标</string>
     <string name="ignored_callsign_match_target_disabled">不忽略</string>
     <string name="ignored_callsign_match_target_transmitter">仅发射方</string>
@@ -97,6 +101,10 @@
     <string name="on_dxcc">当选中的DXCC出现时：</string>
     <string name="on_logged_qso">当完成 QSO 时：</string>
     <string name="set_dxcc_entity">选择DXCC</string>
+    <string name="selected_dxcc_match_target">DXCC 匹配目标</string>
+    <string name="selected_dxcc_match_target_transmitter">仅发射方</string>
+    <string name="selected_dxcc_match_target_receiver">仅接收方</string>
+    <string name="selected_dxcc_match_target_both">接收方或发射方</string>
     <string name="select_all">全选</string>
     <string name="selected_dxcc">选中的DXCC：</string>
     <string name="received_msg">收到解码信息：</string>

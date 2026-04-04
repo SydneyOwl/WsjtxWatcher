@@ -18,6 +18,8 @@ public sealed class AppSettings
     public bool VibrateOnLoggedQso { get; set; }
     public bool AutoIgnoreLoggedQso { get; set; } = true;
     public IgnoredCallsignMatchTarget IgnoredCallsignMatchTarget { get; set; } = IgnoredCallsignMatchTarget.TransmitterOnly;
+    public WatchedCallsignMatchTarget WatchedCallsignMatchTarget { get; set; } = WatchedCallsignMatchTarget.TransmitterOnly;
+    public SelectedDxccMatchTarget SelectedDxccMatchTarget { get; set; } = SelectedDxccMatchTarget.TransmitterOnly;
     public HashSet<int> PreferredDxccIds { get; set; } = new(DefaultPreferredDxccIds);
 
     public static IReadOnlyCollection<int> DefaultPreferredDxccIds { get; } = new[]
@@ -54,6 +56,8 @@ public sealed class AppSettings
             VibrateOnLoggedQso = VibrateOnLoggedQso,
             AutoIgnoreLoggedQso = AutoIgnoreLoggedQso,
             IgnoredCallsignMatchTarget = IgnoredCallsignMatchTarget,
+            WatchedCallsignMatchTarget = WatchedCallsignMatchTarget,
+            SelectedDxccMatchTarget = SelectedDxccMatchTarget,
             PreferredDxccIds = new HashSet<int>(PreferredDxccIds)
         };
     }

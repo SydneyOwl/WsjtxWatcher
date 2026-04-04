@@ -33,6 +33,10 @@
     <string name="vibration">Vibration</string>
     <string name="manage_callsign_patterns">Regex</string>
     <string name="manage_ignored_callsigns">Ignored callsigns</string>
+    <string name="watched_callsign_match_target">Specified callsign match target</string>
+    <string name="watched_callsign_match_target_transmitter">Transmitter only</string>
+    <string name="watched_callsign_match_target_receiver">Receiver only</string>
+    <string name="watched_callsign_match_target_both">Receiver or transmitter</string>
     <string name="ignored_callsign_match_target">Ignored callsign match target</string>
     <string name="ignored_callsign_match_target_disabled">Do not ignore</string>
     <string name="ignored_callsign_match_target_transmitter">Transmitter only</string>
@@ -100,6 +104,10 @@
     <string name="on_dxcc">When selected DXCC appears:</string>
     <string name="on_logged_qso">When a QSO is logged:</string>
     <string name="set_dxcc_entity">Select DXCC</string>
+    <string name="selected_dxcc_match_target">DXCC match target</string>
+    <string name="selected_dxcc_match_target_transmitter">Transmitter only</string>
+    <string name="selected_dxcc_match_target_receiver">Receiver only</string>
+    <string name="selected_dxcc_match_target_both">Receiver or transmitter</string>
     <string name="select_all">Select All</string>
     <string name="selected_dxcc">Selected DXCC:</string>
     <string name="received_msg">Received decoded msg:</string>

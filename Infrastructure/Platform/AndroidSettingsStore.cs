@@ -32,6 +32,18 @@ public sealed class AndroidSettingsStore : ISettingsStore
         var ignoredCallsignMatchTarget = Enum.IsDefined(typeof(IgnoredCallsignMatchTarget), ignoredCallsignMatchTargetValue)
             ? (IgnoredCallsignMatchTarget)ignoredCallsignMatchTargetValue
             : IgnoredCallsignMatchTarget.TransmitterOnly;
+        var watchedCallsignMatchTargetValue = _sharedPreferences.GetInt(
+            "watched_callsign_match_target",
+            (int)WatchedCallsignMatchTarget.TransmitterOnly);
+        var watchedCallsignMatchTarget = Enum.IsDefined(typeof(WatchedCallsignMatchTarget), watchedCallsignMatchTargetValue)
+            ? (WatchedCallsignMatchTarget)watchedCallsignMatchTargetValue
+            : WatchedCallsignMatchTarget.TransmitterOnly;
+        var selectedDxccMatchTargetValue = _sharedPreferences.GetInt(
+            "selected_dxcc_match_target",
+            (int)SelectedDxccMatchTarget.TransmitterOnly);
+        var selectedDxccMatchTarget = Enum.IsDefined(typeof(SelectedDxccMatchTarget), selectedDxccMatchTargetValue)
+            ? (SelectedDxccMatchTarget)selectedDxccMatchTargetValue
+            : SelectedDxccMatchTarget.TransmitterOnly;
 
         var settings = new AppSettings
         {
@@ -51,6 +63,8 @@ public sealed class AndroidSettingsStore : ISettingsStore
             VibrateOnLoggedQso = _sharedPreferences.GetBoolean("vibrate_on_logged_qso", false),
             AutoIgnoreLoggedQso = _sharedPreferences.GetBoolean("auto_ignore_logged_qso", true),
             IgnoredCallsignMatchTarget = ignoredCallsignMatchTarget,
+            WatchedCallsignMatchTarget = watchedCallsignMatchTarget,
+            SelectedDxccMatchTarget = selectedDxccMatchTarget,
             PreferredDxccIds = new HashSet<int>(preferredDxcc.Select(value => int.TryParse(value, out var id) ? id : 0).Where(id => id > 0))
         };
 
@@ -75,6 +89,8 @@ public sealed class AndroidSettingsStore : ISettingsStore
         editor.PutBoolean("vibrate_on_logged_qso", settings.VibrateOnLoggedQso);
         editor.PutBoolean("auto_ignore_logged_qso", settings.AutoIgnoreLoggedQso);
         editor.PutInt("ignored_callsign_match_target", (int)settings.IgnoredCallsignMatchTarget);
+        editor.PutInt("watched_callsign_match_target", (int)settings.WatchedCallsignMatchTarget);
+        editor.PutInt("selected_dxcc_match_target", (int)settings.SelectedDxccMatchTarget);
         editor.PutStringSet("preferred_dxcc", settings.PreferredDxccIds.Select(id => id.ToString()).ToHashSet());
         editor.Remove("ignored_callsigns");
         if (!editor.Commit())

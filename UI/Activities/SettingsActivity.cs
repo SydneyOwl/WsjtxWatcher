@@ -26,6 +26,18 @@ public sealed class SettingsActivity : LocalizedActivity
         IgnoredCallsignMatchTarget.ReceiverOnly,
         IgnoredCallsignMatchTarget.ReceiverOrTransmitter
     ];
+    private readonly WatchedCallsignMatchTarget[] _watchedCallsignMatchTargets =
+    [
+        WatchedCallsignMatchTarget.TransmitterOnly,
+        WatchedCallsignMatchTarget.ReceiverOnly,
+        WatchedCallsignMatchTarget.ReceiverOrTransmitter
+    ];
+    private readonly SelectedDxccMatchTarget[] _selectedDxccMatchTargets =
+    [
+        SelectedDxccMatchTarget.TransmitterOnly,
+        SelectedDxccMatchTarget.ReceiverOnly,
+        SelectedDxccMatchTarget.ReceiverOrTransmitter
+    ];
     private readonly AppLanguage[] _supportedLanguages = [AppLanguage.SimplifiedChinese, AppLanguage.English];
     private SettingsViewModel _viewModel = null!;
     private bool _isBinding;
@@ -34,6 +46,8 @@ public sealed class SettingsActivity : LocalizedActivity
     private EditText _callsignValue = null!;
     private TextView _ipAddressValue = null!;
     private Spinner _ignoredCallsignMatchTargetSpinner = null!;
+    private Spinner _watchedCallsignMatchTargetSpinner = null!;
+    private Spinner _selectedDxccMatchTargetSpinner = null!;
     private Button _manageIgnoredCallsignsButton = null!;
     private Button _manageCallsignPatternsButton = null!;
     private Button _openNotificationSettingsButton = null!;
@@ -70,6 +84,8 @@ public sealed class SettingsActivity : LocalizedActivity
         BindViews();
         InitializeLanguageSpinner();
         InitializeIgnoredCallsignMatchTargetSpinner();
+        InitializeWatchedCallsignMatchTargetSpinner();
+        InitializeSelectedDxccMatchTargetSpinner();
         BindEvents();
         _ = LoadAsync();
     }
@@ -99,6 +115,8 @@ public sealed class SettingsActivity : LocalizedActivity
         _versionValue = FindViewById<TextView>(Resource.Id.version_value)!;
         _languageSpinner = FindViewById<Spinner>(Resource.Id.language_spinner)!;
         _ignoredCallsignMatchTargetSpinner = FindViewById<Spinner>(Resource.Id.ignored_callsign_match_target_spinner)!;
+        _watchedCallsignMatchTargetSpinner = FindViewById<Spinner>(Resource.Id.watched_callsign_match_target_spinner)!;
+        _selectedDxccMatchTargetSpinner = FindViewById<Spinner>(Resource.Id.selected_dxcc_match_target_spinner)!;
         _manageCallsignPatternsButton = FindViewById<Button>(Resource.Id.manage_callsign_patterns)!;
         _manageIgnoredCallsignsButton = FindViewById<Button>(Resource.Id.manage_ignored_callsigns)!;
         _openNotificationSettingsButton = FindViewById<Button>(Resource.Id.open_notification_settings)!;
@@ -133,6 +151,22 @@ public sealed class SettingsActivity : LocalizedActivity
         var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, labels);
         adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
         _ignoredCallsignMatchTargetSpinner.Adapter = adapter;
+    }
+
+    private void InitializeWatchedCallsignMatchTargetSpinner()
+    {
+        var labels = _watchedCallsignMatchTargets.Select(GetWatchedCallsignMatchTargetLabel).ToArray();
+        var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, labels);
+        adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
+        _watchedCallsignMatchTargetSpinner.Adapter = adapter;
+    }
+
+    private void InitializeSelectedDxccMatchTargetSpinner()
+    {
+        var labels = _selectedDxccMatchTargets.Select(GetSelectedDxccMatchTargetLabel).ToArray();
+        var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, labels);
+        adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
+        _selectedDxccMatchTargetSpinner.Adapter = adapter;
     }
 
     private void BindEvents()
@@ -175,6 +209,26 @@ public sealed class SettingsActivity : LocalizedActivity
             }
 
             _viewModel.IgnoredCallsignMatchTarget = _ignoredCallsignMatchTargets[Math.Clamp(args.Position, 0, _ignoredCallsignMatchTargets.Length - 1)];
+        };
+
+        _watchedCallsignMatchTargetSpinner.ItemSelected += (_, args) =>
+        {
+            if (_isBinding)
+            {
+                return;
+            }
+
+            _viewModel.WatchedCallsignMatchTarget = _watchedCallsignMatchTargets[Math.Clamp(args.Position, 0, _watchedCallsignMatchTargets.Length - 1)];
+        };
+
+        _selectedDxccMatchTargetSpinner.ItemSelected += (_, args) =>
+        {
+            if (_isBinding)
+            {
+                return;
+            }
+
+            _viewModel.SelectedDxccMatchTarget = _selectedDxccMatchTargets[Math.Clamp(args.Position, 0, _selectedDxccMatchTargets.Length - 1)];
         };
 
         _portValue.TextChanged += (_, _) =>
@@ -327,6 +381,8 @@ public sealed class SettingsActivity : LocalizedActivity
             _versionValue.PaintFlags |= PaintFlags.UnderlineText;
             _languageSpinner.SetSelection(GetLanguageIndex(_viewModel.SelectedLanguage));
             _ignoredCallsignMatchTargetSpinner.SetSelection(GetIgnoredCallsignMatchTargetIndex(_viewModel.IgnoredCallsignMatchTarget));
+            _watchedCallsignMatchTargetSpinner.SetSelection(GetWatchedCallsignMatchTargetIndex(_viewModel.WatchedCallsignMatchTarget));
+            _selectedDxccMatchTargetSpinner.SetSelection(GetSelectedDxccMatchTargetIndex(_viewModel.SelectedDxccMatchTarget));
             _manageCallsignPatternsButton.Text = $"{GetString(Resource.String.manage_callsign_patterns)} ({_viewModel.WatchedCallsignPatternCount})";
             _manageIgnoredCallsignsButton.Text = $"{GetString(Resource.String.manage_ignored_callsigns)} ({_viewModel.IgnoredCallsignCount})";
             _sendNotificationCheckbox.Checked = _viewModel.NotifyOnMyCall;
@@ -392,6 +448,18 @@ public sealed class SettingsActivity : LocalizedActivity
         return index >= 0 ? index : 0;
     }
 
+    private int GetWatchedCallsignMatchTargetIndex(WatchedCallsignMatchTarget matchTarget)
+    {
+        var index = Array.IndexOf(_watchedCallsignMatchTargets, matchTarget);
+        return index >= 0 ? index : 0;
+    }
+
+    private int GetSelectedDxccMatchTargetIndex(SelectedDxccMatchTarget matchTarget)
+    {
+        var index = Array.IndexOf(_selectedDxccMatchTargets, matchTarget);
+        return index >= 0 ? index : 0;
+    }
+
     private string GetIgnoredCallsignMatchTargetLabel(IgnoredCallsignMatchTarget matchTarget)
     {
         return matchTarget switch
@@ -400,6 +468,26 @@ public sealed class SettingsActivity : LocalizedActivity
             IgnoredCallsignMatchTarget.ReceiverOnly => GetString(Resource.String.ignored_callsign_match_target_receiver),
             IgnoredCallsignMatchTarget.ReceiverOrTransmitter => GetString(Resource.String.ignored_callsign_match_target_both),
             _ => GetString(Resource.String.ignored_callsign_match_target_transmitter)
+        };
+    }
+
+    private string GetWatchedCallsignMatchTargetLabel(WatchedCallsignMatchTarget matchTarget)
+    {
+        return matchTarget switch
+        {
+            WatchedCallsignMatchTarget.ReceiverOnly => GetString(Resource.String.watched_callsign_match_target_receiver),
+            WatchedCallsignMatchTarget.ReceiverOrTransmitter => GetString(Resource.String.watched_callsign_match_target_both),
+            _ => GetString(Resource.String.watched_callsign_match_target_transmitter)
+        };
+    }
+
+    private string GetSelectedDxccMatchTargetLabel(SelectedDxccMatchTarget matchTarget)
+    {
+        return matchTarget switch
+        {
+            SelectedDxccMatchTarget.ReceiverOnly => GetString(Resource.String.selected_dxcc_match_target_receiver),
+            SelectedDxccMatchTarget.ReceiverOrTransmitter => GetString(Resource.String.selected_dxcc_match_target_both),
+            _ => GetString(Resource.String.selected_dxcc_match_target_transmitter)
         };
     }
 

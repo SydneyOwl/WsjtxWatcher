@@ -65,6 +65,12 @@ public partial class SettingsViewModel : ObservableObject
     private IgnoredCallsignMatchTarget ignoredCallsignMatchTarget = IgnoredCallsignMatchTarget.TransmitterOnly;
 
     [ObservableProperty]
+    private WatchedCallsignMatchTarget watchedCallsignMatchTarget = WatchedCallsignMatchTarget.TransmitterOnly;
+
+    [ObservableProperty]
+    private SelectedDxccMatchTarget selectedDxccMatchTarget = SelectedDxccMatchTarget.TransmitterOnly;
+
+    [ObservableProperty]
     private bool autoIgnoreLoggedQso = true;
 
     public SettingsViewModel(
@@ -117,6 +123,8 @@ public partial class SettingsViewModel : ObservableObject
         VibrateOnSelectedDxcc = settings.VibrateOnSelectedDxcc;
         VibrateOnLoggedQso = settings.VibrateOnLoggedQso;
         IgnoredCallsignMatchTarget = settings.IgnoredCallsignMatchTarget;
+        WatchedCallsignMatchTarget = settings.WatchedCallsignMatchTarget;
+        SelectedDxccMatchTarget = settings.SelectedDxccMatchTarget;
         AutoIgnoreLoggedQso = settings.AutoIgnoreLoggedQso;
         SelectedDxccCount = settings.PreferredDxccIds.Count;
         OnPropertyChanged(nameof(LocalIpAddress));
@@ -198,6 +206,8 @@ public partial class SettingsViewModel : ObservableObject
             VibrateOnLoggedQso = VibrateOnLoggedQso,
             AutoIgnoreLoggedQso = AutoIgnoreLoggedQso,
             IgnoredCallsignMatchTarget = IgnoredCallsignMatchTarget,
+            WatchedCallsignMatchTarget = WatchedCallsignMatchTarget,
+            SelectedDxccMatchTarget = SelectedDxccMatchTarget,
             PreferredDxccIds = new HashSet<int>(preferredDxccIds)
         };
     }
