@@ -228,12 +228,12 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
             return new Java.Lang.String(text);
         }
 
-        var shouldBoldCompletedQso = IsCompletedQsoMessage(message);
+        var shouldBoldMessage = IsCompletedQsoMessage(message) || IsCqMessage(message);
         var callsignRanges = message.ContainsMyCallsign
             ? CallsignPatternMatcher.FindCallsignTokenRanges(text, settings.MyCallsign)
             : [];
 
-        if (!shouldBoldCompletedQso && callsignRanges.Count == 0 && ResolveMessageHighlightColor(message, settings) is null)
+        if (!shouldBoldMessage && callsignRanges.Count == 0 && ResolveMessageHighlightColor(message, settings) is null)
         {
             return new Java.Lang.String(text);
         }
@@ -249,7 +249,7 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
                 SpanTypes.ExclusiveExclusive);
         }
 
-        if (shouldBoldCompletedQso)
+        if (shouldBoldMessage)
         {
             builder.SetSpan(
                 new StyleSpan(TypefaceStyle.Bold),
@@ -440,6 +440,11 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
         return message.Message.Contains("RR73", StringComparison.OrdinalIgnoreCase) ||
                message.Message.Contains(" RRR", StringComparison.OrdinalIgnoreCase) ||
                message.Message.EndsWith(" 73", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsCqMessage(DecodedRadioMessage message)
+    {
+        return message.Message.StartsWith("CQ", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsOddPeriod(string decodeTime)

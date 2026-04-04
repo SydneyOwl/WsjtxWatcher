@@ -189,14 +189,14 @@
     <color name="my_transmit_period_stroke">#9FB7AE</color>
     <color name="system_notice_period">#EDF3FB</color>
     <color name="system_notice_period_stroke">#A8B8CE</color>
-    <color name="decoded_match_any_fill">#EAF4FF</color>
-    <color name="decoded_match_any_stroke">#8FB3D1</color>
-    <color name="decoded_match_callsign_fill">#FFF2DA</color>
-    <color name="decoded_match_callsign_stroke">#C28B47</color>
-    <color name="decoded_match_dxcc_fill">#E5F5EE</color>
-    <color name="decoded_match_dxcc_stroke">#64A07D</color>
-    <color name="decoded_match_multi_fill">#F7ECD9</color>
-    <color name="decoded_match_multi_stroke">#9E7440</color>
+    <color name="decoded_match_any_fill">#D7E9FF</color>
+    <color name="decoded_match_any_stroke">#6C95C8</color>
+    <color name="decoded_match_callsign_fill">#FFE082</color>
+    <color name="decoded_match_callsign_stroke">#C58B00</color>
+    <color name="decoded_match_dxcc_fill">#9FE7C8</color>
+    <color name="decoded_match_dxcc_stroke">#2E8B6C</color>
+    <color name="decoded_match_multi_fill">#FFBEA3</color>
+    <color name="decoded_match_multi_stroke">#C96948</color>
     <color name="decoded_message_my_callsign_text">#A63A27</color>
     <color name="ignored_message_text">#2E7D32</color>
 
