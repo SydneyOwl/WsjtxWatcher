@@ -44,9 +44,11 @@ public sealed class AndroidSettingsStore : ISettingsStore
             NotifyOnMyCall = _sharedPreferences.GetBoolean("notify_on_my_call", false),
             NotifyOnAnyMessage = _sharedPreferences.GetBoolean("notify_on_any", false),
             NotifyOnSelectedDxcc = _sharedPreferences.GetBoolean("notify_on_dxcc", false),
+            NotifyOnLoggedQso = _sharedPreferences.GetBoolean("notify_on_logged_qso", false),
             VibrateOnMyCall = _sharedPreferences.GetBoolean("vibrate_on_my_call", false),
             VibrateOnAnyMessage = _sharedPreferences.GetBoolean("vibrate_on_any", false),
             VibrateOnSelectedDxcc = _sharedPreferences.GetBoolean("vibrate_on_dxcc", false),
+            AutoIgnoreLoggedQso = _sharedPreferences.GetBoolean("auto_ignore_logged_qso", true),
             IgnoredCallsignMatchTarget = ignoredCallsignMatchTarget,
             PreferredDxccIds = new HashSet<int>(preferredDxcc.Select(value => int.TryParse(value, out var id) ? id : 0).Where(id => id > 0))
         };
@@ -65,9 +67,11 @@ public sealed class AndroidSettingsStore : ISettingsStore
         editor.PutBoolean("notify_on_my_call", settings.NotifyOnMyCall);
         editor.PutBoolean("notify_on_any", settings.NotifyOnAnyMessage);
         editor.PutBoolean("notify_on_dxcc", settings.NotifyOnSelectedDxcc);
+        editor.PutBoolean("notify_on_logged_qso", settings.NotifyOnLoggedQso);
         editor.PutBoolean("vibrate_on_my_call", settings.VibrateOnMyCall);
         editor.PutBoolean("vibrate_on_any", settings.VibrateOnAnyMessage);
         editor.PutBoolean("vibrate_on_dxcc", settings.VibrateOnSelectedDxcc);
+        editor.PutBoolean("auto_ignore_logged_qso", settings.AutoIgnoreLoggedQso);
         editor.PutInt("ignored_callsign_match_target", (int)settings.IgnoredCallsignMatchTarget);
         editor.PutStringSet("preferred_dxcc", settings.PreferredDxccIds.Select(id => id.ToString()).ToHashSet());
         editor.Remove("ignored_callsigns");

@@ -230,6 +230,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
 
     public async Task OnQsoLoggedAsync(WsjtQsoLoggedEvent qsoLoggedEvent, CancellationToken cancellationToken = default)
     {
+        await NotifyForLoggedQsoAsync(qsoLoggedEvent, cancellationToken).ConfigureAwait(false);
         await TryAutoIgnoreLoggedQsoAsync(qsoLoggedEvent, cancellationToken).ConfigureAwait(false);
     }
 
@@ -478,6 +479,12 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
 
     private async Task TryAutoIgnoreLoggedQsoAsync(WsjtQsoLoggedEvent qsoLoggedEvent, CancellationToken cancellationToken)
     {
+        var settingsSnapshot = _settings.Clone();
+        if (!settingsSnapshot.AutoIgnoreLoggedQso)
+        {
+            return;
+        }
+
         var callsign = IgnoredCallsignMatcher.NormalizeCallsign(qsoLoggedEvent.DxCall);
         if (string.IsNullOrWhiteSpace(callsign))
         {
@@ -490,9 +497,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
             return;
         }
 
-        var settingsSnapshot = _settings.Clone();
-        if (!CallsignPatternMatcher.IsMatch(callsign, settingsSnapshot.WatchedCallsignPatterns) ||
-            IgnoredCallsignMatcher.Contains(settingsSnapshot.IgnoredCallsigns, callsign, band))
+        if (IgnoredCallsignMatcher.Contains(settingsSnapshot.IgnoredCallsigns, callsign, band))
         {
             return;
         }
@@ -501,7 +506,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         try
         {
             var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-            if (!CallsignPatternMatcher.IsMatch(callsign, settings.WatchedCallsignPatterns) ||
+            if (!settings.AutoIgnoreLoggedQso ||
                 IgnoredCallsignMatcher.Contains(settings.IgnoredCallsigns, callsign, band))
             {
                 return;
@@ -523,6 +528,24 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         }
 
         await _uiDispatcher.InvokeAsync(State.RefreshMessagePresentation).ConfigureAwait(false);
+    }
+
+    private async Task NotifyForLoggedQsoAsync(WsjtQsoLoggedEvent qsoLoggedEvent, CancellationToken cancellationToken)
+    {
+        var settingsSnapshot = _settings.Clone();
+        if (!settingsSnapshot.NotifyOnLoggedQso)
+        {
+            return;
+        }
+
+        var callsign = IgnoredCallsignMatcher.NormalizeCallsign(qsoLoggedEvent.DxCall);
+        if (string.IsNullOrWhiteSpace(callsign))
+        {
+            return;
+        }
+
+        var band = ResolveLoggedQsoBand(qsoLoggedEvent);
+        await _notificationService.ShowQsoLoggedAlertAsync(callsign, band, cancellationToken).ConfigureAwait(false);
     }
 
     private string ResolveLoggedQsoBand(WsjtQsoLoggedEvent qsoLoggedEvent)

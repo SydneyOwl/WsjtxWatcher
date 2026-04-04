@@ -48,17 +48,20 @@ public sealed class AndroidBackgroundAccessService : IBackgroundAccessService
             var brand = (Build.Brand ?? string.Empty).ToLowerInvariant();
             if (brand is "huawei" or "honor")
             {
-                StartExplicitActivity("com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity");
-                return;
+                if (TryStartExplicitActivity("com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity") ||
+                    StartPackageActivity("com.huawei.systemmanager"))
+                {
+                    return;
+                }
             }
-
-            if (brand == "xiaomi")
+            else if (brand == "xiaomi")
             {
-                StartExplicitActivity("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity");
-                return;
+                if (TryStartExplicitActivity("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"))
+                {
+                    return;
+                }
             }
-
-            if (brand == "oppo")
+            else if (brand == "oppo")
             {
                 if (!StartPackageActivity("com.coloros.phonemanager") &&
                     !StartPackageActivity("com.oppo.safe") &&
@@ -68,20 +71,17 @@ public sealed class AndroidBackgroundAccessService : IBackgroundAccessService
                 }
                 return;
             }
-
-            if (brand == "vivo")
+            else if (brand == "vivo")
             {
                 StartPackageActivity("com.iqoo.secure");
                 return;
             }
-
-            if (brand == "meizu")
+            else if (brand == "meizu")
             {
                 StartPackageActivity("com.meizu.safe");
                 return;
             }
-
-            if (brand == "samsung")
+            else if (brand == "samsung")
             {
                 if (!StartPackageActivity("com.samsung.android.sm_cn"))
                 {
@@ -89,27 +89,25 @@ public sealed class AndroidBackgroundAccessService : IBackgroundAccessService
                 }
                 return;
             }
-
-            if (brand == "letv")
+            else if (brand == "letv")
             {
-                StartExplicitActivity("com.letv.android.letvsafe", "com.letv.android.letvsafe.AutobootManageActivity");
-                return;
+                if (TryStartExplicitActivity("com.letv.android.letvsafe", "com.letv.android.letvsafe.AutobootManageActivity"))
+                {
+                    return;
+                }
             }
-
-            if (brand == "smartisan")
+            else if (brand == "smartisan")
             {
                 StartPackageActivity("com.smartisanos.security");
                 return;
             }
 
-            var settingsIntent = new Intent(Settings.ActionApplicationDetailsSettings);
-            settingsIntent.SetData(Uri.Parse("package:" + _application.PackageName));
-            settingsIntent.AddFlags(ActivityFlags.NewTask);
-            _application.StartActivity(settingsIntent);
+            OpenAppDetailsSettings();
         }
         catch (Exception ex)
         {
-            Log.Information(ex,"Error while OpenBackgroundSettings");
+            Log.Information(ex, "Error while OpenBackgroundSettings");
+            OpenAppDetailsSettings();
         }
     }
 
@@ -133,11 +131,28 @@ public sealed class AndroidBackgroundAccessService : IBackgroundAccessService
         }
     }
 
-    private void StartExplicitActivity(string packageName, string activityName)
+    private bool TryStartExplicitActivity(string packageName, string activityName)
     {
-        var intent = new Intent();
-        intent.SetComponent(new ComponentName(packageName, activityName));
-        intent.AddFlags(ActivityFlags.NewTask);
-        _application.StartActivity(intent);
+        try
+        {
+            var intent = new Intent();
+            intent.SetComponent(new ComponentName(packageName, activityName));
+            intent.AddFlags(ActivityFlags.NewTask);
+            _application.StartActivity(intent);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Information(ex, "Failed to open background settings component {PackageName}/{ActivityName}.", packageName, activityName);
+            return false;
+        }
+    }
+
+    private void OpenAppDetailsSettings()
+    {
+        var settingsIntent = new Intent(Settings.ActionApplicationDetailsSettings);
+        settingsIntent.SetData(Uri.Parse("package:" + _application.PackageName));
+        settingsIntent.AddFlags(ActivityFlags.NewTask);
+        _application.StartActivity(settingsIntent);
     }
 }

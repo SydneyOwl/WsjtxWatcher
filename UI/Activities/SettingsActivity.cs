@@ -46,8 +46,10 @@ public sealed class SettingsActivity : LocalizedActivity
     private CheckBox _sendNotificationAllCheckbox = null!;
     private CheckBox _sendNotificationCheckbox = null!;
     private CheckBox _sendNotificationDxccCheckbox = null!;
+    private CheckBox _sendNotificationLoggedQsoCheckbox = null!;
     private Button _setDxccButton = null!;
     private TextView _versionValue = null!;
+    private CheckBox _autoIgnoreLoggedQsoCheckbox = null!;
     private CheckBox _vibrationAllCheckbox = null!;
     private CheckBox _vibrationCheckbox = null!;
     private CheckBox _vibrationDxccCheckbox = null!;
@@ -104,6 +106,7 @@ public sealed class SettingsActivity : LocalizedActivity
         _sendNotificationAllCheckbox = FindViewById<CheckBox>(Resource.Id.send_notification_all_checkbox)!;
         _vibrationAllCheckbox = FindViewById<CheckBox>(Resource.Id.vibration_all_checkbox)!;
         _sendNotificationDxccCheckbox = FindViewById<CheckBox>(Resource.Id.send_notification_dxcc_checkbox)!;
+        _sendNotificationLoggedQsoCheckbox = FindViewById<CheckBox>(Resource.Id.send_notification_logged_qso_checkbox)!;
         _vibrationDxccCheckbox = FindViewById<CheckBox>(Resource.Id.vibration_dxcc_checkbox)!;
         _resetDatabaseButton = FindViewById<Button>(Resource.Id.reset_database)!;
         _resetAllButton = FindViewById<Button>(Resource.Id.reset_all)!;
@@ -111,6 +114,7 @@ public sealed class SettingsActivity : LocalizedActivity
         _addWhitelistButton = FindViewById<Button>(Resource.Id.add_white_list)!;
         _addBackgroundButton = FindViewById<Button>(Resource.Id.add_background)!;
         _setDxccButton = FindViewById<Button>(Resource.Id.set_dxcc)!;
+        _autoIgnoreLoggedQsoCheckbox = FindViewById<CheckBox>(Resource.Id.auto_ignore_logged_qso_checkbox)!;
     }
 
     private void InitializeLanguageSpinner()
@@ -220,11 +224,22 @@ public sealed class SettingsActivity : LocalizedActivity
         _sendNotificationDxccCheckbox.CheckedChange += (_, args) =>
             HandleNotificationToggle(_sendNotificationDxccCheckbox, value => _viewModel.NotifyOnSelectedDxcc = value, args.IsChecked);
 
+        _sendNotificationLoggedQsoCheckbox.CheckedChange += (_, args) =>
+            HandleNotificationToggle(_sendNotificationLoggedQsoCheckbox, value => _viewModel.NotifyOnLoggedQso = value, args.IsChecked);
+
         _vibrationDxccCheckbox.CheckedChange += (_, args) =>
         {
             if (!_isBinding)
             {
                 _viewModel.VibrateOnSelectedDxcc = args.IsChecked;
+            }
+        };
+
+        _autoIgnoreLoggedQsoCheckbox.CheckedChange += (_, args) =>
+        {
+            if (!_isBinding)
+            {
+                _viewModel.AutoIgnoreLoggedQso = args.IsChecked;
             }
         };
 
@@ -310,6 +325,8 @@ public sealed class SettingsActivity : LocalizedActivity
             _vibrationAllCheckbox.Checked = _viewModel.VibrateOnAnyMessage;
             _sendNotificationDxccCheckbox.Checked = _viewModel.NotifyOnSelectedDxcc;
             _vibrationDxccCheckbox.Checked = _viewModel.VibrateOnSelectedDxcc;
+            _sendNotificationLoggedQsoCheckbox.Checked = _viewModel.NotifyOnLoggedQso;
+            _autoIgnoreLoggedQsoCheckbox.Checked = _viewModel.AutoIgnoreLoggedQso;
             UpdateNotificationSettingsButtonVisibility();
             _addWhitelistButton.Enabled = !_viewModel.IsIgnoringBatteryOptimizations;
             _setDxccButton.Text = $"{GetString(Resource.String.set_dxcc_entity)} ({_viewModel.SelectedDxccCount})";

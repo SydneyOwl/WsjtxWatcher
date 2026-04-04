@@ -26,6 +26,9 @@ public partial class SettingsViewModel : ObservableObject
     private bool notifyOnSelectedDxcc;
 
     [ObservableProperty]
+    private bool notifyOnLoggedQso;
+
+    [ObservableProperty]
     private string port = "2237";
 
     [ObservableProperty]
@@ -57,6 +60,9 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private IgnoredCallsignMatchTarget ignoredCallsignMatchTarget = IgnoredCallsignMatchTarget.TransmitterOnly;
+
+    [ObservableProperty]
+    private bool autoIgnoreLoggedQso = true;
 
     public SettingsViewModel(
         ISettingsStore settingsStore,
@@ -102,10 +108,12 @@ public partial class SettingsViewModel : ObservableObject
         NotifyOnMyCall = settings.NotifyOnMyCall;
         NotifyOnAnyMessage = settings.NotifyOnAnyMessage;
         NotifyOnSelectedDxcc = settings.NotifyOnSelectedDxcc;
+        NotifyOnLoggedQso = settings.NotifyOnLoggedQso;
         VibrateOnMyCall = settings.VibrateOnMyCall;
         VibrateOnAnyMessage = settings.VibrateOnAnyMessage;
         VibrateOnSelectedDxcc = settings.VibrateOnSelectedDxcc;
         IgnoredCallsignMatchTarget = settings.IgnoredCallsignMatchTarget;
+        AutoIgnoreLoggedQso = settings.AutoIgnoreLoggedQso;
         SelectedDxccCount = settings.PreferredDxccIds.Count;
         OnPropertyChanged(nameof(LocalIpAddress));
         OnPropertyChanged(nameof(IsIgnoringBatteryOptimizations));
@@ -179,9 +187,11 @@ public partial class SettingsViewModel : ObservableObject
             NotifyOnMyCall = NotifyOnMyCall,
             NotifyOnAnyMessage = NotifyOnAnyMessage,
             NotifyOnSelectedDxcc = NotifyOnSelectedDxcc,
+            NotifyOnLoggedQso = NotifyOnLoggedQso,
             VibrateOnMyCall = VibrateOnMyCall,
             VibrateOnAnyMessage = VibrateOnAnyMessage,
             VibrateOnSelectedDxcc = VibrateOnSelectedDxcc,
+            AutoIgnoreLoggedQso = AutoIgnoreLoggedQso,
             IgnoredCallsignMatchTarget = IgnoredCallsignMatchTarget,
             PreferredDxccIds = new HashSet<int>(preferredDxccIds)
         };

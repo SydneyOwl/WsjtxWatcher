@@ -11,9 +11,11 @@ public sealed class AppSettings
     public bool NotifyOnMyCall { get; set; }
     public bool NotifyOnAnyMessage { get; set; }
     public bool NotifyOnSelectedDxcc { get; set; }
+    public bool NotifyOnLoggedQso { get; set; }
     public bool VibrateOnMyCall { get; set; }
     public bool VibrateOnAnyMessage { get; set; }
     public bool VibrateOnSelectedDxcc { get; set; }
+    public bool AutoIgnoreLoggedQso { get; set; } = true;
     public IgnoredCallsignMatchTarget IgnoredCallsignMatchTarget { get; set; } = IgnoredCallsignMatchTarget.TransmitterOnly;
     public HashSet<int> PreferredDxccIds { get; set; } = new(DefaultPreferredDxccIds);
 
@@ -44,9 +46,11 @@ public sealed class AppSettings
             NotifyOnMyCall = NotifyOnMyCall,
             NotifyOnAnyMessage = NotifyOnAnyMessage,
             NotifyOnSelectedDxcc = NotifyOnSelectedDxcc,
+            NotifyOnLoggedQso = NotifyOnLoggedQso,
             VibrateOnMyCall = VibrateOnMyCall,
             VibrateOnAnyMessage = VibrateOnAnyMessage,
             VibrateOnSelectedDxcc = VibrateOnSelectedDxcc,
+            AutoIgnoreLoggedQso = AutoIgnoreLoggedQso,
             IgnoredCallsignMatchTarget = IgnoredCallsignMatchTarget,
             PreferredDxccIds = new HashSet<int>(PreferredDxccIds)
         };

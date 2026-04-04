@@ -2,6 +2,7 @@ using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.Provider;
+using System.Globalization;
 using WsjtxWatcher.Core.Contracts;
 
 namespace WsjtxWatcher.Infrastructure.Platform;
@@ -10,7 +11,8 @@ public sealed class AndroidNotificationService : INotificationService
 {
     private readonly Application _application;
     private readonly NotificationManager _notificationManager;
-    private DateTimeOffset _lastNotificationAt = DateTimeOffset.MinValue;
+    private DateTimeOffset _lastMessageNotificationAt = DateTimeOffset.MinValue;
+    private DateTimeOffset _lastLoggedQsoNotificationAt = DateTimeOffset.MinValue;
 
     public AndroidNotificationService(Application application)
     {
@@ -60,12 +62,51 @@ public sealed class AndroidNotificationService : INotificationService
             return Task.CompletedTask;
         }
 
-        if (DateTimeOffset.UtcNow - _lastNotificationAt < TimeSpan.FromSeconds(10))
+        if (DateTimeOffset.UtcNow - _lastMessageNotificationAt < TimeSpan.FromSeconds(10))
         {
             return Task.CompletedTask;
         }
 
-        _lastNotificationAt = DateTimeOffset.UtcNow;
+        _lastMessageNotificationAt = DateTimeOffset.UtcNow;
+        ShowAlert(
+            int.Parse(_application.GetString(Resource.String.notify_id1)),
+            _application.GetString(Resource.String.user_ft8_msg_available),
+            message);
+        return Task.CompletedTask;
+    }
+
+    public Task ShowQsoLoggedAlertAsync(string callsign, string band, CancellationToken cancellationToken = default)
+    {
+        if (!AreNotificationsEnabled())
+        {
+            return Task.CompletedTask;
+        }
+
+        if (DateTimeOffset.UtcNow - _lastLoggedQsoNotificationAt < TimeSpan.FromSeconds(3))
+        {
+            return Task.CompletedTask;
+        }
+
+        _lastLoggedQsoNotificationAt = DateTimeOffset.UtcNow;
+        var message = string.IsNullOrWhiteSpace(band)
+            ? string.Format(
+                CultureInfo.CurrentCulture,
+                _application.GetString(Resource.String.qso_logged_notification_message),
+                callsign)
+            : string.Format(
+                CultureInfo.CurrentCulture,
+                _application.GetString(Resource.String.qso_logged_notification_message_with_band),
+                callsign,
+                band);
+        ShowAlert(
+            int.Parse(_application.GetString(Resource.String.notify_id3)),
+            _application.GetString(Resource.String.qso_logged_notification_title),
+            message);
+        return Task.CompletedTask;
+    }
+
+    private void ShowAlert(int notificationId, string title, string message)
+    {
         var intent = new Intent(_application, typeof(UI.Activities.MainActivity));
         intent.AddFlags(ActivityFlags.SingleTop | ActivityFlags.ClearTop);
         intent.PutExtra(UI.Activities.MainActivity.ScrollToBottomFromNotificationExtra, true);
@@ -76,14 +117,13 @@ public sealed class AndroidNotificationService : INotificationService
             PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
 
         var notification = new Notification.Builder(_application, _application.GetString(Resource.String.notification_channel_id1))
-            .SetContentTitle(_application.GetString(Resource.String.user_ft8_msg_available))
+            .SetContentTitle(title)
             .SetContentText(message)
             .SetSmallIcon(Resource.Mipmap.appicon)
             .SetContentIntent(pendingIntent)
             .SetAutoCancel(true)
             .Build();
 
-        _notificationManager.Notify(int.Parse(_application.GetString(Resource.String.notify_id1)), notification);
-        return Task.CompletedTask;
+        _notificationManager.Notify(notificationId, notification);
     }
 }

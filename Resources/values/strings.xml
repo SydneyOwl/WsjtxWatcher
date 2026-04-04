@@ -98,6 +98,7 @@
     <string name="notification_channel_id2" translatable="false">4214</string>
     <string name="notify_id2" translatable="false">6311</string>
     <string name="on_dxcc">When selected DXCC appears:</string>
+    <string name="on_logged_qso">When a QSO is logged:</string>
     <string name="set_dxcc_entity">Select DXCC</string>
     <string name="select_all">Select All</string>
     <string name="selected_dxcc">Selected DXCC:</string>
@@ -121,4 +122,9 @@
     <string name="reset_all_confirm">Reset settings, clear cached data, and stop the listener service?</string>
     <string name="background_help_title">Background Running</string>
     <string name="background_help_message">If your phone does not open the correct screen automatically, open the app details page manually and allow background activity, auto-start, and battery optimization exemptions for Wsjtx Watcher.</string>
+    <string name="auto_ignore_logged_qso">Auto-ignore the callsign after a logged QSO</string>
+    <string name="qso_logged_notification_title">QSO logged</string>
+    <string name="qso_logged_notification_message">Logged QSO with %1$s</string>
+    <string name="qso_logged_notification_message_with_band">Logged QSO with %1$s on %2$s</string>
+    <string name="notify_id3" translatable="false">9233</string>
 </resources>

@@ -95,6 +95,7 @@
     <string name="service_running">服务运行中</string>
     <string name="listening_msg">正在监听WSJT-X信息...</string>
     <string name="on_dxcc">当选中的DXCC出现时：</string>
+    <string name="on_logged_qso">当完成 QSO 时：</string>
     <string name="set_dxcc_entity">选择DXCC</string>
     <string name="select_all">全选</string>
     <string name="selected_dxcc">选中的DXCC：</string>
@@ -118,4 +119,8 @@
     <string name="reset_all_confirm">重置设置、清空缓存数据，并停止监听服务？</string>
     <string name="background_help_title">后台运行</string>
     <string name="background_help_message">如果系统没有自动打开正确的设置页，请手动进入应用详情，为 Wsjtx 助手开启后台活动、自启动和电池优化豁免等权限。</string>
+    <string name="auto_ignore_logged_qso">QSO 完成后自动忽略该呼号</string>
+    <string name="qso_logged_notification_title">QSO 已完成</string>
+    <string name="qso_logged_notification_message">已完成与 %1$s 的通联</string>
+    <string name="qso_logged_notification_message_with_band">已完成与 %1$s 的 %2$s 波段通联</string>
 </resources>
