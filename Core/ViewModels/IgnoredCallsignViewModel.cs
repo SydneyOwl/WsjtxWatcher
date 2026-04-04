@@ -90,4 +90,11 @@ public sealed class IgnoredCallsignViewModel
         await _watcherController.ReloadSettingsAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task ClearAsync(CancellationToken cancellationToken = default)
+    {
+        var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
+        settings.IgnoredCallsigns = [];
+        await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(false);
+        await _watcherController.ReloadSettingsAsync(cancellationToken).ConfigureAwait(false);
+    }
 }

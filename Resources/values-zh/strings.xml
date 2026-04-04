@@ -102,6 +102,8 @@
     <string name="search">输入搜索内容...</string>
     <string name="search_callsign">搜索呼号...</string>
     <string name="clear_callsign_search">清空呼号</string>
+    <string name="clear_all_ignored_callsigns">清空全部</string>
+    <string name="clear_all_ignored_callsigns_confirm">清空所有已忽略呼号？</string>
     <string name="previous_page">上一页</string>
     <string name="next_page">下一页</string>
     <string name="ignored_callsign_page_status">第 %1$d / %2$d 页</string>

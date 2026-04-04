@@ -19,7 +19,7 @@ public sealed class IgnoredCallsignActivity : LocalizedActivity
     private IgnoredCallsignViewModel _viewModel = null!;
     private IgnoredCallsignAdapter _adapter = null!;
     private Button _addButton = null!;
-    private Button _clearSearchButton = null!;
+    private Button _clearAllButton = null!;
     private Button _importButton = null!;
     private Button _nextPageButton = null!;
     private Button _previousPageButton = null!;
@@ -60,9 +60,9 @@ public sealed class IgnoredCallsignActivity : LocalizedActivity
         _callsignValue = FindViewById<EditText>(Resource.Id.ignored_callsign_value)!;
         _bandValue = FindViewById<EditText>(Resource.Id.ignored_callsign_band_value)!;
         _searchValue = FindViewById<EditText>(Resource.Id.ignored_callsign_search_value)!;
-        _clearSearchButton = FindViewById<Button>(Resource.Id.clear_ignored_callsign_search)!;
         _addButton = FindViewById<Button>(Resource.Id.add_ignored_callsign)!;
         _importButton = FindViewById<Button>(Resource.Id.import_ignored_callsigns_button)!;
+        _clearAllButton = FindViewById<Button>(Resource.Id.clear_all_ignored_callsigns_button)!;
         _emptyText = FindViewById<TextView>(Resource.Id.empty_ignored_callsigns)!;
         _previousPageButton = FindViewById<Button>(Resource.Id.previous_ignored_callsign_page)!;
         _nextPageButton = FindViewById<Button>(Resource.Id.next_ignored_callsign_page)!;
@@ -131,15 +131,29 @@ public sealed class IgnoredCallsignActivity : LocalizedActivity
             _currentPageIndex = 0;
             RenderEntries();
         };
-        _clearSearchButton.Click += (_, _) =>
-        {
-            _searchValue.Text = string.Empty;
-            _searchValue.ClearFocus();
-            _currentPageIndex = 0;
-            RenderEntries();
-        };
 
         _importButton.Click += (_, _) => StartActivity(typeof(IgnoredCallsignImportActivity));
+        _clearAllButton.Click += async (_, _) =>
+        {
+            if (!await ConfirmClearAllAsync().ConfigureAwait(false))
+            {
+                return;
+            }
+
+            var clearVersion = Interlocked.Increment(ref _loadVersion);
+            await _viewModel.ClearAsync().ConfigureAwait(false);
+            RunOnUiThread(() =>
+            {
+                if (IsFinishing || IsDestroyed || clearVersion != Volatile.Read(ref _loadVersion))
+                {
+                    return;
+                }
+
+                _entries.Clear();
+                _currentPageIndex = 0;
+                RenderEntries();
+            });
+        };
         _previousPageButton.Click += (_, _) =>
         {
             if (_currentPageIndex <= 0)
@@ -238,5 +252,22 @@ public sealed class IgnoredCallsignActivity : LocalizedActivity
                 string.Equals(existing.Band, entry.Band, StringComparison.OrdinalIgnoreCase));
             RenderEntries();
         });
+    }
+
+    private Task<bool> ConfirmClearAllAsync()
+    {
+        var tcs = new TaskCompletionSource<bool>();
+        RunOnUiThread(() =>
+        {
+            var builder = new AlertDialog.Builder(this);
+            builder.SetTitle(Resource.String.clear_all_ignored_callsigns);
+            builder.SetMessage(Resource.String.clear_all_ignored_callsigns_confirm);
+            builder.SetPositiveButton(Android.Resource.String.Ok, (_, _) => tcs.TrySetResult(true));
+            builder.SetNegativeButton(Android.Resource.String.Cancel, (_, _) => tcs.TrySetResult(false));
+            var dialog = builder.Create() ?? throw new InvalidOperationException("Failed to create clear ignored callsigns dialog.");
+            dialog.CancelEvent += (_, _) => tcs.TrySetResult(false);
+            dialog.Show();
+        });
+        return tcs.Task;
     }
 }
