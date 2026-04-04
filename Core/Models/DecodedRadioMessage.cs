@@ -26,6 +26,7 @@ public sealed class DecodedRadioMessage
     public bool MatchesWatchedCallsignPattern { get; init; }
     public bool MatchesSelectedDxcc { get; init; }
     public double DialFrequencyHz { get; init; }
+    public bool IsIgnored { get; set; }
 
     public static DecodedRadioMessage CreateUserTransmit(string message, string mode)
     {

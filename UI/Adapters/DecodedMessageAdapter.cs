@@ -90,7 +90,7 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
     private void BindViewHolder(ViewHolder holder, DecodedRadioMessage message)
     {
         var settings = _settingsProvider();
-        var isIgnored = IgnoredCallsignMatcher.IsIgnored(message, settings);
+        var isIgnored = message.IsIgnored;
         var languageCode = Java.Util.Locale.Default?.Language ?? "en";
         var isCompactMessage = message.IsUserTransmit || message.IsSystemNotice;
         var displayMessage = message.IsUserTransmit
@@ -277,11 +277,11 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
 
     private void ApplyRowBackground(View rowView, DecodedRadioMessage message, AppSettings settings)
     {
-        var (fillColor, strokeColor) = ResolveRowColors(message, settings);
+        var (fillColor, strokeColor) = ResolveRowColors(message);
         rowView.Background = GetRowBackground(fillColor, strokeColor);
     }
 
-    private (int FillColor, int StrokeColor) ResolveRowColors(DecodedRadioMessage message, AppSettings settings)
+    private (int FillColor, int StrokeColor) ResolveRowColors(DecodedRadioMessage message)
     {
         if (message.IsSystemNotice)
         {
@@ -293,7 +293,7 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
             return (Resource.Color.my_transmit_period, Resource.Color.my_transmit_period_stroke);
         }
 
-        if (IgnoredCallsignMatcher.IsIgnored(message, settings))
+        if (message.IsIgnored)
         {
             return IsOddPeriod(message.DecodeTimeUtc)
                 ? (Resource.Color.odd_period, Resource.Color.odd_period_stroke)

@@ -10,22 +10,19 @@ namespace WsjtxWatcher.Infrastructure.Platform;
 public sealed class AndroidSettingsStore : ISettingsStore
 {
     private const string StorageKey = "8fdad8ad";
-    private readonly IIgnoredCallsignStore _ignoredCallsignStore;
     private readonly ISharedPreferences _sharedPreferences;
 
-    public AndroidSettingsStore(Application application, IIgnoredCallsignStore ignoredCallsignStore)
+    public AndroidSettingsStore(Application application)
     {
         _sharedPreferences = application.GetSharedPreferences(StorageKey, FileCreationMode.Private)!;
-        _ignoredCallsignStore = ignoredCallsignStore;
     }
 
-    public async Task<AppSettings> LoadAsync(CancellationToken cancellationToken = default)
+    public Task<AppSettings> LoadAsync(CancellationToken cancellationToken = default)
     {
         var preferredDxcc = _sharedPreferences.GetStringSet("preferred_dxcc", AppSettings.DefaultPreferredDxccIds.Select(id => id.ToString()).ToHashSet())
                             ?? AppSettings.DefaultPreferredDxccIds.Select(id => id.ToString()).ToHashSet();
         var callsign = _sharedPreferences.GetString("callsign", string.Empty) ?? string.Empty;
         var watchedPatterns = LoadWatchedCallsignPatterns(callsign);
-        var ignoredCallsigns = await _ignoredCallsignStore.LoadAsync(cancellationToken).ConfigureAwait(false);
         var ignoredCallsignMatchTargetValue = _sharedPreferences.GetInt(
             "ignored_callsign_match_target",
             (int)IgnoredCallsignMatchTarget.TransmitterOnly);
@@ -52,7 +49,6 @@ public sealed class AndroidSettingsStore : ISettingsStore
             MyCallsign = callsign,
             MyGrid = _sharedPreferences.GetString("grid", string.Empty) ?? string.Empty,
             WatchedCallsignPatterns = [.. watchedPatterns],
-            IgnoredCallsigns = ignoredCallsigns.ToArray(),
             NotifyOnMyCall = _sharedPreferences.GetBoolean("notify_on_my_call", false),
             NotifyOnAnyMessage = _sharedPreferences.GetBoolean("notify_on_any", false),
             NotifyOnSelectedDxcc = _sharedPreferences.GetBoolean("notify_on_dxcc", false),
@@ -68,10 +64,10 @@ public sealed class AndroidSettingsStore : ISettingsStore
             PreferredDxccIds = new HashSet<int>(preferredDxcc.Select(value => int.TryParse(value, out var id) ? id : 0).Where(id => id > 0))
         };
 
-        return settings;
+        return Task.FromResult(settings);
     }
 
-    public async Task SaveAsync(AppSettings settings, CancellationToken cancellationToken = default)
+    public Task SaveAsync(AppSettings settings, CancellationToken cancellationToken = default)
     {
         var editor = _sharedPreferences.Edit()!;
         editor.PutString("port", settings.Port);
@@ -92,15 +88,15 @@ public sealed class AndroidSettingsStore : ISettingsStore
         editor.PutInt("watched_callsign_match_target", (int)settings.WatchedCallsignMatchTarget);
         editor.PutInt("selected_dxcc_match_target", (int)settings.SelectedDxccMatchTarget);
         editor.PutStringSet("preferred_dxcc", settings.PreferredDxccIds.Select(id => id.ToString()).ToHashSet());
-        editor.Remove("ignored_callsigns");
         if (!editor.Commit())
         {
             throw new InvalidOperationException("Failed to persist application settings.");
         }
-        await _ignoredCallsignStore.SaveAsync(settings.IgnoredCallsigns, cancellationToken).ConfigureAwait(false);
+
+        return Task.CompletedTask;
     }
 
-    public async Task ResetAsync(CancellationToken cancellationToken = default)
+    public Task ResetAsync(CancellationToken cancellationToken = default)
     {
         var editor = _sharedPreferences.Edit()!;
         editor.Clear();
@@ -108,8 +104,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
         {
             throw new InvalidOperationException("Failed to clear application settings.");
         }
-        await _ignoredCallsignStore.ResetAsync(cancellationToken).ConfigureAwait(false);
-        await SaveAsync(new AppSettings(), cancellationToken).ConfigureAwait(false);
+        return SaveAsync(new AppSettings(), cancellationToken);
     }
 
     private List<string> LoadWatchedCallsignPatterns(string callsign)

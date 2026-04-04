@@ -55,6 +55,9 @@ public sealed class WatcherDatabaseService
             await _connection.CreateTableAsync<CallsignPrefixRecord>().ConfigureAwait(false);
             await _connection.CreateTableAsync<GridCacheRecord>().ConfigureAwait(false);
             await _connection.CreateTableAsync<IgnoredCallsignRecord>().ConfigureAwait(false);
+            await _connection
+                .ExecuteAsync("create unique index if not exists idx_ignored_callsigns_band_callsign on ignored_callsigns (band, callsign)")
+                .ConfigureAwait(false);
             await EnsureCountryCatalogAsync().ConfigureAwait(false);
             _isInitialized = true;
         }

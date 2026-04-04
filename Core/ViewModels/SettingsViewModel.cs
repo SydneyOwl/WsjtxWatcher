@@ -12,6 +12,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IBackgroundAccessService _backgroundAccessService;
     private readonly ICloudlogImportSettingsStore _cloudlogImportSettingsStore;
     private readonly IGridCacheStore _gridCacheStore;
+    private readonly IIgnoredCallsignStore _ignoredCallsignStore;
     private readonly ILogFileService _logFileService;
     private readonly INetworkInfoService _networkInfoService;
     private readonly ISettingsStore _settingsStore;
@@ -77,6 +78,7 @@ public partial class SettingsViewModel : ObservableObject
         ISettingsStore settingsStore,
         ICloudlogImportSettingsStore cloudlogImportSettingsStore,
         IGridCacheStore gridCacheStore,
+        IIgnoredCallsignStore ignoredCallsignStore,
         INetworkInfoService networkInfoService,
         IBackgroundAccessService backgroundAccessService,
         ILogFileService logFileService,
@@ -87,6 +89,7 @@ public partial class SettingsViewModel : ObservableObject
         _settingsStore = settingsStore;
         _cloudlogImportSettingsStore = cloudlogImportSettingsStore;
         _gridCacheStore = gridCacheStore;
+        _ignoredCallsignStore = ignoredCallsignStore;
         _networkInfoService = networkInfoService;
         _backgroundAccessService = backgroundAccessService;
         _logFileService = logFileService;
@@ -107,13 +110,16 @@ public partial class SettingsViewModel : ObservableObject
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
-        var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
+        var settingsTask = _settingsStore.LoadAsync(cancellationToken);
+        var ignoredCallsignCountTask = _ignoredCallsignStore.CountAsync(cancellationToken);
+        await Task.WhenAll(settingsTask, ignoredCallsignCountTask).ConfigureAwait(false);
+        var settings = await settingsTask.ConfigureAwait(false);
         Port = settings.Port;
         SelectedLanguage = _appLanguageService.ResolveConfiguredLanguage(settings.Language);
         MyCallsign = settings.MyCallsign;
         MyGrid = settings.MyGrid;
         WatchedCallsignPatternCount = settings.WatchedCallsignPatterns.Count;
-        IgnoredCallsignCount = settings.IgnoredCallsigns.Count;
+        IgnoredCallsignCount = await ignoredCallsignCountTask.ConfigureAwait(false);
         NotifyOnMyCall = settings.NotifyOnMyCall;
         NotifyOnAnyMessage = settings.NotifyOnAnyMessage;
         NotifyOnSelectedDxcc = settings.NotifyOnSelectedDxcc;
@@ -138,8 +144,7 @@ public partial class SettingsViewModel : ObservableObject
         var existingSettings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
         var normalizedSettings = CreateSettings(
             existingSettings.PreferredDxccIds,
-            existingSettings.WatchedCallsignPatterns,
-            existingSettings.IgnoredCallsigns);
+            existingSettings.WatchedCallsignPatterns);
         var restartRequired = !string.Equals(existingSettings.Port, normalizedSettings.Port, StringComparison.Ordinal);
 
         await _settingsStore.SaveAsync(normalizedSettings, cancellationToken).ConfigureAwait(false);
@@ -159,8 +164,7 @@ public partial class SettingsViewModel : ObservableObject
         var existingSettings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
         var normalizedSettings = CreateSettings(
             existingSettings.PreferredDxccIds,
-            existingSettings.WatchedCallsignPatterns,
-            existingSettings.IgnoredCallsigns);
+            existingSettings.WatchedCallsignPatterns);
 
         await _settingsStore.SaveAsync(normalizedSettings, cancellationToken).ConfigureAwait(false);
         await _watcherController.StopAsync(cancellationToken).ConfigureAwait(false);
@@ -197,8 +201,7 @@ public partial class SettingsViewModel : ObservableObject
 
     private AppSettings CreateSettings(
         IReadOnlyCollection<int> preferredDxccIds,
-        IReadOnlyCollection<string> watchedCallsignPatterns,
-        IReadOnlyCollection<IgnoredCallsignEntry> ignoredCallsigns)
+        IReadOnlyCollection<string> watchedCallsignPatterns)
     {
         return new AppSettings
         {
@@ -207,7 +210,6 @@ public partial class SettingsViewModel : ObservableObject
             MyCallsign = (MyCallsign ?? string.Empty).Trim().ToUpperInvariant(),
             MyGrid = (MyGrid ?? string.Empty).Trim().ToUpperInvariant(),
             WatchedCallsignPatterns = [.. CallsignPatternMatcher.NormalizePatterns(watchedCallsignPatterns)],
-            IgnoredCallsigns = IgnoredCallsignMatcher.NormalizeEntries(ignoredCallsigns).ToArray(),
             NotifyOnMyCall = NotifyOnMyCall,
             NotifyOnAnyMessage = NotifyOnAnyMessage,
             NotifyOnSelectedDxcc = NotifyOnSelectedDxcc,
