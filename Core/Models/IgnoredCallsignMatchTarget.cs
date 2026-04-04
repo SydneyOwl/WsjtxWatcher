@@ -4,5 +4,6 @@ public enum IgnoredCallsignMatchTarget
 {
     TransmitterOnly = 0,
     ReceiverOnly = 1,
-    ReceiverOrTransmitter = 2
+    ReceiverOrTransmitter = 2,
+    Disabled = 3
 }

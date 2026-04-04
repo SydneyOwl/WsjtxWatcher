@@ -34,6 +34,7 @@
     <string name="manage_callsign_patterns">正则</string>
     <string name="manage_ignored_callsigns">忽略呼号</string>
     <string name="ignored_callsign_match_target">忽略呼号匹配目标</string>
+    <string name="ignored_callsign_match_target_disabled">不忽略</string>
     <string name="ignored_callsign_match_target_transmitter">仅发射方</string>
     <string name="ignored_callsign_match_target_receiver">仅接收方</string>
     <string name="ignored_callsign_match_target_both">接收方或发射方</string>

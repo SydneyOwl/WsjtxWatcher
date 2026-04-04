@@ -22,6 +22,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         SingleWriter = false
     });
     private readonly CancellationTokenSource _disposeCts = new();
+    private readonly SemaphoreSlim _ignoredCallsignMutationLock = new(1, 1);
     private readonly SemaphoreSlim _lifecycleLock = new(1, 1);
     private readonly Dictionary<string, ClientSessionState> _clientSessions = new(StringComparer.OrdinalIgnoreCase);
     private readonly object _sessionSync = new();
@@ -225,6 +226,11 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
             State.IsTransmitting = statusEvent.Transmitting;
             State.TransmitMessage = statusEvent.Transmitting ? statusEvent.TransmitMessage ?? string.Empty : string.Empty;
         }).ConfigureAwait(false);
+    }
+
+    public async Task OnQsoLoggedAsync(WsjtQsoLoggedEvent qsoLoggedEvent, CancellationToken cancellationToken = default)
+    {
+        await TryAutoIgnoreLoggedQsoAsync(qsoLoggedEvent, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task ProcessDecodeQueueAsync(CancellationToken cancellationToken)
@@ -470,6 +476,69 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         return true;
     }
 
+    private async Task TryAutoIgnoreLoggedQsoAsync(WsjtQsoLoggedEvent qsoLoggedEvent, CancellationToken cancellationToken)
+    {
+        var callsign = IgnoredCallsignMatcher.NormalizeCallsign(qsoLoggedEvent.DxCall);
+        if (string.IsNullOrWhiteSpace(callsign))
+        {
+            return;
+        }
+
+        var band = ResolveLoggedQsoBand(qsoLoggedEvent);
+        if (string.IsNullOrWhiteSpace(band))
+        {
+            return;
+        }
+
+        var settingsSnapshot = _settings.Clone();
+        if (!CallsignPatternMatcher.IsMatch(callsign, settingsSnapshot.WatchedCallsignPatterns) ||
+            IgnoredCallsignMatcher.Contains(settingsSnapshot.IgnoredCallsigns, callsign, band))
+        {
+            return;
+        }
+
+        await _ignoredCallsignMutationLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
+            if (!CallsignPatternMatcher.IsMatch(callsign, settings.WatchedCallsignPatterns) ||
+                IgnoredCallsignMatcher.Contains(settings.IgnoredCallsigns, callsign, band))
+            {
+                return;
+            }
+
+            var updatedEntries = settings.IgnoredCallsigns
+                .Append(new IgnoredCallsignEntry
+                {
+                    Callsign = callsign,
+                    Band = band
+                });
+            settings.IgnoredCallsigns = IgnoredCallsignMatcher.NormalizeEntries(updatedEntries);
+            await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(false);
+            _settings = settings.Clone();
+        }
+        finally
+        {
+            _ignoredCallsignMutationLock.Release();
+        }
+
+        await _uiDispatcher.InvokeAsync(State.RefreshMessagePresentation).ConfigureAwait(false);
+    }
+
+    private string ResolveLoggedQsoBand(WsjtQsoLoggedEvent qsoLoggedEvent)
+    {
+        var normalizedBand = IgnoredCallsignMatcher.NormalizeBand(qsoLoggedEvent.Band);
+        if (!string.IsNullOrWhiteSpace(normalizedBand))
+        {
+            return normalizedBand;
+        }
+
+        var frequencyHz = qsoLoggedEvent.FrequencyHz > 0d
+            ? qsoLoggedEvent.FrequencyHz
+            : GetDialFrequencyForClient(qsoLoggedEvent.ClientId);
+        return IgnoredCallsignMatcher.NormalizeBand(RadioBandUtility.GetBandName(frequencyHz));
+    }
+
     private void ResetRuntimeState()
     {
         lock (_sessionSync)
@@ -529,6 +598,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         }
 
         _disposeCts.Dispose();
+        _ignoredCallsignMutationLock.Dispose();
         _watchdogTimer.Dispose();
         _lifecycleLock.Dispose();
     }

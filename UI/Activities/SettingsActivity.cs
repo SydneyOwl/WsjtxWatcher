@@ -21,6 +21,7 @@ public sealed class SettingsActivity : LocalizedActivity
     private const string RepositoryUrl = "https://github.com/sydneyowl/wsjtxwatcher";
     private readonly IgnoredCallsignMatchTarget[] _ignoredCallsignMatchTargets =
     [
+        IgnoredCallsignMatchTarget.Disabled,
         IgnoredCallsignMatchTarget.TransmitterOnly,
         IgnoredCallsignMatchTarget.ReceiverOnly,
         IgnoredCallsignMatchTarget.ReceiverOrTransmitter
@@ -367,6 +368,7 @@ public sealed class SettingsActivity : LocalizedActivity
     {
         return matchTarget switch
         {
+            IgnoredCallsignMatchTarget.Disabled => GetString(Resource.String.ignored_callsign_match_target_disabled),
             IgnoredCallsignMatchTarget.ReceiverOnly => GetString(Resource.String.ignored_callsign_match_target_receiver),
             IgnoredCallsignMatchTarget.ReceiverOrTransmitter => GetString(Resource.String.ignored_callsign_match_target_both),
             _ => GetString(Resource.String.ignored_callsign_match_target_transmitter)

@@ -1,31 +1,38 @@
+using System.Collections;
 using System.Collections.Specialized;
 using Android.Content;
 using Android.Graphics;
 using Android.Graphics.Drawables;
-using Android.OS;
 using Android.Text;
 using Android.Text.Style;
 using Android.Views;
 using Android.Widget;
-using WsjtxUtils.WsjtxMessages.Messages;
+using AndroidX.RecyclerView.Widget;
 using WsjtxWatcher.Core.Models;
 using WsjtxWatcher.Core.Utilities;
 
 namespace WsjtxWatcher.UI.Adapters;
 
-public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
+public sealed class DecodedMessageAdapter : RecyclerView.Adapter
 {
+    private readonly Dictionary<(int FillColor, int StrokeColor), Drawable.ConstantState?> _backgroundCache = new();
     private readonly Context _context;
-    private readonly IList<DecodedRadioMessage> _source;
+    private readonly Action<int, View> _itemLongClick;
     private readonly Func<AppSettings> _settingsProvider;
-    private List<DecodedRadioMessage> _filteredItems = new();
+    private readonly IList<DecodedRadioMessage> _source;
+    private List<DecodedRadioMessage> _filteredItems = [];
     private string _query = string.Empty;
 
-    public DecodedMessageAdapter(Context context, IList<DecodedRadioMessage> source, Func<AppSettings> settingsProvider)
+    public DecodedMessageAdapter(
+        Context context,
+        IList<DecodedRadioMessage> source,
+        Func<AppSettings> settingsProvider,
+        Action<int, View> itemLongClick)
     {
         _context = context;
         _source = source;
         _settingsProvider = settingsProvider;
+        _itemLongClick = itemLongClick;
         ApplyFilter(string.Empty);
 
         if (source is INotifyCollectionChanged notifyCollectionChanged)
@@ -34,9 +41,11 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         }
     }
 
-    public override DecodedRadioMessage this[int position] => _filteredItems[position];
+    public DecodedRadioMessage this[int position] => _filteredItems[position];
 
-    public override int Count => _filteredItems.Count;
+    public int Count => _filteredItems.Count;
+
+    public override int ItemCount => _filteredItems.Count;
 
     public override long GetItemId(int position)
     {
@@ -47,7 +56,7 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
     {
         _query = (query ?? string.Empty).Trim().ToUpperInvariant();
         _filteredItems = string.IsNullOrWhiteSpace(_query)
-            ? _source.ToList()
+            ? [.. _source]
             : _source.Where(item =>
                     item.Transmitter.Contains(_query, StringComparison.OrdinalIgnoreCase) ||
                     item.Receiver.Contains(_query, StringComparison.OrdinalIgnoreCase))
@@ -55,21 +64,36 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         NotifyDataSetChanged();
     }
 
-    public override View GetView(int position, View? convertView, ViewGroup? parent)
+    public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType)
     {
         var inflater = LayoutInflater.From(_context) ?? throw new InvalidOperationException("Failed to create layout inflater.");
-        var view = convertView ?? inflater.Inflate(Resource.Layout.call_item, parent, false)
+        var view = inflater.Inflate(Resource.Layout.call_item, parent, false)
             ?? throw new InvalidOperationException("Failed to inflate decoded message row.");
-        var holder = view.Tag as ViewHolder ?? new ViewHolder(view);
-        view.Tag = holder;
+        return new ViewHolder(view, _itemLongClick);
+    }
 
-        var message = _filteredItems[position];
+    public override void OnBindViewHolder(RecyclerView.ViewHolder holder, int position)
+    {
+        BindViewHolder((ViewHolder)holder, _filteredItems[position]);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && _source is INotifyCollectionChanged notifyCollectionChanged)
+        {
+            notifyCollectionChanged.CollectionChanged -= OnCollectionChanged;
+        }
+
+        base.Dispose(disposing);
+    }
+
+    private void BindViewHolder(ViewHolder holder, DecodedRadioMessage message)
+    {
         var settings = _settingsProvider();
         var isIgnored = IgnoredCallsignMatcher.IsIgnored(message, settings.IgnoredCallsigns, settings.IgnoredCallsignMatchTarget);
         var languageCode = Java.Util.Locale.Default?.Language ?? "en";
-        var isTransmit = message.IsUserTransmit;
         var isCompactMessage = message.IsUserTransmit || message.IsSystemNotice;
-        var displayMessage = isTransmit
+        var displayMessage = message.IsUserTransmit
             ? FormatTransmitMessage(message)
             : message.Message;
 
@@ -101,17 +125,12 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
             holder.Band.Text = FormatFrequency(message);
             holder.Message.SetTextColor(GetColor(isIgnored
                 ? Resource.Color.ignored_message_text
-                : GetMessageTextColor(message)));
+                : Resource.Color.text_view_color));
 
-            if (isIgnored ||
-                message.Message.Contains("RR73", StringComparison.OrdinalIgnoreCase) ||
-                message.Message.Contains(" RRR", StringComparison.OrdinalIgnoreCase) ||
-                message.Message.EndsWith(" 73", StringComparison.OrdinalIgnoreCase))
+            if (isIgnored)
             {
                 holder.Message.PaintFlags |= PaintFlags.StrikeThruText;
             }
-
-            ApplyRowBackground(holder.Root, message, settings);
         }
         else
         {
@@ -121,13 +140,10 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
             {
                 holder.Message.SetTextColor(GetColor(Resource.Color.fromcall_is_qso_text_color));
             }
-
-            ApplyRowBackground(holder.Root, message, settings);
         }
 
+        ApplyRowBackground(holder.Root, message, settings);
         holder.Message.Background = null;
-
-        return view;
     }
 
     private static string GetCountryName(string languageCode, string englishName, string chineseName)
@@ -170,8 +186,7 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
             target.Visibility = ViewStates.Invisible;
             return;
         }
-        
-        // translate mode
+
         mode = WsjtxMessageParser.DecodeModeNotationsToString(mode);
 
         var builder = new SpannableStringBuilder();
@@ -208,19 +223,42 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
 
     private Java.Lang.ICharSequence BuildMessageText(string text, DecodedRadioMessage message, AppSettings settings)
     {
-        if (message.IsUserTransmit || message.IsSystemNotice || !message.ContainsMyCallsign)
+        if (message.IsUserTransmit || message.IsSystemNotice)
         {
             return new Java.Lang.String(text);
         }
 
-        var ranges = CallsignPatternMatcher.FindCallsignTokenRanges(text, settings.MyCallsign);
-        if (ranges.Count == 0)
+        var shouldBoldCompletedQso = IsCompletedQsoMessage(message);
+        var callsignRanges = message.ContainsMyCallsign
+            ? CallsignPatternMatcher.FindCallsignTokenRanges(text, settings.MyCallsign)
+            : [];
+
+        if (!shouldBoldCompletedQso && callsignRanges.Count == 0 && ResolveMessageHighlightColor(message, settings) is null)
         {
             return new Java.Lang.String(text);
         }
 
         var builder = new SpannableStringBuilder(text);
-        foreach (var (start, length) in ranges)
+        var highlightColor = ResolveMessageHighlightColor(message, settings);
+        if (highlightColor.HasValue)
+        {
+            builder.SetSpan(
+                new BackgroundColorSpan(GetColor(highlightColor.Value)),
+                0,
+                text.Length,
+                SpanTypes.ExclusiveExclusive);
+        }
+
+        if (shouldBoldCompletedQso)
+        {
+            builder.SetSpan(
+                new StyleSpan(TypefaceStyle.Bold),
+                0,
+                text.Length,
+                SpanTypes.ExclusiveExclusive);
+        }
+
+        foreach (var (start, length) in callsignRanges)
         {
             builder.SetSpan(
                 new ForegroundColorSpan(GetColor(Resource.Color.decoded_message_my_callsign_text)),
@@ -240,7 +278,7 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
     private void ApplyRowBackground(View rowView, DecodedRadioMessage message, AppSettings settings)
     {
         var (fillColor, strokeColor) = ResolveRowColors(message, settings);
-        rowView.Background = CreateRowBackground(fillColor, strokeColor);
+        rowView.Background = GetRowBackground(fillColor, strokeColor);
     }
 
     private (int FillColor, int StrokeColor) ResolveRowColors(DecodedRadioMessage message, AppSettings settings)
@@ -262,31 +300,21 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
                 : (Resource.Color.even_period, Resource.Color.even_period_stroke);
         }
 
-        var matchesWatchedCallsign = message.MatchesWatchedCallsignPattern && IsWatchedCallsignHighlightEnabled(settings);
-        var matchesDxcc = message.MatchesSelectedDxcc && IsDxccHighlightEnabled(settings);
-        if (matchesWatchedCallsign && matchesDxcc)
-        {
-            return (Resource.Color.decoded_match_multi_fill, Resource.Color.decoded_match_multi_stroke);
-        }
-
-        if (matchesWatchedCallsign)
-        {
-            return (Resource.Color.decoded_match_callsign_fill, Resource.Color.decoded_match_callsign_stroke);
-        }
-
-        if (matchesDxcc)
-        {
-            return (Resource.Color.decoded_match_dxcc_fill, Resource.Color.decoded_match_dxcc_stroke);
-        }
-
-        if (IsAnyMessageHighlightEnabled(settings))
-        {
-            return (Resource.Color.decoded_match_any_fill, Resource.Color.decoded_match_any_stroke);
-        }
-
         return IsOddPeriod(message.DecodeTimeUtc)
             ? (Resource.Color.odd_period, Resource.Color.odd_period_stroke)
             : (Resource.Color.even_period, Resource.Color.even_period_stroke);
+    }
+
+    private Drawable GetRowBackground(int fillColor, int strokeColor)
+    {
+        if (_backgroundCache.TryGetValue((fillColor, strokeColor), out var cachedState) && cachedState is not null)
+        {
+            return cachedState.NewDrawable().Mutate();
+        }
+
+        var drawable = CreateRowBackground(fillColor, strokeColor);
+        _backgroundCache[(fillColor, strokeColor)] = drawable.GetConstantState();
+        return drawable;
     }
 
     private GradientDrawable CreateRowBackground(int fillColor, int strokeColor)
@@ -329,16 +357,89 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
 
     private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        ApplyFilter(_query);
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            ApplyFilter(_query);
+            return;
+        }
+
+        switch (e.Action)
+        {
+            case NotifyCollectionChangedAction.Add when e.NewItems is not null && e.NewStartingIndex >= 0:
+                InsertItems(e.NewStartingIndex, e.NewItems);
+                return;
+            case NotifyCollectionChangedAction.Remove when e.OldItems is not null && e.OldStartingIndex >= 0:
+                RemoveItems(e.OldStartingIndex, e.OldItems.Count);
+                return;
+            case NotifyCollectionChangedAction.Reset:
+                _filteredItems = [.. _source];
+                NotifyDataSetChanged();
+                return;
+            default:
+                ApplyFilter(_query);
+                return;
+        }
     }
 
-    private static int GetMessageTextColor(DecodedRadioMessage message)
+    private void InsertItems(int startIndex, IList items)
+    {
+        var insertIndex = Math.Clamp(startIndex, 0, _filteredItems.Count);
+        for (var index = 0; index < items.Count; index++)
+        {
+            if (items[index] is DecodedRadioMessage message)
+            {
+                _filteredItems.Insert(insertIndex + index, message);
+            }
+        }
+
+        NotifyItemRangeInserted(insertIndex, items.Count);
+    }
+
+    private void RemoveItems(int startIndex, int count)
+    {
+        if (count <= 0 || startIndex < 0 || startIndex >= _filteredItems.Count)
+        {
+            ApplyFilter(_query);
+            return;
+        }
+
+        var removeCount = Math.Min(count, _filteredItems.Count - startIndex);
+        _filteredItems.RemoveRange(startIndex, removeCount);
+        NotifyItemRangeRemoved(startIndex, removeCount);
+    }
+
+    private static int? ResolveMessageHighlightColor(DecodedRadioMessage message, AppSettings settings)
+    {
+        var matchesWatchedCallsign = message.MatchesWatchedCallsignPattern && IsWatchedCallsignHighlightEnabled(settings);
+        var matchesDxcc = message.MatchesSelectedDxcc && IsDxccHighlightEnabled(settings);
+        if (matchesWatchedCallsign && matchesDxcc)
+        {
+            return Resource.Color.decoded_match_multi_fill;
+        }
+
+        if (matchesWatchedCallsign)
+        {
+            return Resource.Color.decoded_match_callsign_fill;
+        }
+
+        if (matchesDxcc)
+        {
+            return Resource.Color.decoded_match_dxcc_fill;
+        }
+
+        if (IsAnyMessageHighlightEnabled(settings))
+        {
+            return Resource.Color.decoded_match_any_fill;
+        }
+
+        return null;
+    }
+
+    private static bool IsCompletedQsoMessage(DecodedRadioMessage message)
     {
         return message.Message.Contains("RR73", StringComparison.OrdinalIgnoreCase) ||
                message.Message.Contains(" RRR", StringComparison.OrdinalIgnoreCase) ||
-               message.Message.EndsWith(" 73", StringComparison.OrdinalIgnoreCase)
-            ? Resource.Color.tracker_new_cq_win_end_color
-            : Resource.Color.text_view_color;
+               message.Message.EndsWith(" 73", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsOddPeriod(string decodeTime)
@@ -362,9 +463,9 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         return new Color(_context.GetColor(colorResource));
     }
 
-    private sealed class ViewHolder : Java.Lang.Object
+    private sealed class ViewHolder : RecyclerView.ViewHolder
     {
-        public ViewHolder(View root)
+        public ViewHolder(View root, Action<int, View> itemLongClick) : base(root)
         {
             Root = root;
             Snr = root.FindViewById<TextView>(Resource.Id.callingListIdBTextView)!;
@@ -377,6 +478,15 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
             ToCountry = root.FindViewById<TextView>(Resource.Id.callToItemTextView)!;
             FromCountry = root.FindViewById<TextView>(Resource.Id.CallFromItemTextView)!;
             Distance = root.FindViewById<TextView>(Resource.Id.callingListDistTextView)!;
+
+            root.LongClick += (_, _) =>
+            {
+                var position = BindingAdapterPosition;
+                if (position != RecyclerView.NoPosition)
+                {
+                    itemLongClick(position, root);
+                }
+            };
         }
 
         public View Root { get; }

@@ -6,7 +6,7 @@ namespace WsjtxWatcher.Core.Models;
 
 public partial class WatcherState : ObservableObject
 {
-    private const int MaxMessages = 500;
+    private const int MaxMessages = 3000;
 
     [ObservableProperty]
     private string clientId = string.Empty;
@@ -36,6 +36,9 @@ public partial class WatcherState : ObservableObject
     private int messagesAboutMe;
 
     [ObservableProperty]
+    private long messagePresentationVersion;
+
+    [ObservableProperty]
     private string transmitMessage = string.Empty;
 
     public ObservableCollection<DecodedRadioMessage> Messages { get; } = new();
@@ -60,6 +63,11 @@ public partial class WatcherState : ObservableObject
         Messages.Clear();
         TotalMessages = 0;
         MessagesAboutMe = 0;
+    }
+
+    public void RefreshMessagePresentation()
+    {
+        MessagePresentationVersion += 1;
     }
 
     public void ResetConnection()

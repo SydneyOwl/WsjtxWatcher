@@ -33,3 +33,10 @@ public sealed class WsjtStatusEvent : WsjtSessionEvent
     public string TransmitMessage { get; init; } = string.Empty;
     public double DialFrequencyHz { get; init; }
 }
+
+public sealed class WsjtQsoLoggedEvent : WsjtSessionEvent
+{
+    public string DxCall { get; init; } = string.Empty;
+    public string Band { get; init; } = string.Empty;
+    public double FrequencyHz { get; init; }
+}

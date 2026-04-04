@@ -83,6 +83,7 @@ public static class IgnoredCallsignMatcher
 
         return matchTarget switch
         {
+            IgnoredCallsignMatchTarget.Disabled => false,
             IgnoredCallsignMatchTarget.ReceiverOnly => Contains(entries, message.Receiver, band),
             IgnoredCallsignMatchTarget.ReceiverOrTransmitter => Contains(entries, message.Receiver, band) || Contains(entries, message.Transmitter, band),
             _ => Contains(entries, message.Transmitter, band)

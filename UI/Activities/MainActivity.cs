@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using System.ComponentModel;
 using Android.App;
 using Android.Content;
@@ -7,6 +8,7 @@ using Android.Runtime;
 using Android.Views;
 using Android.Views.Animations;
 using Android.Widget;
+using AndroidX.RecyclerView.Widget;
 using Serilog;
 using WsjtxWatcher.App;
 using WsjtxWatcher.Core.Contracts;
@@ -22,6 +24,7 @@ namespace WsjtxWatcher.UI.Activities;
 public sealed class MainActivity : LocalizedActivity
 {
     public const string ScrollToBottomFromNotificationExtra = "wsjtxwatcher.scroll_to_bottom_from_notification";
+    private const int AutoScrollThresholdItems = 6;
 
     private MainViewModel _viewModel = null!;
     private DecodedMessageAdapter _adapter = null!;
@@ -34,7 +37,8 @@ public sealed class MainActivity : LocalizedActivity
     private float _jumpButtonStartY;
     private bool _isDraggingJumpButton;
     private ImageButton _jumpToBottomButton = null!;
-    private ListView _listView = null!;
+    private RecyclerView _listView = null!;
+    private LinearLayoutManager _listLayoutManager = null!;
     private IMenuItem? _startServerMenuItem;
     private IMenuItem? _stopServerMenuItem;
     private TextView _totalRecord = null!;
@@ -113,6 +117,7 @@ public sealed class MainActivity : LocalizedActivity
         if (_viewModel is not null)
         {
             _viewModel.State.PropertyChanged -= OnStatePropertyChanged;
+            _viewModel.Messages.CollectionChanged -= OnMessagesCollectionChanged;
         }
 
         base.OnDestroy();
@@ -141,7 +146,7 @@ public sealed class MainActivity : LocalizedActivity
 
     private void BindViews()
     {
-        _listView = FindViewById<ListView>(Resource.Id.calllist_view)!;
+        _listView = FindViewById<RecyclerView>(Resource.Id.calllist_view)!;
         _aboutMe = FindViewById<TextView>(Resource.Id.about_me)!;
         _totalRecord = FindViewById<TextView>(Resource.Id.total_record)!;
         _callsignSearch = FindViewById<EditText>(Resource.Id.callsign_search)!;
@@ -149,10 +154,13 @@ public sealed class MainActivity : LocalizedActivity
         _transmitLayout = FindViewById<RelativeLayout>(Resource.Id.transmittingLayout)!;
         _transmitMessage = FindViewById<TextView>(Resource.Id.transmittingMessageTextView)!;
 
-        _adapter = new DecodedMessageAdapter(this, _viewModel.Messages, () => _viewModel.SettingsSnapshot);
-        _listView.Adapter = _adapter;
+        _adapter = new DecodedMessageAdapter(this, _viewModel.Messages, () => _viewModel.SettingsSnapshot, OnMessageItemLongClick);
+        _listLayoutManager = new LinearLayoutManager(this);
+        _listView.HasFixedSize = true;
+        _listView.SetLayoutManager(_listLayoutManager);
+        _listView.SetAdapter(_adapter);
+        _listView.SetItemAnimator(null);
         _callsignSearch.TextChanged += (_, _) => _adapter.ApplyFilter(_callsignSearch.Text ?? string.Empty);
-        _listView.ItemLongClick += OnMessageItemLongClick;
         _jumpToBottomButton.Click += (_, _) => ScrollToBottom();
         _dragTouchSlop = ViewConfiguration.Get(this)?.ScaledTouchSlop ?? 8;
         _jumpToBottomButton.Touch += OnJumpToBottomButtonTouch;
@@ -163,11 +171,36 @@ public sealed class MainActivity : LocalizedActivity
     private void BindViewModel()
     {
         _viewModel.State.PropertyChanged += OnStatePropertyChanged;
+        _viewModel.Messages.CollectionChanged += OnMessagesCollectionChanged;
     }
 
     private void OnStatePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        RunOnUiThread(Render);
+        RunOnUiThread(() =>
+        {
+            if (string.Equals(e.PropertyName, nameof(_viewModel.State.MessagePresentationVersion), StringComparison.Ordinal))
+            {
+                _adapter.NotifyDataSetChanged();
+            }
+
+            Render();
+        });
+    }
+
+    private void OnMessagesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        var newItemCount = e.NewItems?.Count ?? 0;
+        if (e.Action != NotifyCollectionChangedAction.Add || newItemCount <= 0)
+        {
+            return;
+        }
+
+        if (!ShouldAutoScrollForNewMessages(newItemCount))
+        {
+            return;
+        }
+
+        RunOnUiThread(ScrollToBottom);
     }
 
     private void Render()
@@ -296,12 +329,12 @@ public sealed class MainActivity : LocalizedActivity
             return;
         }
 
-        _listView.Post(() => _listView.SetSelection(_adapter.Count - 1));
+        _listView.Post(() => _listView.ScrollToPosition(_adapter.Count - 1));
     }
 
-    private void OnMessageItemLongClick(object? sender, AdapterView.ItemLongClickEventArgs e)
+    private void OnMessageItemLongClick(int position, View anchorView)
     {
-        var message = _adapter[e.Position];
+        var message = _adapter[position];
         if (message.IsSystemNotice || message.IsUserTransmit)
         {
             return;
@@ -322,7 +355,7 @@ public sealed class MainActivity : LocalizedActivity
             return;
         }
 
-        var popupMenu = new PopupMenu(this, e.View!);
+        var popupMenu = new PopupMenu(this, anchorView);
         for (var index = 0; index < candidates.Count; index++)
         {
             popupMenu.Menu?.Add(0, index, index, GetString(Resource.String.ignore_callsign_on_band, band, candidates[index]));
@@ -385,6 +418,28 @@ public sealed class MainActivity : LocalizedActivity
         }
 
         candidates.Add(normalized);
+    }
+
+    private bool ShouldAutoScrollForNewMessages(int newItemCount)
+    {
+        if (!string.IsNullOrWhiteSpace(_callsignSearch.Text))
+        {
+            return false;
+        }
+
+        var previousCount = Math.Max(0, _adapter.Count - Math.Max(0, newItemCount));
+        if (previousCount == 0)
+        {
+            return true;
+        }
+
+        var lastVisible = _listLayoutManager.FindLastVisibleItemPosition();
+        if (lastVisible == RecyclerView.NoPosition)
+        {
+            return true;
+        }
+
+        return lastVisible >= previousCount - 1 - AutoScrollThresholdItems;
     }
 
     private void OnJumpToBottomButtonTouch(object? sender, View.TouchEventArgs e)

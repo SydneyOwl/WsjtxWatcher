@@ -114,6 +114,7 @@ public sealed class WsjtMessageHandler : WsjtxUdpServerBaseAsyncMessageHandler
     {
         await _eventSink.FeedTimeoutDogAsync();
         await PublishSessionActivityAsync(message.Id, endPoint, cancellationToken).ConfigureAwait(false);
+        await PublishQsoLoggedAsync(message.Id, endPoint, message.DXCall, string.Empty, message.TXFrequencyInHz, cancellationToken).ConfigureAwait(false);
         await base.HandleQsoLoggedMessageAsync(server, message, endPoint, cancellationToken).ConfigureAwait(false);
     }
 
@@ -174,6 +175,31 @@ public sealed class WsjtMessageHandler : WsjtxUdpServerBaseAsyncMessageHandler
         catch (Exception exception)
         {
             Log.Warning(exception, "Failed to publish session activity.");
+        }
+    }
+
+    private async Task PublishQsoLoggedAsync(
+        string clientId,
+        EndPoint endPoint,
+        string dxCall,
+        string band,
+        double frequencyHz,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _eventSink.OnQsoLoggedAsync(new WsjtQsoLoggedEvent
+            {
+                ClientId = clientId,
+                SessionEndPoint = endPoint,
+                DxCall = dxCall ?? string.Empty,
+                Band = band ?? string.Empty,
+                FrequencyHz = frequencyHz
+            }, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            Log.Warning(exception, "Failed to publish logged QSO event.");
         }
     }
 }
