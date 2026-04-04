@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Android;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
@@ -57,7 +56,6 @@ public sealed class MainActivity : LocalizedActivity
         BindViews();
         BindViewModel();
         HandleLaunchIntent(Intent);
-        RequestNotificationPermissionIfNeeded();
         _ = InitializeAsync();
     }
 
@@ -289,36 +287,6 @@ public sealed class MainActivity : LocalizedActivity
             _isStoppingService = false;
             RunOnUiThread(Render);
         }
-    }
-
-    private void RequestNotificationPermissionIfNeeded()
-    {
-        if (!OperatingSystem.IsAndroidVersionAtLeast(33))
-        {
-            return;
-        }
-
-        if (CheckSelfPermission(Manifest.Permission.PostNotifications) != Permission.Granted)
-        {
-            RequestPermissions(new[] { Manifest.Permission.PostNotifications }, 1001);
-        }
-    }
-
-    public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
-    {
-        base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode != 1001)
-        {
-            return;
-        }
-
-        if (_notificationService.AreNotificationsEnabled())
-        {
-            return;
-        }
-
-        Toast.MakeText(this, GetString(Resource.String.denied_notification), ToastLength.Long)?.Show();
     }
 
     private void ScrollToBottom()

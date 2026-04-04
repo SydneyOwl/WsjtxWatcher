@@ -89,4 +89,5 @@ public sealed class IgnoredCallsignViewModel
         await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(false);
         await _watcherController.ReloadSettingsAsync(cancellationToken).ConfigureAwait(false);
     }
+
 }

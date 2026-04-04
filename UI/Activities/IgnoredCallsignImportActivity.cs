@@ -23,6 +23,7 @@ public sealed class IgnoredCallsignImportActivity : LocalizedActivity
     ];
 
     private ICloudlogIgnoredCallsignImportService _importService = null!;
+    private ICloudlogImportSettingsStore _importSettingsStore = null!;
     private IgnoredCallsignViewModel _ignoredCallsignViewModel = null!;
     private Spinner _lookbackDaysValue = null!;
     private EditText _passwordValue = null!;
@@ -40,11 +41,19 @@ public sealed class IgnoredCallsignImportActivity : LocalizedActivity
         SetContentView(Resource.Layout.activity_ignored_callsign_import);
 
         _importService = AppHost.Current.GetRequiredService<ICloudlogIgnoredCallsignImportService>();
+        _importSettingsStore = AppHost.Current.GetRequiredService<ICloudlogImportSettingsStore>();
         _ignoredCallsignViewModel = AppHost.Current.GetRequiredService<IgnoredCallsignViewModel>();
 
         BindViews();
         BindEvents();
         InitializeState();
+        _ = LoadPersistedSettingsAsync();
+    }
+
+    protected override void OnPause()
+    {
+        SavePersistedSettingsAsync().GetAwaiter().GetResult();
+        base.OnPause();
     }
 
     private void BindViews()
@@ -92,6 +101,8 @@ public sealed class IgnoredCallsignImportActivity : LocalizedActivity
             Toast.MakeText(this, Resource.String.cloudlog_import_station_required, ToastLength.Short)?.Show();
             return;
         }
+
+        await SavePersistedSettingsAsync().ConfigureAwait(false);
 
         RunOnUiThread(() =>
         {
@@ -175,6 +186,43 @@ public sealed class IgnoredCallsignImportActivity : LocalizedActivity
         return string.Equals(label, "all", StringComparison.OrdinalIgnoreCase)
             ? GetString(Resource.String.cloudlog_lookback_all)
             : label;
+    }
+
+    private async Task LoadPersistedSettingsAsync()
+    {
+        var settings = await _importSettingsStore.LoadAsync().ConfigureAwait(false);
+        RunOnUiThread(() =>
+        {
+            if (IsFinishing || IsDestroyed)
+            {
+                return;
+            }
+
+            _urlValue.Text = settings.Url;
+            _stationIdValue.Text = settings.StationId;
+            _usernameValue.Text = settings.Username;
+            _passwordValue.Text = settings.Password;
+            _lookbackDaysValue.SetSelection(ResolveLookbackSelection(settings.LookbackDays));
+        });
+    }
+
+    private Task SavePersistedSettingsAsync()
+    {
+        var settings = new Core.Models.CloudlogImportSettings
+        {
+            Url = (_urlValue.Text ?? string.Empty).Trim(),
+            StationId = (_stationIdValue.Text ?? string.Empty).Trim(),
+            Username = (_usernameValue.Text ?? string.Empty).Trim(),
+            Password = _passwordValue.Text ?? string.Empty,
+            LookbackDays = ResolveLookbackDays()
+        };
+        return _importSettingsStore.SaveAsync(settings);
+    }
+
+    private static int ResolveLookbackSelection(int lookbackDays)
+    {
+        var index = Array.FindIndex(LookbackOptions, option => option.Days == lookbackDays);
+        return index >= 0 ? index : LookbackOptions.Length - 1;
     }
 
     private sealed record ImportLookbackOption(string Label, int Days);

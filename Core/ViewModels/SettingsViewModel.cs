@@ -10,6 +10,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IAppLanguageService _appLanguageService;
     private readonly IAppInfoService _appInfoService;
     private readonly IBackgroundAccessService _backgroundAccessService;
+    private readonly ICloudlogImportSettingsStore _cloudlogImportSettingsStore;
     private readonly IGridCacheStore _gridCacheStore;
     private readonly ILogFileService _logFileService;
     private readonly INetworkInfoService _networkInfoService;
@@ -59,6 +60,7 @@ public partial class SettingsViewModel : ObservableObject
 
     public SettingsViewModel(
         ISettingsStore settingsStore,
+        ICloudlogImportSettingsStore cloudlogImportSettingsStore,
         IGridCacheStore gridCacheStore,
         INetworkInfoService networkInfoService,
         IBackgroundAccessService backgroundAccessService,
@@ -68,6 +70,7 @@ public partial class SettingsViewModel : ObservableObject
         Services.WatcherController watcherController)
     {
         _settingsStore = settingsStore;
+        _cloudlogImportSettingsStore = cloudlogImportSettingsStore;
         _gridCacheStore = gridCacheStore;
         _networkInfoService = networkInfoService;
         _backgroundAccessService = backgroundAccessService;
@@ -140,6 +143,7 @@ public partial class SettingsViewModel : ObservableObject
     public async Task ResetAllAsync(CancellationToken cancellationToken = default)
     {
         await _watcherController.ResetAllAsync(cancellationToken).ConfigureAwait(false);
+        await _cloudlogImportSettingsStore.ResetAsync(cancellationToken).ConfigureAwait(false);
         await LoadAsync(cancellationToken).ConfigureAwait(false);
     }
 

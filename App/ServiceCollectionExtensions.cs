@@ -20,6 +20,7 @@ internal static class ServiceCollectionExtensions
         services.AddSingleton<IAppInfoService, AndroidAppInfoService>();
         services.AddSingleton<IUiDispatcher, AndroidUiDispatcher>();
         services.AddSingleton<ISettingsStore, AndroidSettingsStore>();
+        services.AddSingleton<ICloudlogImportSettingsStore, AndroidCloudlogImportSettingsStore>();
         services.AddSingleton<AndroidAppLanguageManager>();
         services.AddSingleton<IAppLanguageService>(serviceProvider => serviceProvider.GetRequiredService<AndroidAppLanguageManager>());
         services.AddSingleton<WatcherDatabaseService>();

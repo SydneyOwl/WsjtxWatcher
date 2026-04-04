@@ -1,9 +1,12 @@
+using Android;
 using Android.App;
 using Android.Content;
+using Android.Content.PM;
 using Android.Graphics;
 using Android.OS;
 using Android.Views;
 using Android.Widget;
+using System.Runtime.Versioning;
 using WsjtxWatcher.App;
 using WsjtxWatcher.Core.Contracts;
 using WsjtxWatcher.Core.Models;
@@ -14,6 +17,7 @@ namespace WsjtxWatcher.UI.Activities;
 [Activity(Label = "@string/settings", Exported = false)]
 public sealed class SettingsActivity : LocalizedActivity
 {
+    private const int NotificationPermissionRequestCode = 2001;
     private const string RepositoryUrl = "https://github.com/sydneyowl/wsjtxwatcher";
     private readonly IgnoredCallsignMatchTarget[] _ignoredCallsignMatchTargets =
     [
@@ -47,6 +51,9 @@ public sealed class SettingsActivity : LocalizedActivity
     private CheckBox _vibrationCheckbox = null!;
     private CheckBox _vibrationDxccCheckbox = null!;
     private INotificationService _notificationService = null!;
+    private CheckBox? _pendingNotificationCheckbox;
+    private Action<bool>? _pendingNotificationSetter;
+    private bool _suppressNotificationToggleEvents;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -188,12 +195,7 @@ public sealed class SettingsActivity : LocalizedActivity
         };
 
         _sendNotificationCheckbox.CheckedChange += (_, args) =>
-        {
-            if (!_isBinding)
-            {
-                _viewModel.NotifyOnMyCall = args.IsChecked;
-            }
-        };
+            HandleNotificationToggle(_sendNotificationCheckbox, value => _viewModel.NotifyOnMyCall = value, args.IsChecked);
 
         _vibrationCheckbox.CheckedChange += (_, args) =>
         {
@@ -204,12 +206,7 @@ public sealed class SettingsActivity : LocalizedActivity
         };
 
         _sendNotificationAllCheckbox.CheckedChange += (_, args) =>
-        {
-            if (!_isBinding)
-            {
-                _viewModel.NotifyOnAnyMessage = args.IsChecked;
-            }
-        };
+            HandleNotificationToggle(_sendNotificationAllCheckbox, value => _viewModel.NotifyOnAnyMessage = value, args.IsChecked);
 
         _vibrationAllCheckbox.CheckedChange += (_, args) =>
         {
@@ -220,12 +217,7 @@ public sealed class SettingsActivity : LocalizedActivity
         };
 
         _sendNotificationDxccCheckbox.CheckedChange += (_, args) =>
-        {
-            if (!_isBinding)
-            {
-                _viewModel.NotifyOnSelectedDxcc = args.IsChecked;
-            }
-        };
+            HandleNotificationToggle(_sendNotificationDxccCheckbox, value => _viewModel.NotifyOnSelectedDxcc = value, args.IsChecked);
 
         _vibrationDxccCheckbox.CheckedChange += (_, args) =>
         {
@@ -317,13 +309,37 @@ public sealed class SettingsActivity : LocalizedActivity
             _vibrationAllCheckbox.Checked = _viewModel.VibrateOnAnyMessage;
             _sendNotificationDxccCheckbox.Checked = _viewModel.NotifyOnSelectedDxcc;
             _vibrationDxccCheckbox.Checked = _viewModel.VibrateOnSelectedDxcc;
-            _openNotificationSettingsButton.Visibility = _notificationService.AreNotificationsEnabled()
-                ? ViewStates.Gone
-                : ViewStates.Visible;
+            UpdateNotificationSettingsButtonVisibility();
             _addWhitelistButton.Enabled = !_viewModel.IsIgnoringBatteryOptimizations;
             _setDxccButton.Text = $"{GetString(Resource.String.set_dxcc_entity)} ({_viewModel.SelectedDxccCount})";
             _isBinding = false;
         });
+    }
+
+    public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
+    {
+        base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode != NotificationPermissionRequestCode)
+        {
+            return;
+        }
+
+        var granted = grantResults.Length > 0 && grantResults[0] == Permission.Granted;
+        if (granted)
+        {
+            _pendingNotificationSetter?.Invoke(true);
+        }
+        else if (_pendingNotificationCheckbox is not null)
+        {
+            _pendingNotificationSetter?.Invoke(false);
+            SetNotificationCheckboxChecked(_pendingNotificationCheckbox, false);
+            Toast.MakeText(this, GetString(Resource.String.denied_notification), ToastLength.Long)?.Show();
+        }
+
+        _pendingNotificationCheckbox = null;
+        _pendingNotificationSetter = null;
+        UpdateNotificationSettingsButtonVisibility();
     }
 
     private int GetLanguageIndex(AppLanguage language)
@@ -372,6 +388,59 @@ public sealed class SettingsActivity : LocalizedActivity
             dialog.Show();
         });
         return tcs.Task;
+    }
+
+    private void HandleNotificationToggle(CheckBox checkBox, Action<bool> setter, bool isChecked)
+    {
+        if (_isBinding || _suppressNotificationToggleEvents)
+        {
+            return;
+        }
+
+        if (!isChecked)
+        {
+            setter(false);
+            UpdateNotificationSettingsButtonVisibility();
+            return;
+        }
+
+        if (!RequiresNotificationPermissionRequest())
+        {
+            setter(true);
+            UpdateNotificationSettingsButtonVisibility();
+            return;
+        }
+
+        _pendingNotificationCheckbox = checkBox;
+        _pendingNotificationSetter = setter;
+        RequestNotificationPermission();
+    }
+
+    [SupportedOSPlatformGuard("android33.0")]
+    private bool RequiresNotificationPermissionRequest()
+    {
+        return OperatingSystem.IsAndroidVersionAtLeast(33) &&
+               CheckSelfPermission(Manifest.Permission.PostNotifications) != Permission.Granted;
+    }
+
+    [SupportedOSPlatform("android33.0")]
+    private void RequestNotificationPermission()
+    {
+        RequestPermissions([Manifest.Permission.PostNotifications], NotificationPermissionRequestCode);
+    }
+
+    private void SetNotificationCheckboxChecked(CheckBox checkBox, bool isChecked)
+    {
+        _suppressNotificationToggleEvents = true;
+        checkBox.Checked = isChecked;
+        _suppressNotificationToggleEvents = false;
+    }
+
+    private void UpdateNotificationSettingsButtonVisibility()
+    {
+        _openNotificationSettingsButton.Visibility = _notificationService.AreNotificationsEnabled()
+            ? ViewStates.Gone
+            : ViewStates.Visible;
     }
 
     private void ShowBackgroundHelpDialog()
