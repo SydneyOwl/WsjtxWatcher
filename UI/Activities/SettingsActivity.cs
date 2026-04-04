@@ -199,7 +199,11 @@ public sealed class SettingsActivity : LocalizedActivity
 
                 _isExitingApplication = true;
                 await _viewModel.SaveAndStopAsync().ConfigureAwait(false);
-                RunOnUiThread(ExitApplication);
+                RunOnUiThread(() =>
+                {
+                    StopService(new Intent(this, typeof(UI.Services.MsgPushService)));
+                    ExitApplication();
+                });
             }
         };
 
