@@ -533,7 +533,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
     private async Task NotifyForLoggedQsoAsync(WsjtQsoLoggedEvent qsoLoggedEvent, CancellationToken cancellationToken)
     {
         var settingsSnapshot = _settings.Clone();
-        if (!settingsSnapshot.NotifyOnLoggedQso)
+        if (!settingsSnapshot.NotifyOnLoggedQso && !settingsSnapshot.VibrateOnLoggedQso)
         {
             return;
         }
@@ -545,7 +545,15 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         }
 
         var band = ResolveLoggedQsoBand(qsoLoggedEvent);
-        await _notificationService.ShowQsoLoggedAlertAsync(callsign, band, cancellationToken).ConfigureAwait(false);
+        if (settingsSnapshot.VibrateOnLoggedQso)
+        {
+            await _deviceFeedbackService.VibrateAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        if (settingsSnapshot.NotifyOnLoggedQso)
+        {
+            await _notificationService.ShowQsoLoggedAlertAsync(callsign, band, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     private string ResolveLoggedQsoBand(WsjtQsoLoggedEvent qsoLoggedEvent)

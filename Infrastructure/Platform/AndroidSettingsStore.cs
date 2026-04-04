@@ -48,6 +48,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
             VibrateOnMyCall = _sharedPreferences.GetBoolean("vibrate_on_my_call", false),
             VibrateOnAnyMessage = _sharedPreferences.GetBoolean("vibrate_on_any", false),
             VibrateOnSelectedDxcc = _sharedPreferences.GetBoolean("vibrate_on_dxcc", false),
+            VibrateOnLoggedQso = _sharedPreferences.GetBoolean("vibrate_on_logged_qso", false),
             AutoIgnoreLoggedQso = _sharedPreferences.GetBoolean("auto_ignore_logged_qso", true),
             IgnoredCallsignMatchTarget = ignoredCallsignMatchTarget,
             PreferredDxccIds = new HashSet<int>(preferredDxcc.Select(value => int.TryParse(value, out var id) ? id : 0).Where(id => id > 0))
@@ -71,11 +72,15 @@ public sealed class AndroidSettingsStore : ISettingsStore
         editor.PutBoolean("vibrate_on_my_call", settings.VibrateOnMyCall);
         editor.PutBoolean("vibrate_on_any", settings.VibrateOnAnyMessage);
         editor.PutBoolean("vibrate_on_dxcc", settings.VibrateOnSelectedDxcc);
+        editor.PutBoolean("vibrate_on_logged_qso", settings.VibrateOnLoggedQso);
         editor.PutBoolean("auto_ignore_logged_qso", settings.AutoIgnoreLoggedQso);
         editor.PutInt("ignored_callsign_match_target", (int)settings.IgnoredCallsignMatchTarget);
         editor.PutStringSet("preferred_dxcc", settings.PreferredDxccIds.Select(id => id.ToString()).ToHashSet());
         editor.Remove("ignored_callsigns");
-        editor.Apply();
+        if (!editor.Commit())
+        {
+            throw new InvalidOperationException("Failed to persist application settings.");
+        }
         await _ignoredCallsignStore.SaveAsync(settings.IgnoredCallsigns, cancellationToken).ConfigureAwait(false);
     }
 
@@ -83,7 +88,10 @@ public sealed class AndroidSettingsStore : ISettingsStore
     {
         var editor = _sharedPreferences.Edit()!;
         editor.Clear();
-        editor.Apply();
+        if (!editor.Commit())
+        {
+            throw new InvalidOperationException("Failed to clear application settings.");
+        }
         await _ignoredCallsignStore.ResetAsync(cancellationToken).ConfigureAwait(false);
         await SaveAsync(new AppSettings(), cancellationToken).ConfigureAwait(false);
     }

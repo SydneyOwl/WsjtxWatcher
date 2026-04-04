@@ -302,14 +302,31 @@
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
-            <CheckBox
-                android:id="@+id/send_notification_logged_qso_checkbox"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:checked="false"
-                android:text="@string/send_notification"
-                android:textSize="15sp" />
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/send_notification_logged_qso_checkbox"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:checked="false"
+                    android:text="@string/send_notification"
+                    android:textSize="15sp" />
+
+                <CheckBox
+                    android:id="@+id/vibration_logged_qso_checkbox"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:checked="false"
+                    android:text="@string/vibration"
+                    android:textSize="15sp" />
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout

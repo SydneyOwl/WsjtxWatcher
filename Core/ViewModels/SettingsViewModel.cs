@@ -29,6 +29,9 @@ public partial class SettingsViewModel : ObservableObject
     private bool notifyOnLoggedQso;
 
     [ObservableProperty]
+    private bool vibrateOnLoggedQso;
+
+    [ObservableProperty]
     private string port = "2237";
 
     [ObservableProperty]
@@ -112,6 +115,7 @@ public partial class SettingsViewModel : ObservableObject
         VibrateOnMyCall = settings.VibrateOnMyCall;
         VibrateOnAnyMessage = settings.VibrateOnAnyMessage;
         VibrateOnSelectedDxcc = settings.VibrateOnSelectedDxcc;
+        VibrateOnLoggedQso = settings.VibrateOnLoggedQso;
         IgnoredCallsignMatchTarget = settings.IgnoredCallsignMatchTarget;
         AutoIgnoreLoggedQso = settings.AutoIgnoreLoggedQso;
         SelectedDxccCount = settings.PreferredDxccIds.Count;
@@ -191,6 +195,7 @@ public partial class SettingsViewModel : ObservableObject
             VibrateOnMyCall = VibrateOnMyCall,
             VibrateOnAnyMessage = VibrateOnAnyMessage,
             VibrateOnSelectedDxcc = VibrateOnSelectedDxcc,
+            VibrateOnLoggedQso = VibrateOnLoggedQso,
             AutoIgnoreLoggedQso = AutoIgnoreLoggedQso,
             IgnoredCallsignMatchTarget = IgnoredCallsignMatchTarget,
             PreferredDxccIds = new HashSet<int>(preferredDxccIds)

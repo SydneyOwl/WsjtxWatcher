@@ -2,7 +2,6 @@ using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.Provider;
-using System.Globalization;
 using WsjtxWatcher.Core.Contracts;
 
 namespace WsjtxWatcher.Infrastructure.Platform;
@@ -89,12 +88,10 @@ public sealed class AndroidNotificationService : INotificationService
 
         _lastLoggedQsoNotificationAt = DateTimeOffset.UtcNow;
         var message = string.IsNullOrWhiteSpace(band)
-            ? string.Format(
-                CultureInfo.CurrentCulture,
+            ? FormatAndroidTemplate(
                 _application.GetString(Resource.String.qso_logged_notification_message),
                 callsign)
-            : string.Format(
-                CultureInfo.CurrentCulture,
+            : FormatAndroidTemplate(
                 _application.GetString(Resource.String.qso_logged_notification_message_with_band),
                 callsign,
                 band);
@@ -125,5 +122,16 @@ public sealed class AndroidNotificationService : INotificationService
             .Build();
 
         _notificationManager.Notify(notificationId, notification);
+    }
+
+    private static string FormatAndroidTemplate(string template, params string[] values)
+    {
+        var result = template;
+        for (var index = 0; index < values.Length; index++)
+        {
+            result = result.Replace($"%{index + 1}$s", values[index], StringComparison.Ordinal);
+        }
+
+        return result;
     }
 }

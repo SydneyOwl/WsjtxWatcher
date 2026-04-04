@@ -53,6 +53,7 @@ public sealed class SettingsActivity : LocalizedActivity
     private CheckBox _vibrationAllCheckbox = null!;
     private CheckBox _vibrationCheckbox = null!;
     private CheckBox _vibrationDxccCheckbox = null!;
+    private CheckBox _vibrationLoggedQsoCheckbox = null!;
     private INotificationService _notificationService = null!;
     private CheckBox? _pendingNotificationCheckbox;
     private Action<bool>? _pendingNotificationSetter;
@@ -108,6 +109,7 @@ public sealed class SettingsActivity : LocalizedActivity
         _sendNotificationDxccCheckbox = FindViewById<CheckBox>(Resource.Id.send_notification_dxcc_checkbox)!;
         _sendNotificationLoggedQsoCheckbox = FindViewById<CheckBox>(Resource.Id.send_notification_logged_qso_checkbox)!;
         _vibrationDxccCheckbox = FindViewById<CheckBox>(Resource.Id.vibration_dxcc_checkbox)!;
+        _vibrationLoggedQsoCheckbox = FindViewById<CheckBox>(Resource.Id.vibration_logged_qso_checkbox)!;
         _resetDatabaseButton = FindViewById<Button>(Resource.Id.reset_database)!;
         _resetAllButton = FindViewById<Button>(Resource.Id.reset_all)!;
         _openLogButton = FindViewById<Button>(Resource.Id.open_log)!;
@@ -235,6 +237,14 @@ public sealed class SettingsActivity : LocalizedActivity
             }
         };
 
+        _vibrationLoggedQsoCheckbox.CheckedChange += (_, args) =>
+        {
+            if (!_isBinding)
+            {
+                _viewModel.VibrateOnLoggedQso = args.IsChecked;
+            }
+        };
+
         _autoIgnoreLoggedQsoCheckbox.CheckedChange += (_, args) =>
         {
             if (!_isBinding)
@@ -326,6 +336,7 @@ public sealed class SettingsActivity : LocalizedActivity
             _sendNotificationDxccCheckbox.Checked = _viewModel.NotifyOnSelectedDxcc;
             _vibrationDxccCheckbox.Checked = _viewModel.VibrateOnSelectedDxcc;
             _sendNotificationLoggedQsoCheckbox.Checked = _viewModel.NotifyOnLoggedQso;
+            _vibrationLoggedQsoCheckbox.Checked = _viewModel.VibrateOnLoggedQso;
             _autoIgnoreLoggedQsoCheckbox.Checked = _viewModel.AutoIgnoreLoggedQso;
             UpdateNotificationSettingsButtonVisibility();
             _addWhitelistButton.Enabled = !_viewModel.IsIgnoringBatteryOptimizations;
