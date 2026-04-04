@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="12dp">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/cloudlog_import_help"
+                android:textSize="14sp"/>
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/cloudlog_server_url"/>
+
+        <EditText
+                android:id="@+id/cloudlog_url_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/cloudlog_server_url_watermark"
+                android:inputType="textUri"
+                android:maxLines="1"/>
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/cloudlog_station_id"/>
+
+        <EditText
+                android:id="@+id/cloudlog_station_id_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/cloudlog_station_id"
+                android:inputType="textNoSuggestions"
+                android:maxLines="1"/>
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/cloudlog_username"/>
+
+        <EditText
+                android:id="@+id/cloudlog_username_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/cloudlog_username"
+                android:inputType="textNoSuggestions"
+                android:maxLines="1"/>
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/cloudlog_password"/>
+
+        <EditText
+                android:id="@+id/cloudlog_password_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/cloudlog_password"
+                android:inputType="textPassword"
+                android:maxLines="1"/>
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/cloudlog_lookback_days"/>
+
+        <Spinner
+                android:id="@+id/cloudlog_lookback_days_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:spinnerMode="dropdown"/>
+
+        <ProgressBar
+                android:id="@+id/cloudlog_import_progress"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:visibility="gone"/>
+
+        <TextView
+                android:id="@+id/cloudlog_import_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/cloudlog_import_status_idle"
+                android:textSize="13sp"/>
+
+        <Button
+                android:id="@+id/import_cloudlog_ignored_callsigns"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/import_ignored_callsigns"/>
+    </LinearLayout>
+</ScrollView>

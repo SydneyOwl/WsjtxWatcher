@@ -54,6 +54,9 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private int ignoredCallsignCount;
 
+    [ObservableProperty]
+    private IgnoredCallsignMatchTarget ignoredCallsignMatchTarget = IgnoredCallsignMatchTarget.TransmitterOnly;
+
     public SettingsViewModel(
         ISettingsStore settingsStore,
         IGridCacheStore gridCacheStore,
@@ -99,6 +102,7 @@ public partial class SettingsViewModel : ObservableObject
         VibrateOnMyCall = settings.VibrateOnMyCall;
         VibrateOnAnyMessage = settings.VibrateOnAnyMessage;
         VibrateOnSelectedDxcc = settings.VibrateOnSelectedDxcc;
+        IgnoredCallsignMatchTarget = settings.IgnoredCallsignMatchTarget;
         SelectedDxccCount = settings.PreferredDxccIds.Count;
         OnPropertyChanged(nameof(LocalIpAddress));
         OnPropertyChanged(nameof(IsIgnoringBatteryOptimizations));
@@ -174,6 +178,7 @@ public partial class SettingsViewModel : ObservableObject
             VibrateOnMyCall = VibrateOnMyCall,
             VibrateOnAnyMessage = VibrateOnAnyMessage,
             VibrateOnSelectedDxcc = VibrateOnSelectedDxcc,
+            IgnoredCallsignMatchTarget = IgnoredCallsignMatchTarget,
             PreferredDxccIds = new HashSet<int>(preferredDxccIds)
         };
     }

@@ -10,20 +10,28 @@ namespace WsjtxWatcher.Infrastructure.Platform;
 public sealed class AndroidSettingsStore : ISettingsStore
 {
     private const string StorageKey = "8fdad8ad";
+    private readonly IIgnoredCallsignStore _ignoredCallsignStore;
     private readonly ISharedPreferences _sharedPreferences;
 
-    public AndroidSettingsStore(Application application)
+    public AndroidSettingsStore(Application application, IIgnoredCallsignStore ignoredCallsignStore)
     {
         _sharedPreferences = application.GetSharedPreferences(StorageKey, FileCreationMode.Private)!;
+        _ignoredCallsignStore = ignoredCallsignStore;
     }
 
-    public Task<AppSettings> LoadAsync(CancellationToken cancellationToken = default)
+    public async Task<AppSettings> LoadAsync(CancellationToken cancellationToken = default)
     {
         var preferredDxcc = _sharedPreferences.GetStringSet("preferred_dxcc", AppSettings.DefaultPreferredDxccIds.Select(id => id.ToString()).ToHashSet())
                             ?? AppSettings.DefaultPreferredDxccIds.Select(id => id.ToString()).ToHashSet();
         var callsign = _sharedPreferences.GetString("callsign", string.Empty) ?? string.Empty;
         var watchedPatterns = LoadWatchedCallsignPatterns(callsign);
-        var ignoredCallsigns = LoadIgnoredCallsigns();
+        var ignoredCallsigns = await _ignoredCallsignStore.LoadAsync(cancellationToken).ConfigureAwait(false);
+        var ignoredCallsignMatchTargetValue = _sharedPreferences.GetInt(
+            "ignored_callsign_match_target",
+            (int)IgnoredCallsignMatchTarget.TransmitterOnly);
+        var ignoredCallsignMatchTarget = Enum.IsDefined(typeof(IgnoredCallsignMatchTarget), ignoredCallsignMatchTargetValue)
+            ? (IgnoredCallsignMatchTarget)ignoredCallsignMatchTargetValue
+            : IgnoredCallsignMatchTarget.TransmitterOnly;
 
         var settings = new AppSettings
         {
@@ -39,13 +47,14 @@ public sealed class AndroidSettingsStore : ISettingsStore
             VibrateOnMyCall = _sharedPreferences.GetBoolean("vibrate_on_my_call", false),
             VibrateOnAnyMessage = _sharedPreferences.GetBoolean("vibrate_on_any", false),
             VibrateOnSelectedDxcc = _sharedPreferences.GetBoolean("vibrate_on_dxcc", false),
+            IgnoredCallsignMatchTarget = ignoredCallsignMatchTarget,
             PreferredDxccIds = new HashSet<int>(preferredDxcc.Select(value => int.TryParse(value, out var id) ? id : 0).Where(id => id > 0))
         };
 
-        return Task.FromResult(settings);
+        return settings;
     }
 
-    public Task SaveAsync(AppSettings settings, CancellationToken cancellationToken = default)
+    public async Task SaveAsync(AppSettings settings, CancellationToken cancellationToken = default)
     {
         var editor = _sharedPreferences.Edit()!;
         editor.PutString("port", settings.Port);
@@ -53,43 +62,26 @@ public sealed class AndroidSettingsStore : ISettingsStore
         editor.PutString("callsign", settings.MyCallsign);
         editor.PutString("grid", settings.MyGrid);
         editor.PutString("callsign_patterns", JsonSerializer.Serialize(CallsignPatternMatcher.NormalizePatterns(settings.WatchedCallsignPatterns)));
-        editor.PutString("ignored_callsigns", JsonSerializer.Serialize(IgnoredCallsignMatcher.NormalizeEntries(settings.IgnoredCallsigns)));
         editor.PutBoolean("notify_on_my_call", settings.NotifyOnMyCall);
         editor.PutBoolean("notify_on_any", settings.NotifyOnAnyMessage);
         editor.PutBoolean("notify_on_dxcc", settings.NotifyOnSelectedDxcc);
         editor.PutBoolean("vibrate_on_my_call", settings.VibrateOnMyCall);
         editor.PutBoolean("vibrate_on_any", settings.VibrateOnAnyMessage);
         editor.PutBoolean("vibrate_on_dxcc", settings.VibrateOnSelectedDxcc);
+        editor.PutInt("ignored_callsign_match_target", (int)settings.IgnoredCallsignMatchTarget);
         editor.PutStringSet("preferred_dxcc", settings.PreferredDxccIds.Select(id => id.ToString()).ToHashSet());
+        editor.Remove("ignored_callsigns");
         editor.Apply();
-        return Task.CompletedTask;
+        await _ignoredCallsignStore.SaveAsync(settings.IgnoredCallsigns, cancellationToken).ConfigureAwait(false);
     }
 
-    public Task ResetAsync(CancellationToken cancellationToken = default)
+    public async Task ResetAsync(CancellationToken cancellationToken = default)
     {
         var editor = _sharedPreferences.Edit()!;
         editor.Clear();
         editor.Apply();
-        return SaveAsync(new AppSettings(), cancellationToken);
-    }
-
-    private List<IgnoredCallsignEntry> LoadIgnoredCallsigns()
-    {
-        var json = _sharedPreferences.GetString("ignored_callsigns", string.Empty) ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return [];
-        }
-
-        try
-        {
-            var entries = JsonSerializer.Deserialize<List<IgnoredCallsignEntry>>(json);
-            return IgnoredCallsignMatcher.NormalizeEntries(entries);
-        }
-        catch (JsonException)
-        {
-            return [];
-        }
+        await _ignoredCallsignStore.ResetAsync(cancellationToken).ConfigureAwait(false);
+        await SaveAsync(new AppSettings(), cancellationToken).ConfigureAwait(false);
     }
 
     private List<string> LoadWatchedCallsignPatterns(string callsign)

@@ -70,7 +70,10 @@ public static class IgnoredCallsignMatcher
             string.Equals(entry.Band, normalizedBand, StringComparison.OrdinalIgnoreCase));
     }
 
-    public static bool IsIgnored(DecodedRadioMessage message, IEnumerable<IgnoredCallsignEntry> entries)
+    public static bool IsIgnored(
+        DecodedRadioMessage message,
+        IEnumerable<IgnoredCallsignEntry> entries,
+        IgnoredCallsignMatchTarget matchTarget)
     {
         var band = NormalizeBand(RadioBandUtility.GetBandName(message.DialFrequencyHz));
         if (string.IsNullOrWhiteSpace(band))
@@ -78,7 +81,12 @@ public static class IgnoredCallsignMatcher
             return false;
         }
 
-        return Contains(entries, message.Receiver, band) || Contains(entries, message.Transmitter, band);
+        return matchTarget switch
+        {
+            IgnoredCallsignMatchTarget.ReceiverOnly => Contains(entries, message.Receiver, band),
+            IgnoredCallsignMatchTarget.ReceiverOrTransmitter => Contains(entries, message.Receiver, band) || Contains(entries, message.Transmitter, band),
+            _ => Contains(entries, message.Transmitter, band)
+        };
     }
 
     private sealed class IgnoredCallsignEntryComparer : IEqualityComparer<IgnoredCallsignEntry>

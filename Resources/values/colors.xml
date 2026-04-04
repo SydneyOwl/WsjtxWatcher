@@ -198,6 +198,7 @@
     <color name="decoded_match_multi_fill">#F7ECD9</color>
     <color name="decoded_match_multi_stroke">#9E7440</color>
     <color name="decoded_message_my_callsign_text">#A63A27</color>
+    <color name="ignored_message_text">#2E7D32</color>
 
 
 </resources>

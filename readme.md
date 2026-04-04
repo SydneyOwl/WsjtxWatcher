@@ -16,7 +16,7 @@ Currently, the software supports Simplified Chinese and English.
 
 ## Supported System Versions
 
-+ Android 8.0 and above
++ Android 8.0 and above.
 
 ## How to Use
 
@@ -32,18 +32,25 @@ Currently, the software supports Simplified Chinese and English.
 
    <img src="./md_assets/page4.png" style="zoom: 67%;" />
 
-   ~~Please check "accept udp requests" checkbox as well! (NOT NEEDED NOW)~~
-
    **Ensure that the computer running wsjtx and your phone are on the same local network, such as being connected to the
    same Wi-Fi!**
 
 4. Wait for the information to appear on the software interface!
 
+Tip: On the main message list, long-press a decoded record to quickly add that callsign to the ignored list (for the current band).
+
+## Matching Logic
+
+- Ignored callsign matching target is configurable in settings: **transmitter only**, **receiver only**, or **receiver/transmitter**; matching always uses callsign + band.
+- Selected DXCC matching is based on the **transmitter** DXCC.
+- Watched callsign regex matching is applied to the full decoded message text.
+- "Contains my callsign" detection is also based on full decoded message text.
+
 ## Todos
 
 + ~~Add support for more message types(done)~~
 + Third-party data source / CLH Plugin support
-+ Sync QSO Records from cloudlog/wavelog
++ ~~Sync QSO Records from cloudlog/wavelog~~
 + Other enhancements...
 
 ## Acknowledgments
@@ -84,4 +91,3 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 For more information, please refer to <https://unlicense.org>
 ``````
-

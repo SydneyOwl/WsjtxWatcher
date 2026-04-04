@@ -15,10 +15,14 @@ public sealed class IgnoredCallsignActivity : LocalizedActivity
     private readonly List<IgnoredCallsignEntry> _entries = [];
     private IgnoredCallsignViewModel _viewModel = null!;
     private Button _addButton = null!;
+    private Button _clearSearchButton = null!;
+    private Button _importButton = null!;
     private EditText _bandValue = null!;
     private EditText _callsignValue = null!;
+    private EditText _searchValue = null!;
     private TextView _emptyText = null!;
     private LinearLayout _entryList = null!;
+    private int _loadVersion;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -28,14 +32,28 @@ public sealed class IgnoredCallsignActivity : LocalizedActivity
         _viewModel = AppHost.Current.GetRequiredService<IgnoredCallsignViewModel>();
         BindViews();
         BindEvents();
+    }
+
+    protected override void OnResume()
+    {
+        base.OnResume();
         _ = LoadAsync();
+    }
+
+    protected override void OnPause()
+    {
+        Interlocked.Increment(ref _loadVersion);
+        base.OnPause();
     }
 
     private void BindViews()
     {
         _callsignValue = FindViewById<EditText>(Resource.Id.ignored_callsign_value)!;
         _bandValue = FindViewById<EditText>(Resource.Id.ignored_callsign_band_value)!;
+        _searchValue = FindViewById<EditText>(Resource.Id.ignored_callsign_search_value)!;
+        _clearSearchButton = FindViewById<Button>(Resource.Id.clear_ignored_callsign_search)!;
         _addButton = FindViewById<Button>(Resource.Id.add_ignored_callsign)!;
+        _importButton = FindViewById<Button>(Resource.Id.import_ignored_callsigns_button)!;
         _emptyText = FindViewById<TextView>(Resource.Id.empty_ignored_callsigns)!;
         _entryList = FindViewById<LinearLayout>(Resource.Id.ignored_callsign_list)!;
     }
@@ -69,6 +87,7 @@ public sealed class IgnoredCallsignActivity : LocalizedActivity
                     return;
                 }
 
+                Interlocked.Increment(ref _loadVersion);
                 _callsignValue.Text = string.Empty;
                 _bandValue.Text = string.Empty;
                 _entries.Add(new IgnoredCallsignEntry
@@ -76,27 +95,52 @@ public sealed class IgnoredCallsignActivity : LocalizedActivity
                     Callsign = callsign,
                     Band = band
                 });
-                SortEntries();
                 RenderEntries();
             });
         };
+
+        _searchValue.TextChanged += (_, _) => RenderEntries();
+        _clearSearchButton.Click += (_, _) =>
+        {
+            _searchValue.Text = string.Empty;
+            _searchValue.ClearFocus();
+            RenderEntries();
+        };
+
+        _importButton.Click += (_, _) => StartActivity(typeof(IgnoredCallsignImportActivity));
     }
 
     private async Task LoadAsync()
     {
+        var loadVersion = Interlocked.Increment(ref _loadVersion);
         var entries = await _viewModel.LoadAsync().ConfigureAwait(false);
-        _entries.Clear();
-        _entries.AddRange(entries);
-        RunOnUiThread(RenderEntries);
+        RunOnUiThread(() =>
+        {
+            if (IsFinishing || IsDestroyed || loadVersion != Volatile.Read(ref _loadVersion))
+            {
+                return;
+            }
+
+            _entries.Clear();
+            _entries.AddRange(entries);
+            RenderEntries();
+        });
     }
 
     private void RenderEntries()
     {
-        SortEntries();
         _entryList.RemoveAllViews();
-        _emptyText.Visibility = _entries.Count == 0 ? ViewStates.Visible : ViewStates.Gone;
+        var keyword = IgnoredCallsignMatcher.NormalizeCallsign(_searchValue.Text);
+        var visibleEntries = _entries
+            .Where(entry =>
+                string.IsNullOrWhiteSpace(keyword) ||
+                entry.Callsign.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(entry => entry.Band, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(entry => entry.Callsign, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        _emptyText.Visibility = visibleEntries.Count == 0 ? ViewStates.Visible : ViewStates.Gone;
 
-        foreach (var entry in _entries)
+        foreach (var entry in visibleEntries)
         {
             _entryList.AddView(CreateEntryRow(entry));
         }
@@ -132,6 +176,7 @@ public sealed class IgnoredCallsignActivity : LocalizedActivity
             await _viewModel.RemoveAsync(entry).ConfigureAwait(false);
             RunOnUiThread(() =>
             {
+                Interlocked.Increment(ref _loadVersion);
                 _entries.RemoveAll(existing =>
                     string.Equals(existing.Callsign, entry.Callsign, StringComparison.OrdinalIgnoreCase) &&
                     string.Equals(existing.Band, entry.Band, StringComparison.OrdinalIgnoreCase));
@@ -142,17 +187,6 @@ public sealed class IgnoredCallsignActivity : LocalizedActivity
         row.AddView(textView);
         row.AddView(deleteButton);
         return row;
-    }
-
-    private void SortEntries()
-    {
-        _entries.Sort((left, right) =>
-        {
-            var bandComparison = string.Compare(left.Band, right.Band, StringComparison.OrdinalIgnoreCase);
-            return bandComparison != 0
-                ? bandComparison
-                : string.Compare(left.Callsign, right.Callsign, StringComparison.OrdinalIgnoreCase);
-        });
     }
 
     private int Dp(int value)

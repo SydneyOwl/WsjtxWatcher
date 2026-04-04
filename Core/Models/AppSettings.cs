@@ -14,6 +14,7 @@ public sealed class AppSettings
     public bool VibrateOnMyCall { get; set; }
     public bool VibrateOnAnyMessage { get; set; }
     public bool VibrateOnSelectedDxcc { get; set; }
+    public IgnoredCallsignMatchTarget IgnoredCallsignMatchTarget { get; set; } = IgnoredCallsignMatchTarget.TransmitterOnly;
     public HashSet<int> PreferredDxccIds { get; set; } = new(DefaultPreferredDxccIds);
 
     public static IReadOnlyCollection<int> DefaultPreferredDxccIds { get; } = new[]
@@ -46,6 +47,7 @@ public sealed class AppSettings
             VibrateOnMyCall = VibrateOnMyCall,
             VibrateOnAnyMessage = VibrateOnAnyMessage,
             VibrateOnSelectedDxcc = VibrateOnSelectedDxcc,
+            IgnoredCallsignMatchTarget = IgnoredCallsignMatchTarget,
             PreferredDxccIds = new HashSet<int>(PreferredDxccIds)
         };
     }

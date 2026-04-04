@@ -1,4 +1,6 @@
 using Android.App;
+using Android.Content;
+using Android.Graphics;
 using Android.OS;
 using Android.Views;
 using Android.Widget;
@@ -12,6 +14,13 @@ namespace WsjtxWatcher.UI.Activities;
 [Activity(Label = "@string/settings", Exported = false)]
 public sealed class SettingsActivity : LocalizedActivity
 {
+    private const string RepositoryUrl = "https://github.com/sydneyowl/wsjtxwatcher";
+    private readonly IgnoredCallsignMatchTarget[] _ignoredCallsignMatchTargets =
+    [
+        IgnoredCallsignMatchTarget.TransmitterOnly,
+        IgnoredCallsignMatchTarget.ReceiverOnly,
+        IgnoredCallsignMatchTarget.ReceiverOrTransmitter
+    ];
     private readonly AppLanguage[] _supportedLanguages = [AppLanguage.SimplifiedChinese, AppLanguage.English];
     private SettingsViewModel _viewModel = null!;
     private bool _isBinding;
@@ -19,6 +28,7 @@ public sealed class SettingsActivity : LocalizedActivity
     private Button _addWhitelistButton = null!;
     private EditText _callsignValue = null!;
     private TextView _ipAddressValue = null!;
+    private Spinner _ignoredCallsignMatchTargetSpinner = null!;
     private Button _manageIgnoredCallsignsButton = null!;
     private Button _manageCallsignPatternsButton = null!;
     private Button _openNotificationSettingsButton = null!;
@@ -48,6 +58,7 @@ public sealed class SettingsActivity : LocalizedActivity
         _isBinding = true;
         BindViews();
         InitializeLanguageSpinner();
+        InitializeIgnoredCallsignMatchTargetSpinner();
         BindEvents();
         _ = LoadAsync();
     }
@@ -76,6 +87,7 @@ public sealed class SettingsActivity : LocalizedActivity
         _locationValue = FindViewById<EditText>(Resource.Id.location_value)!;
         _versionValue = FindViewById<TextView>(Resource.Id.version_value)!;
         _languageSpinner = FindViewById<Spinner>(Resource.Id.language_spinner)!;
+        _ignoredCallsignMatchTargetSpinner = FindViewById<Spinner>(Resource.Id.ignored_callsign_match_target_spinner)!;
         _manageCallsignPatternsButton = FindViewById<Button>(Resource.Id.manage_callsign_patterns)!;
         _manageIgnoredCallsignsButton = FindViewById<Button>(Resource.Id.manage_ignored_callsigns)!;
         _openNotificationSettingsButton = FindViewById<Button>(Resource.Id.open_notification_settings)!;
@@ -99,6 +111,14 @@ public sealed class SettingsActivity : LocalizedActivity
         var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, labels);
         adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
         _languageSpinner.Adapter = adapter;
+    }
+
+    private void InitializeIgnoredCallsignMatchTargetSpinner()
+    {
+        var labels = _ignoredCallsignMatchTargets.Select(GetIgnoredCallsignMatchTargetLabel).ToArray();
+        var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, labels);
+        adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
+        _ignoredCallsignMatchTargetSpinner.Adapter = adapter;
     }
 
     private void BindEvents()
@@ -131,6 +151,16 @@ public sealed class SettingsActivity : LocalizedActivity
                 await _viewModel.SaveAsync().ConfigureAwait(false);
                 RunOnUiThread(ExitApplication);
             }
+        };
+
+        _ignoredCallsignMatchTargetSpinner.ItemSelected += (_, args) =>
+        {
+            if (_isBinding)
+            {
+                return;
+            }
+
+            _viewModel.IgnoredCallsignMatchTarget = _ignoredCallsignMatchTargets[Math.Clamp(args.Position, 0, _ignoredCallsignMatchTargets.Length - 1)];
         };
 
         _portValue.TextChanged += (_, _) =>
@@ -250,6 +280,17 @@ public sealed class SettingsActivity : LocalizedActivity
         _manageIgnoredCallsignsButton.Click += (_, _) => StartActivity(typeof(IgnoredCallsignActivity));
         _manageCallsignPatternsButton.Click += (_, _) => StartActivity(typeof(CallsignPatternActivity));
         _setDxccButton.Click += (_, _) => StartActivity(typeof(DxccSelectionActivity));
+        _versionValue.Click += (_, _) =>
+        {
+            try
+            {
+                StartActivity(new Intent(Intent.ActionView, Android.Net.Uri.Parse(RepositoryUrl)));
+            }
+            catch
+            {
+                Toast.MakeText(this, GetString(Resource.String.no_app_found), ToastLength.Short)?.Show();
+            }
+        };
     }
 
     private async Task LoadAsync()
@@ -264,8 +305,10 @@ public sealed class SettingsActivity : LocalizedActivity
             _portValue.Text = _viewModel.Port;
             _callsignValue.Text = _viewModel.MyCallsign;
             _locationValue.Text = _viewModel.MyGrid;
-            _versionValue.Text = _viewModel.VersionName;
+            _versionValue.Text = $"{_viewModel.VersionName}";
+            _versionValue.PaintFlags |= PaintFlags.UnderlineText;
             _languageSpinner.SetSelection(GetLanguageIndex(_viewModel.SelectedLanguage));
+            _ignoredCallsignMatchTargetSpinner.SetSelection(GetIgnoredCallsignMatchTargetIndex(_viewModel.IgnoredCallsignMatchTarget));
             _manageCallsignPatternsButton.Text = $"{GetString(Resource.String.manage_callsign_patterns)} ({_viewModel.WatchedCallsignPatternCount})";
             _manageIgnoredCallsignsButton.Text = $"{GetString(Resource.String.manage_ignored_callsigns)} ({_viewModel.IgnoredCallsignCount})";
             _sendNotificationCheckbox.Checked = _viewModel.NotifyOnMyCall;
@@ -295,6 +338,22 @@ public sealed class SettingsActivity : LocalizedActivity
         {
             AppLanguage.SimplifiedChinese => GetString(Resource.String.simplified_chinese),
             _ => GetString(Resource.String.english)
+        };
+    }
+
+    private int GetIgnoredCallsignMatchTargetIndex(IgnoredCallsignMatchTarget matchTarget)
+    {
+        var index = Array.IndexOf(_ignoredCallsignMatchTargets, matchTarget);
+        return index >= 0 ? index : 0;
+    }
+
+    private string GetIgnoredCallsignMatchTargetLabel(IgnoredCallsignMatchTarget matchTarget)
+    {
+        return matchTarget switch
+        {
+            IgnoredCallsignMatchTarget.ReceiverOnly => GetString(Resource.String.ignored_callsign_match_target_receiver),
+            IgnoredCallsignMatchTarget.ReceiverOrTransmitter => GetString(Resource.String.ignored_callsign_match_target_both),
+            _ => GetString(Resource.String.ignored_callsign_match_target_transmitter)
         };
     }
 

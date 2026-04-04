@@ -65,6 +65,7 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
 
         var message = _filteredItems[position];
         var settings = _settingsProvider();
+        var isIgnored = IgnoredCallsignMatcher.IsIgnored(message, settings.IgnoredCallsigns, settings.IgnoredCallsignMatchTarget);
         var languageCode = Java.Util.Locale.Default?.Language ?? "en";
         var isTransmit = message.IsUserTransmit;
         var isCompactMessage = message.IsUserTransmit || message.IsSystemNotice;
@@ -83,7 +84,9 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
 
         holder.Message.PaintFlags = PaintFlags.LinearText;
         holder.Message.SetTextColor(GetColor(Resource.Color.text_view_color));
-        holder.Message.TextFormatted = BuildMessageText(displayMessage, message, settings);
+        holder.Message.TextFormatted = isIgnored
+            ? new Java.Lang.String(displayMessage)
+            : BuildMessageText(displayMessage, message, settings);
 
         if (!isCompactMessage)
         {
@@ -96,16 +99,19 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
             holder.Distance.Text = message.DistanceText;
             ApplyModeStatus(holder.LowConfidence, message);
             holder.Band.Text = FormatFrequency(message);
-            holder.Message.SetTextColor(GetColor(GetMessageTextColor(message)));
+            holder.Message.SetTextColor(GetColor(isIgnored
+                ? Resource.Color.ignored_message_text
+                : GetMessageTextColor(message)));
 
-            if (message.Message.Contains("RR73", StringComparison.OrdinalIgnoreCase) ||
+            if (isIgnored ||
+                message.Message.Contains("RR73", StringComparison.OrdinalIgnoreCase) ||
                 message.Message.Contains(" RRR", StringComparison.OrdinalIgnoreCase) ||
                 message.Message.EndsWith(" 73", StringComparison.OrdinalIgnoreCase))
             {
                 holder.Message.PaintFlags |= PaintFlags.StrikeThruText;
             }
 
-            ApplyRowBackground(view, message, settings);
+            ApplyMessageBackground(holder.Message, message, settings);
         }
         else
         {
@@ -116,7 +122,7 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
                 holder.Message.SetTextColor(GetColor(Resource.Color.fromcall_is_qso_text_color));
             }
 
-            ApplyRowBackground(view, message, settings);
+            ApplyMessageBackground(holder.Message, message, settings);
         }
 
         return view;
@@ -229,10 +235,10 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         return builder;
     }
 
-    private void ApplyRowBackground(View view, DecodedRadioMessage message, AppSettings settings)
+    private void ApplyMessageBackground(TextView messageView, DecodedRadioMessage message, AppSettings settings)
     {
         var (fillColor, strokeColor) = ResolveRowColors(message, settings);
-        view.Background = CreateRowBackground(fillColor, strokeColor);
+        messageView.Background = CreateRowBackground(fillColor, strokeColor);
     }
 
     private (int FillColor, int StrokeColor) ResolveRowColors(DecodedRadioMessage message, AppSettings settings)
@@ -247,7 +253,7 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
             return (Resource.Color.my_transmit_period, Resource.Color.my_transmit_period_stroke);
         }
 
-        if (IgnoredCallsignMatcher.IsIgnored(message, settings.IgnoredCallsigns))
+        if (IgnoredCallsignMatcher.IsIgnored(message, settings.IgnoredCallsigns, settings.IgnoredCallsignMatchTarget))
         {
             return IsOddPeriod(message.DecodeTimeUtc)
                 ? (Resource.Color.odd_period, Resource.Color.odd_period_stroke)

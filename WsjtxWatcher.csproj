@@ -15,6 +15,8 @@
         <ApplicationId>com.sydneyowl.WsjtxWatcher</ApplicationId>
         <ApplicationVersion>1</ApplicationVersion>
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+        <AndroidSdkDirectory>C:\Users\SydneyOwl\AppData\Local\Android\Sdk</AndroidSdkDirectory>
+        <JavaSdkDirectory>C:\Program Files\jdk\jdk-17.0.12</JavaSdkDirectory>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />

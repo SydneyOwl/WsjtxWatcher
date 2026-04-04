@@ -24,6 +24,7 @@
     <string name="simplified_chinese">Simplified Chinese</string>
     <string name="english">English</string>
     <string name="version">Version</string>
+    <string name="version_tap_hint">Version</string>
     <string name="language_restart_required">Language changes take effect after you restart the app.</string>
     <string name="language_restart_title">Exit app?</string>
     <string name="language_restart_message">The app will now close. Please reopen it to apply the language change.</string>
@@ -32,11 +33,32 @@
     <string name="vibration">Vibration</string>
     <string name="manage_callsign_patterns">Regex</string>
     <string name="manage_ignored_callsigns">Ignored callsigns</string>
+    <string name="ignored_callsign_match_target">Ignored callsign match target</string>
+    <string name="ignored_callsign_match_target_transmitter">Transmitter only</string>
+    <string name="ignored_callsign_match_target_receiver">Receiver only</string>
+    <string name="ignored_callsign_match_target_both">Receiver or transmitter</string>
     <string name="specified_callsign_patterns">Specified Callsign Regex</string>
     <string name="ignored_callsigns">Ignored Callsigns</string>
+    <string name="import_ignored_callsigns">Import from Cloudlog/Wavelog</string>
     <string name="callsign_pattern_hint">Input callsign / regex</string>
     <string name="ignored_callsign_hint">Input callsign</string>
     <string name="ignored_band_hint">Band, e.g. 20m</string>
+    <string name="cloudlog_import_help">Enter the server URL, station ID, username, and password, then import QSO callsign-band pairs into the ignored list.</string>
+    <string name="cloudlog_server_url">Cloudlog/Wavelog URL</string>
+    <string name="cloudlog_server_url_watermark">demo.mysite.com</string>
+    <string name="cloudlog_server_url_example">Example: https://demo.mysite.com</string>
+    <string name="cloudlog_station_id">Station ID</string>
+    <string name="cloudlog_username">Username</string>
+    <string name="cloudlog_password">Password</string>
+    <string name="cloudlog_lookback_days">Lookback days</string>
+    <string name="cloudlog_lookback_all">all</string>
+    <string name="cloudlog_import_status_idle">Enter the server URL and station ID to start importing.</string>
+    <string name="cloudlog_import_invalid_lookback_days">Please input a lookback day count greater than zero.</string>
+    <string name="cloudlog_import_station_required">Please input a station ID first.</string>
+    <string name="cloudlog_import_importing">Logging in and exporting QSOs...</string>
+    <string name="cloudlog_import_no_qso_records">The selected range returned no QSO records.</string>
+    <string name="cloudlog_import_no_valid_entries">No valid callsign-band pairs were found in the imported QSOs.</string>
+    <string name="cloudlog_import_completed">Imported %1$d new ignored entries, skipped %2$d duplicates from %3$d imported pairs.</string>
     <string name="add_pattern">Add</string>
     <string name="delete_pattern">Delete</string>
     <string name="no_callsign_patterns">No callsign regex added yet.</string>
@@ -74,14 +96,15 @@
     <string name="notification_channel_id1" translatable="false">2341</string>
     <string name="notification_channel_id2" translatable="false">4214</string>
     <string name="notify_id2" translatable="false">6311</string>
-    <string name="on_dxcc">When selected dxcc appears:</string>
+    <string name="on_dxcc">When selected DXCC appears:</string>
     <string name="set_dxcc_entity">Select DXCC</string>
     <string name="select_all">Select All</string>
-    <string name="selected_dxcc">Selected Dxcc:</string>
+    <string name="selected_dxcc">Selected DXCC:</string>
     <string name="received_msg">Received decoded msg:</string>
     <string name="included_in_msg">I am included in the msg:</string>
     <string name="search">Input to search...</string>
     <string name="search_callsign">Search Callsign</string>
+    <string name="clear_callsign_search">Clear Callsign</string>
     <string name="jump_to_bottom">Jump to bottom</string>
     <string name="open_log">Open Log FIle</string>
     <string name="start_service_failed">Failed to start service. See logs for more...</string>

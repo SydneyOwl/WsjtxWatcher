@@ -94,7 +94,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
-                android:text="@string/version"
+                android:text="@string/version_tap_hint"
                 android:textColor="@color/textview_message_color"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -104,7 +104,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:textColor="@color/text_view_color"
+                android:textColor="@color/fromcall_is_qso_text_color"
                 android:textSize="16sp" />
 
             <TextView
@@ -184,13 +184,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:text="@string/manage_callsign_patterns" />
-
-            <Button
-                android:id="@+id/manage_ignored_callsigns"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="@string/manage_ignored_callsigns" />
 
             <View
                 android:layout_width="match_parent"
@@ -292,6 +285,47 @@
                 android:layout_marginTop="12dp"
                 android:text="@string/open_notification_settings"
                 android:visibility="gone" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/settings_card_background"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/manage_ignored_callsigns"
+                android:textColor="@color/textview_message_color"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/manage_ignored_callsigns"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/manage_ignored_callsigns" />
+
+            <TextView
+                android:id="@+id/ignored_callsign_match_target_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/ignored_callsign_match_target"
+                android:textColor="@color/textview_message_color"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <Spinner
+                android:id="@+id/ignored_callsign_match_target_spinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:spinnerMode="dropdown" />
         </LinearLayout>
 
         <LinearLayout

@@ -54,6 +54,7 @@ public sealed class WatcherDatabaseService
             await _connection.CreateTableAsync<CountryRecord>().ConfigureAwait(false);
             await _connection.CreateTableAsync<CallsignPrefixRecord>().ConfigureAwait(false);
             await _connection.CreateTableAsync<GridCacheRecord>().ConfigureAwait(false);
+            await _connection.CreateTableAsync<IgnoredCallsignRecord>().ConfigureAwait(false);
             await EnsureCountryCatalogAsync().ConfigureAwait(false);
             _isInitialized = true;
         }

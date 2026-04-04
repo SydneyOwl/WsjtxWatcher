@@ -25,12 +25,14 @@ internal static class ServiceCollectionExtensions
         services.AddSingleton<WatcherDatabaseService>();
         services.AddSingleton<ICountryCatalog, SqliteCountryCatalog>();
         services.AddSingleton<IGridCacheStore, SqliteGridCacheStore>();
+        services.AddSingleton<IIgnoredCallsignStore, SqliteIgnoredCallsignStore>();
         services.AddSingleton<INotificationService, AndroidNotificationService>();
         services.AddSingleton<IDeviceFeedbackService, AndroidDeviceFeedbackService>();
         services.AddSingleton<INetworkInfoService, AndroidNetworkInfoService>();
         services.AddSingleton<IBackgroundAccessService, AndroidBackgroundAccessService>();
         services.AddSingleton<ILogFileService, AndroidLogFileService>();
         services.AddSingleton<IWsjtGateway, WsjtGateway>();
+        services.AddSingleton<ICloudlogIgnoredCallsignImportService, CloudlogIgnoredCallsignImportService>();
         services.AddSingleton<DecodedMessageFactory>();
         services.AddSingleton<WatcherController>();
         services.AddSingleton<MainViewModel>();

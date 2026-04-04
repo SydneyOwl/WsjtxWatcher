@@ -42,6 +42,41 @@ public sealed class IgnoredCallsignViewModel
         return true;
     }
 
+    public async Task<IgnoredCallsignMergeResult> MergeAsync(
+        IEnumerable<IgnoredCallsignEntry> importedEntries,
+        CancellationToken cancellationToken = default)
+    {
+        var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
+        var existingEntries = IgnoredCallsignMatcher.NormalizeEntries(settings.IgnoredCallsigns);
+        var normalizedImportedEntries = IgnoredCallsignMatcher.NormalizeEntries(importedEntries);
+        var addedCount = 0;
+
+        foreach (var entry in normalizedImportedEntries)
+        {
+            if (IgnoredCallsignMatcher.Contains(existingEntries, entry.Callsign, entry.Band))
+            {
+                continue;
+            }
+
+            existingEntries.Add(entry);
+            addedCount++;
+        }
+
+        if (addedCount > 0)
+        {
+            settings.IgnoredCallsigns = IgnoredCallsignMatcher.NormalizeEntries(existingEntries);
+            await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(false);
+            await _watcherController.ReloadSettingsAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        return new IgnoredCallsignMergeResult
+        {
+            CandidateCount = normalizedImportedEntries.Count,
+            AddedCount = addedCount,
+            DuplicateCount = normalizedImportedEntries.Count - addedCount
+        };
+    }
+
     public async Task RemoveAsync(IgnoredCallsignEntry entry, CancellationToken cancellationToken = default)
     {
         var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);

@@ -338,7 +338,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
 
     private async Task NotifyForMessageAsync(DecodedRadioMessage message, AppSettings settingsSnapshot, CancellationToken cancellationToken)
     {
-        if (IgnoredCallsignMatcher.IsIgnored(message, settingsSnapshot.IgnoredCallsigns))
+        if (IgnoredCallsignMatcher.IsIgnored(message, settingsSnapshot.IgnoredCallsigns, settingsSnapshot.IgnoredCallsignMatchTarget))
         {
             return;
         }
