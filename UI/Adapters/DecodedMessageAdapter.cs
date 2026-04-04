@@ -111,7 +111,7 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
                 holder.Message.PaintFlags |= PaintFlags.StrikeThruText;
             }
 
-            ApplyMessageBackground(holder.Message, message, settings);
+            ApplyRowBackground(holder.Root, message, settings);
         }
         else
         {
@@ -122,8 +122,10 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
                 holder.Message.SetTextColor(GetColor(Resource.Color.fromcall_is_qso_text_color));
             }
 
-            ApplyMessageBackground(holder.Message, message, settings);
+            ApplyRowBackground(holder.Root, message, settings);
         }
+
+        holder.Message.Background = null;
 
         return view;
     }
@@ -235,10 +237,10 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
         return builder;
     }
 
-    private void ApplyMessageBackground(TextView messageView, DecodedRadioMessage message, AppSettings settings)
+    private void ApplyRowBackground(View rowView, DecodedRadioMessage message, AppSettings settings)
     {
         var (fillColor, strokeColor) = ResolveRowColors(message, settings);
-        messageView.Background = CreateRowBackground(fillColor, strokeColor);
+        rowView.Background = CreateRowBackground(fillColor, strokeColor);
     }
 
     private (int FillColor, int StrokeColor) ResolveRowColors(DecodedRadioMessage message, AppSettings settings)
@@ -364,6 +366,7 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
     {
         public ViewHolder(View root)
         {
+            Root = root;
             Snr = root.FindViewById<TextView>(Resource.Id.callingListIdBTextView)!;
             DeltaTime = root.FindViewById<TextView>(Resource.Id.callListDtTextView)!;
             Offset = root.FindViewById<TextView>(Resource.Id.callingListFreqTextView)!;
@@ -376,6 +379,7 @@ public sealed class DecodedMessageAdapter : BaseAdapter<DecodedRadioMessage>
             Distance = root.FindViewById<TextView>(Resource.Id.callingListDistTextView)!;
         }
 
+        public View Root { get; }
         public TextView Snr { get; }
         public TextView DeltaTime { get; }
         public TextView Offset { get; }
