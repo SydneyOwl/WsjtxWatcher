@@ -39,11 +39,44 @@ Currently, the software supports Simplified Chinese and English.
 
 Tip: On the main message list, long-press a decoded record to quickly add that callsign to the ignored list (for the current band).
 
+## Settings Guide
+
+- `LAN IP` / `Server Port`: the UDP address that WSJT-X or JTDX should send decoded messages to.
+- `Callsign`: your own station callsign. It is used for highlighting messages that contain your callsign and as the default watched callsign pattern when no custom pattern list exists yet.
+- `Location`: your own 4-character Maidenhead grid. It is used to calculate distance to the decoded station when possible.
+- `Language`: switches the app language between Simplified Chinese and English. When the language is changed, the app saves settings, stops the background service, and exits so you can reopen it with the new language applied.
+
+### Notification Triggers
+
+- `When the message matches specified callsigns`: triggers notification/vibration when the decoded `de` / `dx` callsign matches one of your configured watched callsign regex patterns.
+- `Specified callsign match target`: controls whether watched callsign matching checks the `transmitter`, the `receiver`, or `both`.
+- `Regex`: opens the watched callsign regex list editor.
+- `When a WSJT-X message is received`: triggers notification/vibration for every decoded message. This is mainly useful for VHF DX style monitoring.
+- `When selected DXCC appears`: triggers notification/vibration when the decoded `de` / `dx` callsign resolves to one of your selected DXCC entities.
+- `DXCC match target`: controls whether selected DXCC matching checks the `transmitter`, the `receiver`, or `both`.
+- `Select DXCC`: opens the DXCC selection list used by the selected DXCC trigger.
+- `When a QSO is logged`: triggers notification/vibration after WSJT-X reports a completed logged QSO.
+
+### Ignore And Automation
+
+- `Ignored callsigns`: opens the ignored callsign list. Ignored items are matched by `callsign + band`.
+- `Ignored callsign match target`: controls whether ignored callsigns suppress alerts for the `transmitter`, the `receiver`, `both`, or neither.
+- `Auto-ignore the callsign after a logged QSO`: after a QSO is logged, automatically add the worked DX callsign on that band to the ignored list.
+
+### Permissions And Maintenance
+
+- `Open notification settings`: appears when system notifications are disabled for the app.
+- `Open Log File`: opens the application log for troubleshooting.
+- `Reset Database`: clears cached grid information and the current decoded message list.
+- `Reset All`: resets settings, clears cached data, and stops the listener service.
+- `Add to whitelist` / `Add background`: open Android battery/background settings that help the listener stay alive.
+
 ## Matching Logic
 
-- Ignored callsign matching target is configurable in settings: **transmitter only**, **receiver only**, or **receiver/transmitter**; matching always uses callsign + band.
-- Selected DXCC matching is based on the **transmitter** DXCC.
-- Watched callsign regex matching is applied to the full decoded message text.
+- Ignored callsign matching target is configurable in settings: **transmitter only**, **receiver only**, **receiver/transmitter**, or **do not ignore**; matching always uses callsign + band.
+- Selected DXCC matching is configurable in settings: **transmitter only**, **receiver only**, or **receiver/transmitter**.
+- Watched callsign regex matching is configurable in settings: **transmitter only**, **receiver only**, or **receiver/transmitter**.
+- Watched callsign regex matching is applied to the parsed `de` / `dx` callsigns, not to the full decoded message text.
 - "Contains my callsign" detection is also based on full decoded message text.
 
 ## Todos

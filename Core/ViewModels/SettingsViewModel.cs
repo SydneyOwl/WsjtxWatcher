@@ -154,6 +154,18 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
+    public async Task SaveAndStopAsync(CancellationToken cancellationToken = default)
+    {
+        var existingSettings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
+        var normalizedSettings = CreateSettings(
+            existingSettings.PreferredDxccIds,
+            existingSettings.WatchedCallsignPatterns,
+            existingSettings.IgnoredCallsigns);
+
+        await _settingsStore.SaveAsync(normalizedSettings, cancellationToken).ConfigureAwait(false);
+        await _watcherController.StopAsync(cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task ResetCacheAsync(CancellationToken cancellationToken = default)
     {
         await _gridCacheStore.ResetAsync(cancellationToken).ConfigureAwait(false);

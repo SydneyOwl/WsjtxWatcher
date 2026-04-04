@@ -72,6 +72,7 @@ public sealed class SettingsActivity : LocalizedActivity
     private CheckBox? _pendingNotificationCheckbox;
     private Action<bool>? _pendingNotificationSetter;
     private bool _suppressNotificationToggleEvents;
+    private bool _isExitingApplication;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -98,7 +99,7 @@ public sealed class SettingsActivity : LocalizedActivity
 
     protected override void OnPause()
     {
-        if (!_isBinding)
+        if (!_isBinding && !_isExitingApplication)
         {
             _viewModel.SaveAsync().GetAwaiter().GetResult();
         }
@@ -196,7 +197,8 @@ public sealed class SettingsActivity : LocalizedActivity
                     return;
                 }
 
-                await _viewModel.SaveAsync().ConfigureAwait(false);
+                _isExitingApplication = true;
+                await _viewModel.SaveAndStopAsync().ConfigureAwait(false);
                 RunOnUiThread(ExitApplication);
             }
         };
