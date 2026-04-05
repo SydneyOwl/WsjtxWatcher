@@ -5,8 +5,10 @@ namespace WsjtxWatcher.Core.Contracts;
 public interface IWsjtGateway
 {
     bool IsRunning { get; }
-    Task StartAsync(int port, IWsjtEventSink eventSink, CancellationToken cancellationToken = default);
+    Task StartAsync(AppSettings settings, IWsjtEventSink eventSink, CancellationToken cancellationToken = default);
     Task StopAsync(CancellationToken cancellationToken = default);
+    Task SelectSourceAsync(string sourceName, CancellationToken cancellationToken = default);
+    Task RefreshAsync(CancellationToken cancellationToken = default);
 }
 
 public interface IWsjtEventSink

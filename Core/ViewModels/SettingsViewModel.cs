@@ -15,8 +15,10 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IIgnoredCallsignStore _ignoredCallsignStore;
     private readonly ILogFileService _logFileService;
     private readonly INetworkInfoService _networkInfoService;
+    private readonly IRelayConnectionProbe _relayConnectionProbe;
     private readonly ISettingsStore _settingsStore;
     private readonly Services.WatcherController _watcherController;
+    private readonly RelayRuntimeState _relayRuntimeState;
     [ObservableProperty]
     private bool notifyOnAnyMessage;
 
@@ -34,6 +36,24 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private string port = "2237";
+
+    [ObservableProperty]
+    private DataSourceType selectedDataSourceType = DataSourceType.Udp;
+
+    [ObservableProperty]
+    private string relayServerUrl = string.Empty;
+
+    [ObservableProperty]
+    private string relaySharedSecret = string.Empty;
+
+    [ObservableProperty]
+    private string relayTenantId = string.Empty;
+
+    [ObservableProperty]
+    private string relayPreferredSourceName = string.Empty;
+
+    [ObservableProperty]
+    private string relayTrustedFingerprint = string.Empty;
 
     [ObservableProperty]
     private string myCallsign = string.Empty;
@@ -82,8 +102,10 @@ public partial class SettingsViewModel : ObservableObject
         INetworkInfoService networkInfoService,
         IBackgroundAccessService backgroundAccessService,
         ILogFileService logFileService,
+        IRelayConnectionProbe relayConnectionProbe,
         IAppInfoService appInfoService,
         IAppLanguageService appLanguageService,
+        RelayRuntimeState relayRuntimeState,
         Services.WatcherController watcherController)
     {
         _settingsStore = settingsStore;
@@ -93,8 +115,10 @@ public partial class SettingsViewModel : ObservableObject
         _networkInfoService = networkInfoService;
         _backgroundAccessService = backgroundAccessService;
         _logFileService = logFileService;
+        _relayConnectionProbe = relayConnectionProbe;
         _appInfoService = appInfoService;
         _appLanguageService = appLanguageService;
+        _relayRuntimeState = relayRuntimeState;
         _watcherController = watcherController;
     }
 
@@ -108,13 +132,27 @@ public partial class SettingsViewModel : ObservableObject
 
     public bool IsLanguageChangePending => SelectedLanguage != CurrentAppLanguage;
 
+    public bool IsUdpSourceSelected => SelectedDataSourceType == DataSourceType.Udp;
+
+    public bool IsRelaySourceSelected => SelectedDataSourceType == DataSourceType.Relay;
+
+    public bool IsWatcherServiceRunning => _watcherController.State.IsServiceRunning;
+
+    public RelayRuntimeState RelayRuntimeState => _relayRuntimeState;
+
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
         var settingsTask = _settingsStore.LoadAsync(cancellationToken);
         var ignoredCallsignCountTask = _ignoredCallsignStore.CountAsync(cancellationToken);
         await Task.WhenAll(settingsTask, ignoredCallsignCountTask).ConfigureAwait(false);
         var settings = await settingsTask.ConfigureAwait(false);
+        SelectedDataSourceType = settings.DataSourceType;
         Port = settings.Port;
+        RelayServerUrl = settings.RelayServerUrl;
+        RelaySharedSecret = settings.RelaySharedSecret;
+        RelayTenantId = settings.RelayTenantId;
+        RelayPreferredSourceName = settings.RelayPreferredSourceName;
+        RelayTrustedFingerprint = settings.RelayTrustedFingerprint;
         SelectedLanguage = _appLanguageService.ResolveConfiguredLanguage(settings.Language);
         MyCallsign = settings.MyCallsign;
         MyGrid = settings.MyGrid;
@@ -137,15 +175,19 @@ public partial class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(IsIgnoringBatteryOptimizations));
         OnPropertyChanged(nameof(CurrentAppLanguage));
         OnPropertyChanged(nameof(IsLanguageChangePending));
+        OnPropertyChanged(nameof(IsUdpSourceSelected));
+        OnPropertyChanged(nameof(IsRelaySourceSelected));
     }
 
-    public async Task SaveAsync(CancellationToken cancellationToken = default)
+    public async Task<SettingsSaveResult> SaveAsync(CancellationToken cancellationToken = default)
     {
         var existingSettings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
         var normalizedSettings = CreateSettings(
             existingSettings.PreferredDxccIds,
             existingSettings.WatchedCallsignPatterns);
-        var restartRequired = !string.Equals(existingSettings.Port, normalizedSettings.Port, StringComparison.Ordinal);
+        var restartRequired = RequiresGatewayRestart(existingSettings, normalizedSettings);
+        var sourceSwitchRequired = RequiresRelaySourceSwitch(existingSettings, normalizedSettings);
+        var serviceWasRunning = _watcherController.State.IsServiceRunning;
 
         await _settingsStore.SaveAsync(normalizedSettings, cancellationToken).ConfigureAwait(false);
 
@@ -156,7 +198,13 @@ public partial class SettingsViewModel : ObservableObject
         else
         {
             await _watcherController.ReloadSettingsAsync(cancellationToken).ConfigureAwait(false);
+            if (sourceSwitchRequired)
+            {
+                await _watcherController.SwitchRelaySourceAsync(normalizedSettings.RelayPreferredSourceName, cancellationToken).ConfigureAwait(false);
+            }
         }
+
+        return new SettingsSaveResult(restartRequired, serviceWasRunning);
     }
 
     public async Task SaveAndStopAsync(CancellationToken cancellationToken = default)
@@ -199,13 +247,33 @@ public partial class SettingsViewModel : ObservableObject
         _backgroundAccessService.OpenBackgroundSettings();
     }
 
+    public Task RefreshRelaySourcesAsync(CancellationToken cancellationToken = default)
+    {
+        return _watcherController.RefreshGatewayAsync(cancellationToken);
+    }
+
+    public Task<RelayConnectionTestResult> TestRelayConnectionAsync(CancellationToken cancellationToken = default)
+    {
+        return _relayConnectionProbe.TestWatchConnectionAsync(new RelayConnectionProbeOptions(
+            NormalizeUrl(RelayServerUrl),
+            (RelaySharedSecret ?? string.Empty).Trim(),
+            (RelayTenantId ?? string.Empty).Trim(),
+            (RelayTrustedFingerprint ?? string.Empty).Trim()), cancellationToken);
+    }
+
     private AppSettings CreateSettings(
         IReadOnlyCollection<int> preferredDxccIds,
         IReadOnlyCollection<string> watchedCallsignPatterns)
     {
         return new AppSettings
         {
+            DataSourceType = SelectedDataSourceType,
             Port = NormalizePort(Port),
+            RelayServerUrl = NormalizeUrl(RelayServerUrl),
+            RelaySharedSecret = (RelaySharedSecret ?? string.Empty).Trim(),
+            RelayTenantId = (RelayTenantId ?? string.Empty).Trim(),
+            RelayPreferredSourceName = (RelayPreferredSourceName ?? string.Empty).Trim(),
+            RelayTrustedFingerprint = (RelayTrustedFingerprint ?? string.Empty).Trim(),
             Language = SelectedLanguage.ToStorageValue(),
             MyCallsign = (MyCallsign ?? string.Empty).Trim().ToUpperInvariant(),
             MyGrid = (MyGrid ?? string.Empty).Trim().ToUpperInvariant(),
@@ -231,8 +299,36 @@ public partial class SettingsViewModel : ObservableObject
         return int.TryParse(value, out var port) && port is > 0 and < 65536 ? port.ToString() : "2237";
     }
 
+    private static string NormalizeUrl(string? value)
+    {
+        return (value ?? string.Empty).Trim().TrimEnd('/');
+    }
+
+    private static bool RequiresGatewayRestart(AppSettings existingSettings, AppSettings normalizedSettings)
+    {
+        return existingSettings.DataSourceType != normalizedSettings.DataSourceType
+               || !string.Equals(existingSettings.Port, normalizedSettings.Port, StringComparison.Ordinal)
+               || !string.Equals(existingSettings.RelayServerUrl, normalizedSettings.RelayServerUrl, StringComparison.Ordinal)
+               || !string.Equals(existingSettings.RelaySharedSecret, normalizedSettings.RelaySharedSecret, StringComparison.Ordinal)
+               || !string.Equals(existingSettings.RelayTenantId, normalizedSettings.RelayTenantId, StringComparison.Ordinal)
+               || !string.Equals(existingSettings.RelayTrustedFingerprint, normalizedSettings.RelayTrustedFingerprint, StringComparison.Ordinal);
+    }
+
+    private static bool RequiresRelaySourceSwitch(AppSettings existingSettings, AppSettings normalizedSettings)
+    {
+        return existingSettings.DataSourceType == DataSourceType.Relay
+               && normalizedSettings.DataSourceType == DataSourceType.Relay
+               && !string.Equals(existingSettings.RelayPreferredSourceName, normalizedSettings.RelayPreferredSourceName, StringComparison.Ordinal);
+    }
+
     partial void OnSelectedLanguageChanged(AppLanguage value)
     {
         OnPropertyChanged(nameof(IsLanguageChangePending));
+    }
+
+    partial void OnSelectedDataSourceTypeChanged(DataSourceType value)
+    {
+        OnPropertyChanged(nameof(IsUdpSourceSelected));
+        OnPropertyChanged(nameof(IsRelaySourceSelected));
     }
 }

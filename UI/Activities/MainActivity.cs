@@ -29,6 +29,7 @@ public sealed class MainActivity : LocalizedActivity
     private MainViewModel _viewModel = null!;
     private DecodedMessageAdapter _adapter = null!;
     private TextView _aboutMe = null!;
+    private TextView _currentSourceStatus = null!;
     private EditText _callsignSearch = null!;
     private int _dragTouchSlop;
     private float _jumpButtonStartRawX;
@@ -117,6 +118,7 @@ public sealed class MainActivity : LocalizedActivity
         if (_viewModel is not null)
         {
             _viewModel.State.PropertyChanged -= OnStatePropertyChanged;
+            _viewModel.RelayState.PropertyChanged -= OnStatePropertyChanged;
             _viewModel.Messages.CollectionChanged -= OnMessagesCollectionChanged;
         }
 
@@ -148,6 +150,7 @@ public sealed class MainActivity : LocalizedActivity
     {
         _listView = FindViewById<RecyclerView>(Resource.Id.calllist_view)!;
         _aboutMe = FindViewById<TextView>(Resource.Id.about_me)!;
+        _currentSourceStatus = FindViewById<TextView>(Resource.Id.current_source_status)!;
         _totalRecord = FindViewById<TextView>(Resource.Id.total_record)!;
         _callsignSearch = FindViewById<EditText>(Resource.Id.callsign_search)!;
         _jumpToBottomButton = FindViewById<ImageButton>(Resource.Id.jump_to_bottom_button)!;
@@ -171,6 +174,7 @@ public sealed class MainActivity : LocalizedActivity
     private void BindViewModel()
     {
         _viewModel.State.PropertyChanged += OnStatePropertyChanged;
+        _viewModel.RelayState.PropertyChanged += OnStatePropertyChanged;
         _viewModel.Messages.CollectionChanged += OnMessagesCollectionChanged;
     }
 
@@ -208,6 +212,7 @@ public sealed class MainActivity : LocalizedActivity
         var state = _viewModel.State;
         _totalRecord.Text = $"{GetString(Resource.String.total_record)} {state.TotalMessages}";
         _aboutMe.Text = $"{GetString(Resource.String.about_me)} {state.MessagesAboutMe}";
+        RenderCurrentSourceStatus();
 
         if (!state.IsServiceRunning)
         {
@@ -236,6 +241,26 @@ public sealed class MainActivity : LocalizedActivity
         }
 
         UpdateMenuState();
+    }
+
+    private void RenderCurrentSourceStatus()
+    {
+        if (_viewModel.SettingsSnapshot.DataSourceType != Core.Models.DataSourceType.Relay)
+        {
+            _currentSourceStatus.Text = string.Empty;
+            _currentSourceStatus.Visibility = ViewStates.Gone;
+            return;
+        }
+
+        var relayState = _viewModel.RelayState;
+        var sourceLabel = string.IsNullOrWhiteSpace(relayState.CurrentSourceName)
+            ? GetString(Resource.String.relay_source_unknown)
+            : string.Format(
+                GetString(Resource.String.relay_source_status_format),
+                relayState.CurrentSourceName,
+                GetString(relayState.CurrentSourceOnline ? Resource.String.relay_source_status_online : Resource.String.relay_source_status_offline));
+        _currentSourceStatus.Text = string.Format(GetString(Resource.String.current_source_status), sourceLabel);
+        _currentSourceStatus.Visibility = ViewStates.Visible;
     }
 
     private void SetBanner(string text, bool visible, bool animate = true)

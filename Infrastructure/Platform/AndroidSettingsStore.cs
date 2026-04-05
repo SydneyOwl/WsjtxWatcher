@@ -44,7 +44,13 @@ public sealed class AndroidSettingsStore : ISettingsStore
 
         var settings = new AppSettings
         {
+            DataSourceType = ParseDataSourceType(_sharedPreferences.GetInt("data_source_type", (int)DataSourceType.Udp)),
             Port = _sharedPreferences.GetString("port", "2237") ?? "2237",
+            RelayServerUrl = _sharedPreferences.GetString("relay_server_url", string.Empty) ?? string.Empty,
+            RelaySharedSecret = _sharedPreferences.GetString("relay_shared_secret", string.Empty) ?? string.Empty,
+            RelayTenantId = _sharedPreferences.GetString("relay_tenant_id", string.Empty) ?? string.Empty,
+            RelayPreferredSourceName = _sharedPreferences.GetString("relay_preferred_source_name", string.Empty) ?? string.Empty,
+            RelayTrustedFingerprint = _sharedPreferences.GetString("relay_trusted_fingerprint", string.Empty) ?? string.Empty,
             Language = _sharedPreferences.GetString("language", string.Empty) ?? string.Empty,
             MyCallsign = callsign,
             MyGrid = _sharedPreferences.GetString("grid", string.Empty) ?? string.Empty,
@@ -70,7 +76,13 @@ public sealed class AndroidSettingsStore : ISettingsStore
     public Task SaveAsync(AppSettings settings, CancellationToken cancellationToken = default)
     {
         var editor = _sharedPreferences.Edit()!;
+        editor.PutInt("data_source_type", (int)settings.DataSourceType);
         editor.PutString("port", settings.Port);
+        editor.PutString("relay_server_url", settings.RelayServerUrl);
+        editor.PutString("relay_shared_secret", settings.RelaySharedSecret);
+        editor.PutString("relay_tenant_id", settings.RelayTenantId);
+        editor.PutString("relay_preferred_source_name", settings.RelayPreferredSourceName);
+        editor.PutString("relay_trusted_fingerprint", settings.RelayTrustedFingerprint);
         editor.PutString("language", settings.Language);
         editor.PutString("callsign", settings.MyCallsign);
         editor.PutString("grid", settings.MyGrid);
@@ -128,5 +140,12 @@ public sealed class AndroidSettingsStore : ISettingsStore
         }
 
         return [CallsignPatternMatcher.CreateDefaultPattern(callsign)];
+    }
+
+    private static DataSourceType ParseDataSourceType(int value)
+    {
+        return Enum.IsDefined(typeof(DataSourceType), value)
+            ? (DataSourceType)value
+            : DataSourceType.Udp;
     }
 }

@@ -2,10 +2,11 @@ using System.Net;
 using Serilog;
 using WsjtxUtils.WsjtxUdpServer;
 using WsjtxWatcher.Core.Contracts;
+using WsjtxWatcher.Core.Models;
 
 namespace WsjtxWatcher.Infrastructure.Wsjt;
 
-public sealed class WsjtGateway : IWsjtGateway
+public sealed class UdpWsjtGateway : IWsjtGateway
 {
     private readonly SemaphoreSlim _lock = new(1, 1);
     private WsjtxUdpServer? _server;
@@ -13,7 +14,7 @@ public sealed class WsjtGateway : IWsjtGateway
 
     public bool IsRunning => _server?.IsRunning ?? false;
 
-    public async Task StartAsync(int port, IWsjtEventSink eventSink, CancellationToken cancellationToken = default)
+    public async Task StartAsync(AppSettings settings, IWsjtEventSink eventSink, CancellationToken cancellationToken = default)
     {
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -21,6 +22,7 @@ public sealed class WsjtGateway : IWsjtGateway
             await StopCoreAsync().ConfigureAwait(false);
             _cancellationTokenSource = new CancellationTokenSource();
             var handler = new WsjtMessageHandler(eventSink);
+            var port = ParsePort(settings.Port);
             _server = new WsjtxUdpServer(handler, IPAddress.Any, port);
             Log.Information("Starting WSJT-X UDP listener on {Endpoint}", _server.LocalEndpoint);
             _server.Start(_cancellationTokenSource);
@@ -42,6 +44,16 @@ public sealed class WsjtGateway : IWsjtGateway
         {
             _lock.Release();
         }
+    }
+
+    public Task SelectSourceAsync(string sourceName, CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task RefreshAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
     }
 
     private Task StopCoreAsync()
@@ -80,5 +92,12 @@ public sealed class WsjtGateway : IWsjtGateway
                 cancellationTokenSource?.Dispose();
             }
         });
+    }
+
+    private static int ParsePort(string value)
+    {
+        return int.TryParse(value, out var port) && port is > 0 and < 65536
+            ? port
+            : throw new InvalidOperationException($"Invalid WSJT-X port: {value}");
     }
 }

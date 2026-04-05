@@ -1,0 +1,3 @@
+[submodule "wsjtx-relay-proto"]
+	path = wsjtx-relay-proto
+	url = https://github.com/SydneyOwl/wsjtx-relay-proto.git

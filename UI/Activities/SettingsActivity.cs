@@ -6,6 +6,8 @@ using Android.Graphics;
 using Android.OS;
 using Android.Views;
 using Android.Widget;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Runtime.Versioning;
 using Serilog;
 using WsjtxWatcher.App;
@@ -39,12 +41,14 @@ public sealed class SettingsActivity : LocalizedActivity
         SelectedDxccMatchTarget.ReceiverOnly,
         SelectedDxccMatchTarget.ReceiverOrTransmitter
     ];
+    private readonly DataSourceType[] _dataSourceTypes = [DataSourceType.Udp, DataSourceType.Relay];
     private readonly AppLanguage[] _supportedLanguages = [AppLanguage.SimplifiedChinese, AppLanguage.English];
     private SettingsViewModel _viewModel = null!;
     private bool _isBinding;
     private Button _addBackgroundButton = null!;
     private Button _addWhitelistButton = null!;
     private EditText _callsignValue = null!;
+    private Spinner _dataSourceSpinner = null!;
     private TextView _ipAddressValue = null!;
     private Spinner _ignoredCallsignMatchTargetSpinner = null!;
     private Spinner _watchedCallsignMatchTargetSpinner = null!;
@@ -56,6 +60,16 @@ public sealed class SettingsActivity : LocalizedActivity
     private EditText _locationValue = null!;
     private Spinner _languageSpinner = null!;
     private EditText _portValue = null!;
+    private LinearLayout _udpSection = null!;
+    private LinearLayout _relaySection = null!;
+    private EditText _relayServerUrlValue = null!;
+    private EditText _relaySharedSecretValue = null!;
+    private EditText _relayTenantIdValue = null!;
+    private TextView _relayConnectionStatusValue = null!;
+    private Button _relayTestConnectionButton = null!;
+    private Button _relaySelectedSourceButton = null!;
+    private Button _relayRefreshSourcesButton = null!;
+    private Button _relayClearTrustButton = null!;
     private Button _resetAllButton = null!;
     private Button _resetDatabaseButton = null!;
     private CheckBox _sendNotificationAllCheckbox = null!;
@@ -85,11 +99,14 @@ public sealed class SettingsActivity : LocalizedActivity
         _notificationService = AppHost.Current.GetRequiredService<INotificationService>();
         _isBinding = true;
         BindViews();
+        InitializeDataSourceSpinner();
         InitializeLanguageSpinner();
         InitializeIgnoredCallsignMatchTargetSpinner();
         InitializeWatchedCallsignMatchTargetSpinner();
         InitializeSelectedDxccMatchTargetSpinner();
         BindEvents();
+        _viewModel.RelayRuntimeState.PropertyChanged += OnRelayRuntimeStateChanged;
+        _viewModel.RelayRuntimeState.Sources.CollectionChanged += OnRelaySourcesChanged;
         _ = LoadAsync();
     }
 
@@ -109,10 +126,32 @@ public sealed class SettingsActivity : LocalizedActivity
         base.OnPause();
     }
 
+    protected override void OnDestroy()
+    {
+        if (_viewModel is not null)
+        {
+            _viewModel.RelayRuntimeState.PropertyChanged -= OnRelayRuntimeStateChanged;
+            _viewModel.RelayRuntimeState.Sources.CollectionChanged -= OnRelaySourcesChanged;
+        }
+
+        base.OnDestroy();
+    }
+
     private void BindViews()
     {
+        _dataSourceSpinner = FindViewById<Spinner>(Resource.Id.data_source_spinner)!;
         _ipAddressValue = FindViewById<TextView>(Resource.Id.ip_address_value)!;
         _portValue = FindViewById<EditText>(Resource.Id.port_value)!;
+        _udpSection = FindViewById<LinearLayout>(Resource.Id.udp_section)!;
+        _relaySection = FindViewById<LinearLayout>(Resource.Id.relay_section)!;
+        _relayServerUrlValue = FindViewById<EditText>(Resource.Id.relay_server_url_value)!;
+        _relaySharedSecretValue = FindViewById<EditText>(Resource.Id.relay_shared_secret_value)!;
+        _relayTenantIdValue = FindViewById<EditText>(Resource.Id.relay_tenant_id_value)!;
+        _relayConnectionStatusValue = FindViewById<TextView>(Resource.Id.relay_connection_status_value)!;
+        _relayTestConnectionButton = FindViewById<Button>(Resource.Id.relay_test_connection_button)!;
+        _relaySelectedSourceButton = FindViewById<Button>(Resource.Id.relay_selected_source_button)!;
+        _relayRefreshSourcesButton = FindViewById<Button>(Resource.Id.relay_refresh_sources_button)!;
+        _relayClearTrustButton = FindViewById<Button>(Resource.Id.relay_clear_trust_button)!;
         _callsignValue = FindViewById<EditText>(Resource.Id.callsign_value)!;
         _locationValue = FindViewById<EditText>(Resource.Id.location_value)!;
         _versionValue = FindViewById<TextView>(Resource.Id.version_value)!;
@@ -138,6 +177,14 @@ public sealed class SettingsActivity : LocalizedActivity
         _addBackgroundButton = FindViewById<Button>(Resource.Id.add_background)!;
         _setDxccButton = FindViewById<Button>(Resource.Id.set_dxcc)!;
         _autoIgnoreLoggedQsoCheckbox = FindViewById<CheckBox>(Resource.Id.auto_ignore_logged_qso_checkbox)!;
+    }
+
+    private void InitializeDataSourceSpinner()
+    {
+        var labels = _dataSourceTypes.Select(GetDataSourceLabel).ToArray();
+        var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, labels);
+        adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
+        _dataSourceSpinner.Adapter = adapter;
     }
 
     private void InitializeLanguageSpinner()
@@ -174,6 +221,17 @@ public sealed class SettingsActivity : LocalizedActivity
 
     private void BindEvents()
     {
+        _dataSourceSpinner.ItemSelected += (_, args) =>
+        {
+            if (_isBinding)
+            {
+                return;
+            }
+
+            _viewModel.SelectedDataSourceType = _dataSourceTypes[Math.Clamp(args.Position, 0, _dataSourceTypes.Length - 1)];
+            RunOnUiThread(UpdateDataSourceSectionVisibility);
+        };
+
         _languageSpinner.ItemSelected += async (_, args) =>
         {
             if (_isBinding)
@@ -244,6 +302,30 @@ public sealed class SettingsActivity : LocalizedActivity
             if (!_isBinding)
             {
                 _viewModel.Port = _portValue.Text ?? string.Empty;
+            }
+        };
+
+        _relayServerUrlValue.TextChanged += (_, _) =>
+        {
+            if (!_isBinding)
+            {
+                _viewModel.RelayServerUrl = _relayServerUrlValue.Text ?? string.Empty;
+            }
+        };
+
+        _relaySharedSecretValue.TextChanged += (_, _) =>
+        {
+            if (!_isBinding)
+            {
+                _viewModel.RelaySharedSecret = _relaySharedSecretValue.Text ?? string.Empty;
+            }
+        };
+
+        _relayTenantIdValue.TextChanged += (_, _) =>
+        {
+            if (!_isBinding)
+            {
+                _viewModel.RelayTenantId = _relayTenantIdValue.Text ?? string.Empty;
             }
         };
 
@@ -357,6 +439,16 @@ public sealed class SettingsActivity : LocalizedActivity
         };
 
         _openNotificationSettingsButton.Click += (_, _) => _notificationService.OpenNotificationSettings();
+        _relayTestConnectionButton.Click += async (_, _) => await TestRelayConnectionAsync().ConfigureAwait(false);
+        _relaySelectedSourceButton.Click += (_, _) => StartActivity(typeof(RelaySourceSelectionActivity));
+        _relayRefreshSourcesButton.Click += async (_, _) => await _viewModel.RefreshRelaySourcesAsync().ConfigureAwait(false);
+        _relayClearTrustButton.Click += async (_, _) =>
+        {
+            _viewModel.RelayTrustedFingerprint = string.Empty;
+            var saveResult = await _viewModel.SaveAsync().ConfigureAwait(false);
+            await LoadAsync().ConfigureAwait(false);
+            RunOnUiThread(() => ShowSaveResultToast(saveResult));
+        };
         _manageIgnoredCallsignsButton.Click += (_, _) => StartActivity(typeof(IgnoredCallsignActivity));
         _manageCallsignPatternsButton.Click += (_, _) => StartActivity(typeof(CallsignPatternActivity));
         _setDxccButton.Click += (_, _) => StartActivity(typeof(DxccSelectionActivity));
@@ -379,10 +471,14 @@ public sealed class SettingsActivity : LocalizedActivity
         await _viewModel.LoadAsync().ConfigureAwait(false);
         RunOnUiThread(() =>
         {
+            _dataSourceSpinner.SetSelection(GetDataSourceIndex(_viewModel.SelectedDataSourceType));
             _ipAddressValue.Text = string.IsNullOrWhiteSpace(_viewModel.LocalIpAddress)
                 ? GetString(Resource.String.no_wifi)
                 : _viewModel.LocalIpAddress;
             _portValue.Text = _viewModel.Port;
+            _relayServerUrlValue.Text = _viewModel.RelayServerUrl;
+            _relaySharedSecretValue.Text = _viewModel.RelaySharedSecret;
+            _relayTenantIdValue.Text = _viewModel.RelayTenantId;
             _callsignValue.Text = _viewModel.MyCallsign;
             _locationValue.Text = _viewModel.MyGrid;
             _versionValue.Text = $"{_viewModel.VersionName}";
@@ -403,6 +499,8 @@ public sealed class SettingsActivity : LocalizedActivity
             _vibrationLoggedQsoCheckbox.Checked = _viewModel.VibrateOnLoggedQso;
             _autoIgnoreLoggedQsoCheckbox.Checked = _viewModel.AutoIgnoreLoggedQso;
             UpdateNotificationSettingsButtonVisibility();
+            UpdateDataSourceSectionVisibility();
+            UpdateRelaySection();
             _addWhitelistButton.Enabled = !_viewModel.IsIgnoringBatteryOptimizations;
             _setDxccButton.Text = $"{GetString(Resource.String.set_dxcc_entity)} ({_viewModel.SelectedDxccCount})";
             _isBinding = false;
@@ -433,6 +531,19 @@ public sealed class SettingsActivity : LocalizedActivity
         _pendingNotificationCheckbox = null;
         _pendingNotificationSetter = null;
         UpdateNotificationSettingsButtonVisibility();
+    }
+
+    private int GetDataSourceIndex(DataSourceType dataSourceType)
+    {
+        var index = Array.IndexOf(_dataSourceTypes, dataSourceType);
+        return index >= 0 ? index : 0;
+    }
+
+    private string GetDataSourceLabel(DataSourceType dataSourceType)
+    {
+        return dataSourceType == DataSourceType.Relay
+            ? GetString(Resource.String.data_source_relay)
+            : GetString(Resource.String.data_source_udp);
     }
 
     private int GetLanguageIndex(AppLanguage language)
@@ -569,6 +680,47 @@ public sealed class SettingsActivity : LocalizedActivity
             : ViewStates.Visible;
     }
 
+    private void UpdateDataSourceSectionVisibility()
+    {
+        var isRelay = _viewModel.SelectedDataSourceType == DataSourceType.Relay;
+        _udpSection.Visibility = isRelay ? ViewStates.Gone : ViewStates.Visible;
+        _relaySection.Visibility = isRelay ? ViewStates.Visible : ViewStates.Gone;
+    }
+
+    private void UpdateRelaySection()
+    {
+        var runtimeState = _viewModel.RelayRuntimeState;
+        _relayConnectionStatusValue.Text = string.IsNullOrWhiteSpace(runtimeState.ConnectionStatus)
+            ? GetString(Resource.String.wait_conn)
+            : runtimeState.ConnectionStatus;
+
+        var selectedSourceName = string.IsNullOrWhiteSpace(_viewModel.RelayPreferredSourceName)
+            ? GetString(Resource.String.relay_source_unknown)
+            : _viewModel.RelayPreferredSourceName;
+        var selectedSource = runtimeState.Sources.FirstOrDefault(source =>
+            string.Equals(source.SourceName, _viewModel.RelayPreferredSourceName, StringComparison.OrdinalIgnoreCase));
+        if (selectedSource is not null)
+        {
+            selectedSourceName = string.Format(
+                GetString(Resource.String.relay_source_status_format),
+                selectedSource.DisplayName,
+                GetString(selectedSource.Online ? Resource.String.relay_source_status_online : Resource.String.relay_source_status_offline));
+        }
+
+        _relaySelectedSourceButton.Text = selectedSourceName;
+        _relayClearTrustButton.Enabled = !string.IsNullOrWhiteSpace(_viewModel.RelayTrustedFingerprint);
+    }
+
+    private void OnRelayRuntimeStateChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        RunOnUiThread(UpdateRelaySection);
+    }
+
+    private void OnRelaySourcesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        RunOnUiThread(UpdateRelaySection);
+    }
+
     private void ShowBackgroundHelpDialog()
     {
         var builder = new AlertDialog.Builder(this);
@@ -596,7 +748,8 @@ public sealed class SettingsActivity : LocalizedActivity
 
         try
         {
-            await _viewModel.SaveAsync().ConfigureAwait(false);
+            var saveResult = await _viewModel.SaveAsync().ConfigureAwait(false);
+            RunOnUiThread(() => ShowSaveResultToast(saveResult));
         }
         catch (Exception exception)
         {
@@ -614,5 +767,54 @@ public sealed class SettingsActivity : LocalizedActivity
         FinishAndRemoveTask();
         Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
         Java.Lang.JavaSystem.Exit(0);
+    }
+
+    private async Task TestRelayConnectionAsync()
+    {
+        RunOnUiThread(() =>
+        {
+            _relayTestConnectionButton.Enabled = false;
+            _relayConnectionStatusValue.Text = GetString(Resource.String.relay_test_in_progress);
+        });
+
+        try
+        {
+            var result = await _viewModel.TestRelayConnectionAsync().ConfigureAwait(false);
+            RunOnUiThread(() =>
+            {
+                _relayConnectionStatusValue.Text = result.Message;
+                var toastMessage = result.Success && !_viewModel.IsWatcherServiceRunning
+                    ? GetString(Resource.String.relay_test_success_manual_start)
+                    : result.Message;
+                Toast.MakeText(this, toastMessage, ToastLength.Long)?.Show();
+            });
+        }
+        catch (Exception exception)
+        {
+            Log.Warning(exception, "Relay connection test failed unexpectedly.");
+            RunOnUiThread(() =>
+            {
+                _relayConnectionStatusValue.Text = exception.Message;
+                Toast.MakeText(this, exception.Message, ToastLength.Long)?.Show();
+            });
+        }
+        finally
+        {
+            RunOnUiThread(() => _relayTestConnectionButton.Enabled = true);
+        }
+    }
+
+    private void ShowSaveResultToast(SettingsSaveResult saveResult)
+    {
+        if (saveResult.ServiceRestarted)
+        {
+            Toast.MakeText(this, Resource.String.relay_save_service_restarted, ToastLength.Long)?.Show();
+            return;
+        }
+
+        if (saveResult.ManualStartRecommended)
+        {
+            Toast.MakeText(this, Resource.String.relay_save_manual_start_required, ToastLength.Long)?.Show();
+        }
     }
 }

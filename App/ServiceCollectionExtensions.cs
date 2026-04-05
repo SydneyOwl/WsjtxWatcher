@@ -17,6 +17,7 @@ internal static class ServiceCollectionExtensions
         services.AddSingleton(application);
 
         services.AddSingleton<WatcherState>();
+        services.AddSingleton<RelayRuntimeState>();
         services.AddSingleton<IAppInfoService, AndroidAppInfoService>();
         services.AddSingleton<IUiDispatcher, AndroidUiDispatcher>();
         services.AddSingleton<ISettingsStore, AndroidSettingsStore>();
@@ -32,12 +33,16 @@ internal static class ServiceCollectionExtensions
         services.AddSingleton<INetworkInfoService, AndroidNetworkInfoService>();
         services.AddSingleton<IBackgroundAccessService, AndroidBackgroundAccessService>();
         services.AddSingleton<ILogFileService, AndroidLogFileService>();
+        services.AddSingleton<IRelayConnectionProbe, RelayConnectionProbe>();
+        services.AddSingleton<UdpWsjtGateway>();
+        services.AddSingleton<RelayWsjtGateway>();
         services.AddSingleton<IWsjtGateway, WsjtGateway>();
         services.AddSingleton<ICloudlogIgnoredCallsignImportService, CloudlogIgnoredCallsignImportService>();
         services.AddSingleton<DecodedMessageFactory>();
         services.AddSingleton<WatcherController>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<SettingsViewModel>();
+        services.AddTransient<RelaySourceSelectionViewModel>();
         services.AddSingleton<CallsignPatternViewModel>();
         services.AddSingleton<IgnoredCallsignViewModel>();
         services.AddTransient<DxccSelectionViewModel>();

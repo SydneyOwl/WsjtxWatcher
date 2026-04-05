@@ -89,7 +89,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
             await _wsjtGateway.StopAsync(cancellationToken).ConfigureAwait(false);
             Interlocked.Increment(ref _runId);
             ResetRuntimeState();
-            await _wsjtGateway.StartAsync(ParsePort(_settings.Port), this, cancellationToken).ConfigureAwait(false);
+            await _wsjtGateway.StartAsync(_settings.Clone(), this, cancellationToken).ConfigureAwait(false);
             _watchdogTimer.Start();
 
             await _uiDispatcher.InvokeAsync(() =>
@@ -137,6 +137,22 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
 
         await StopAsync(cancellationToken).ConfigureAwait(false);
         await StartAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task SwitchRelaySourceAsync(string sourceName, CancellationToken cancellationToken = default)
+    {
+        var normalizedSourceName = sourceName?.Trim() ?? string.Empty;
+        await _uiDispatcher.InvokeAsync(() =>
+        {
+            State.ClearMessages();
+            State.ResetConnection();
+        }).ConfigureAwait(false);
+        await _wsjtGateway.SelectSourceAsync(normalizedSourceName, cancellationToken).ConfigureAwait(false);
+    }
+
+    public Task RefreshGatewayAsync(CancellationToken cancellationToken = default)
+    {
+        return _wsjtGateway.RefreshAsync(cancellationToken);
     }
 
     public async Task ResetCacheAsync(CancellationToken cancellationToken = default)
@@ -450,13 +466,6 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
             State.IsTimedOut = isTimedOut;
             State.IsWaitingForConnection = isTimedOut || string.IsNullOrWhiteSpace(State.ClientId);
         });
-    }
-
-    private static int ParsePort(string value)
-    {
-        return int.TryParse(value, out var port) && port is > 0 and < 65536
-            ? port
-            : throw new InvalidOperationException($"Invalid WSJT-X port: {value}");
     }
 
     private string BuildStatusSwitchNotice(

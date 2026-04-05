@@ -10,15 +10,19 @@ public sealed partial class MainViewModel : ObservableObject
 {
     private readonly WatcherController _watcherController;
 
-    public MainViewModel(WatcherController watcherController)
+    public MainViewModel(WatcherController watcherController, RelayRuntimeState relayState)
     {
         _watcherController = watcherController;
         State = watcherController.State;
+        RelayState = relayState;
         State.PropertyChanged += OnStatePropertyChanged;
+        RelayState.PropertyChanged += OnStatePropertyChanged;
         Messages = State.Messages;
     }
 
     public WatcherState State { get; }
+
+    public RelayRuntimeState RelayState { get; }
 
     public ObservableCollection<DecodedRadioMessage> Messages { get; }
 
