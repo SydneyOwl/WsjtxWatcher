@@ -7,6 +7,7 @@ using Android.OS;
 using Android.Views;
 using Android.Widget;
 using System.Runtime.Versioning;
+using Serilog;
 using WsjtxWatcher.App;
 using WsjtxWatcher.Core.Contracts;
 using WsjtxWatcher.Core.Models;
@@ -73,6 +74,7 @@ public sealed class SettingsActivity : LocalizedActivity
     private Action<bool>? _pendingNotificationSetter;
     private bool _suppressNotificationToggleEvents;
     private bool _isExitingApplication;
+    private readonly SemaphoreSlim _pauseSaveLock = new(1, 1);
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -101,7 +103,7 @@ public sealed class SettingsActivity : LocalizedActivity
     {
         if (!_isBinding && !_isExitingApplication)
         {
-            _viewModel.SaveAsync().GetAwaiter().GetResult();
+            _ = SaveOnPauseAsync();
         }
 
         base.OnPause();
@@ -583,6 +585,27 @@ public sealed class SettingsActivity : LocalizedActivity
         _viewModel.SelectedLanguage = originalLanguage;
         _languageSpinner.SetSelection(GetLanguageIndex(originalLanguage));
         _isBinding = false;
+    }
+
+    private async Task SaveOnPauseAsync()
+    {
+        if (!await _pauseSaveLock.WaitAsync(0).ConfigureAwait(false))
+        {
+            return;
+        }
+
+        try
+        {
+            await _viewModel.SaveAsync().ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            Log.Warning(exception, "Failed to persist settings during activity pause.");
+        }
+        finally
+        {
+            _pauseSaveLock.Release();
+        }
     }
 
     private void ExitApplication()

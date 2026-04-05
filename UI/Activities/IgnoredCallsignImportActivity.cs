@@ -2,6 +2,7 @@
 using Android.OS;
 using Android.Views;
 using Android.Widget;
+using Serilog;
 using WsjtxWatcher.App;
 using WsjtxWatcher.Core.Contracts;
 using WsjtxWatcher.Core.ViewModels;
@@ -34,6 +35,7 @@ public sealed class IgnoredCallsignImportActivity : LocalizedActivity
     private EditText _urlValue = null!;
     private EditText _usernameValue = null!;
     private bool _isBusy;
+    private readonly SemaphoreSlim _pauseSaveLock = new(1, 1);
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -52,7 +54,7 @@ public sealed class IgnoredCallsignImportActivity : LocalizedActivity
 
     protected override void OnPause()
     {
-        SavePersistedSettingsAsync().GetAwaiter().GetResult();
+        _ = SaveOnPauseAsync();
         base.OnPause();
     }
 
@@ -217,6 +219,27 @@ public sealed class IgnoredCallsignImportActivity : LocalizedActivity
             LookbackDays = ResolveLookbackDays()
         };
         return _importSettingsStore.SaveAsync(settings);
+    }
+
+    private async Task SaveOnPauseAsync()
+    {
+        if (!await _pauseSaveLock.WaitAsync(0).ConfigureAwait(false))
+        {
+            return;
+        }
+
+        try
+        {
+            await SavePersistedSettingsAsync().ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            Log.Warning(exception, "Failed to persist Cloudlog import settings during activity pause.");
+        }
+        finally
+        {
+            _pauseSaveLock.Release();
+        }
     }
 
     private static int ResolveLookbackSelection(int lookbackDays)
