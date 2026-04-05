@@ -63,7 +63,7 @@
     <string name="cloudlog_import_importing">正在登录并导出通联记录...</string>
     <string name="cloudlog_import_no_qso_records">所选范围内没有通联记录。</string>
     <string name="cloudlog_import_no_valid_entries">导入的通联记录里没有有效的呼号-波段组合。</string>
-    <string name="cloudlog_import_completed">已导入 %1$d 条新的忽略项，跳过 %2$d 条重复项，共处理 %3$d 条呼号-波段组合。</string>
+    <string name="cloudlog_import_completed">已导入 {0} 条新的忽略项，跳过 {1} 条重复项，共处理 {2} 条呼号-波段组合。</string>
     <string name="add_pattern">添加</string>
     <string name="delete_pattern">删除</string>
     <string name="no_callsign_patterns">还没有添加任何呼号正则。</string>
@@ -73,9 +73,9 @@
     <string name="duplicate_callsign_pattern">这条正则已经存在。</string>
     <string name="duplicate_ignored_callsign">这个呼号在该波段已经被忽略了。</string>
     <string name="empty_callsign_pattern">请输入正则表达式。</string>
-    <string name="ignore_callsign_on_band">忽略%1$s上的呼号%2$s</string>
-    <string name="ignored_callsign_added">已忽略%1$s上的呼号%2$s</string>
-    <string name="ignored_callsign_item_format">%1$s - %2$s</string>
+    <string name="ignore_callsign_on_band">忽略{0}上的呼号{1}</string>
+    <string name="ignored_callsign_added">已忽略{0}上的呼号{1}</string>
+    <string name="ignored_callsign_item_format">{0} - {1}</string>
     <string name="ignored_callsign_unknown_band">当前记录无法识别波段，不能忽略。</string>
     <string name="user_ft8_msg_available">有一条重要解码信息！</string>
     <string name="reset_database">重置数据库</string>
@@ -116,7 +116,7 @@
     <string name="clear_all_ignored_callsigns_confirm">清空所有已忽略呼号？</string>
     <string name="previous_page">上一页</string>
     <string name="next_page">下一页</string>
-    <string name="ignored_callsign_page_status">第 %1$d / %2$d 页</string>
+    <string name="ignored_callsign_page_status">第 {0} / {1} 页</string>
     <string name="jump_to_bottom">跳到列表底部</string>
     <string name="open_log">查看日志</string>
     <string name="start_service_failed">服务启动失败，请查看日志...</string>
@@ -129,6 +129,6 @@
     <string name="background_help_message">如果系统没有自动打开正确的设置页，请手动进入应用详情，为 Wsjtx 助手开启后台活动、自启动和电池优化豁免等权限。</string>
     <string name="auto_ignore_logged_qso">QSO 完成后自动忽略该呼号</string>
     <string name="qso_logged_notification_title">QSO 已完成</string>
-    <string name="qso_logged_notification_message">已完成与 %1$s 的通联</string>
-    <string name="qso_logged_notification_message_with_band">已完成与 %1$s 的 %2$s 波段通联</string>
+    <string name="qso_logged_notification_message">已完成与 {0} 的通联</string>
+    <string name="qso_logged_notification_message_with_band">已完成与 {0} 的 {1} 波段通联</string>
 </resources>

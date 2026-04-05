@@ -215,7 +215,7 @@ public sealed class IgnoredCallsignActivity : LocalizedActivity
         if (visibleEntries.Count == 0)
         {
             _currentPageIndex = 0;
-            _pageInfoText.Text = GetString(Resource.String.ignored_callsign_page_status, 0, 0);
+            _pageInfoText.Text = string.Format(GetString(Resource.String.ignored_callsign_page_status), 0, 0);
             _previousPageButton.Enabled = false;
             _nextPageButton.Enabled = false;
             _adapter.UpdateEntries([]);
@@ -229,7 +229,7 @@ public sealed class IgnoredCallsignActivity : LocalizedActivity
             .Take(PageSize)
             .ToList();
 
-        _pageInfoText.Text = GetString(Resource.String.ignored_callsign_page_status, _currentPageIndex + 1, totalPages);
+        _pageInfoText.Text = string.Format(GetString(Resource.String.ignored_callsign_page_status), _currentPageIndex + 1, totalPages);
         _previousPageButton.Enabled = _currentPageIndex > 0;
         _nextPageButton.Enabled = _currentPageIndex < totalPages - 1;
         _adapter.UpdateEntries(pageEntries);

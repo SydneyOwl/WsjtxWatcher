@@ -358,7 +358,7 @@ public sealed class MainActivity : LocalizedActivity
         var popupMenu = new PopupMenu(this, anchorView);
         for (var index = 0; index < candidates.Count; index++)
         {
-            popupMenu.Menu?.Add(0, index, index, GetString(Resource.String.ignore_callsign_on_band, band, candidates[index]));
+            popupMenu.Menu?.Add(0, index, index, string.Format(GetString(Resource.String.ignore_callsign_on_band), band, candidates[index]));
         }
 
         popupMenu.MenuItemClick += async (_, args) =>
@@ -379,7 +379,7 @@ public sealed class MainActivity : LocalizedActivity
                 Toast.MakeText(
                     this,
                     added
-                        ? GetString(Resource.String.ignored_callsign_added, band, ignoredCallsign)
+                        ? string.Format(GetString(Resource.String.ignored_callsign_added), band, ignoredCallsign)
                         : GetString(Resource.String.duplicate_ignored_callsign),
                     ToastLength.Short)?.Show();
                 _adapter.NotifyDataSetChanged();

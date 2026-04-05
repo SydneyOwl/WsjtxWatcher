@@ -89,10 +89,10 @@ public sealed class IgnoredCallsignAdapter : RecyclerView.Adapter
         public void Bind(IgnoredCallsignEntry entry, Context context)
         {
             _entry = entry;
-            Text.Text = context.GetString(
-                Resource.String.ignored_callsign_item_format,
-                new Java.Lang.String(entry.Band),
-                new Java.Lang.String(entry.Callsign));
+            Text.Text = string.Format(
+                context.GetString(Resource.String.ignored_callsign_item_format),
+                entry.Band,
+                entry.Callsign);
             DeleteButton.Enabled = true;
         }
     }

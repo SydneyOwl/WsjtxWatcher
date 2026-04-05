@@ -141,8 +141,8 @@ public sealed class IgnoredCallsignImportActivity : LocalizedActivity
                     return;
                 }
 
-                var message = GetString(
-                    Resource.String.cloudlog_import_completed,
+                var message = string.Format(
+                    GetString(Resource.String.cloudlog_import_completed),
                     mergeResult.AddedCount,
                     mergeResult.DuplicateCount,
                     mergeResult.CandidateCount);

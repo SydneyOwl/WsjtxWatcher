@@ -9,14 +9,18 @@ public partial class DxccSelectionViewModel : ObservableObject
 {
     private readonly ICountryCatalog _countryCatalog;
     private readonly ISettingsStore _settingsStore;
+    private readonly IUiDispatcher _uiDispatcher;
+    private readonly SemaphoreSlim _selectionLock = new(1, 1);
     private readonly HashSet<int> _selectedIds = new();
+    private int _refreshVersion;
     [ObservableProperty]
     private string searchText = string.Empty;
 
-    public DxccSelectionViewModel(ICountryCatalog countryCatalog, ISettingsStore settingsStore)
+    public DxccSelectionViewModel(ICountryCatalog countryCatalog, ISettingsStore settingsStore, IUiDispatcher uiDispatcher)
     {
         _countryCatalog = countryCatalog;
         _settingsStore = settingsStore;
+        _uiDispatcher = uiDispatcher;
     }
 
     public ObservableCollection<CountrySelectionItem> Items { get; } = new();
@@ -26,76 +30,127 @@ public partial class DxccSelectionViewModel : ObservableObject
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
         var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-        _selectedIds.Clear();
-        _selectedIds.UnionWith(settings.PreferredDxccIds);
-        SearchText = string.Empty;
-        await RefreshItemsAsync(cancellationToken).ConfigureAwait(false);
+        await _uiDispatcher.InvokeAsync(() =>
+        {
+            _selectedIds.Clear();
+            _selectedIds.UnionWith(settings.PreferredDxccIds);
+            SearchText = string.Empty;
+        }).ConfigureAwait(false);
+
+        await RefreshItemsAsync(string.Empty, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task SearchAsync(string query, CancellationToken cancellationToken = default)
     {
-        SearchText = query ?? string.Empty;
-        await RefreshItemsAsync(cancellationToken).ConfigureAwait(false);
+        var normalizedQuery = query ?? string.Empty;
+        await _uiDispatcher.InvokeAsync(() =>
+        {
+            SearchText = normalizedQuery;
+        }).ConfigureAwait(false);
+
+        await RefreshItemsAsync(normalizedQuery, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task ToggleAsync(CountrySelectionItem item, bool isSelected, CancellationToken cancellationToken = default)
     {
-        item.IsSelected = isSelected;
-        if (isSelected)
+        await _selectionLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            _selectedIds.Add(item.Country.Id);
-        }
-        else
-        {
-            _selectedIds.Remove(item.Country.Id);
-        }
+            HashSet<int> selectedIdsSnapshot = [];
+            await _uiDispatcher.InvokeAsync(() =>
+            {
+                item.IsSelected = isSelected;
+                if (isSelected)
+                {
+                    _selectedIds.Add(item.Country.Id);
+                }
+                else
+                {
+                    _selectedIds.Remove(item.Country.Id);
+                }
 
-        await SaveAsync(cancellationToken).ConfigureAwait(false);
-        OnPropertyChanged(nameof(AreAllDisplayedItemsSelected));
+                selectedIdsSnapshot = new HashSet<int>(_selectedIds);
+                OnPropertyChanged(nameof(AreAllDisplayedItemsSelected));
+            }).ConfigureAwait(false);
+
+            await SaveAsync(selectedIdsSnapshot, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _selectionLock.Release();
+        }
     }
 
     public async Task SetAllDisplayedAsync(bool isSelected, CancellationToken cancellationToken = default)
     {
-        foreach (var item in Items)
+        await _selectionLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            item.IsSelected = isSelected;
-            if (isSelected)
+            HashSet<int> selectedIdsSnapshot = [];
+            await _uiDispatcher.InvokeAsync(() =>
             {
-                _selectedIds.Add(item.Country.Id);
-            }
-            else
-            {
-                _selectedIds.Remove(item.Country.Id);
-            }
-        }
+                foreach (var item in Items)
+                {
+                    item.IsSelected = isSelected;
+                    if (isSelected)
+                    {
+                        _selectedIds.Add(item.Country.Id);
+                    }
+                    else
+                    {
+                        _selectedIds.Remove(item.Country.Id);
+                    }
+                }
 
-        await SaveAsync(cancellationToken).ConfigureAwait(false);
-        OnPropertyChanged(nameof(AreAllDisplayedItemsSelected));
+                selectedIdsSnapshot = new HashSet<int>(_selectedIds);
+                OnPropertyChanged(nameof(AreAllDisplayedItemsSelected));
+            }).ConfigureAwait(false);
+
+            await SaveAsync(selectedIdsSnapshot, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _selectionLock.Release();
+        }
     }
 
-    private async Task RefreshItemsAsync(CancellationToken cancellationToken)
+    private async Task RefreshItemsAsync(string query, CancellationToken cancellationToken)
     {
-        var countries = string.IsNullOrWhiteSpace(SearchText)
+        var requestVersion = Interlocked.Increment(ref _refreshVersion);
+        var countries = string.IsNullOrWhiteSpace(query)
             ? await _countryCatalog.GetAllCountriesAsync(cancellationToken).ConfigureAwait(false)
-            : await _countryCatalog.SearchCountriesAsync(SearchText, cancellationToken).ConfigureAwait(false);
+            : await _countryCatalog.SearchCountriesAsync(query, cancellationToken).ConfigureAwait(false);
 
-        Items.Clear();
-        foreach (var country in countries)
+        if (requestVersion != Volatile.Read(ref _refreshVersion))
         {
-            Items.Add(new CountrySelectionItem
-            {
-                Country = country,
-                IsSelected = _selectedIds.Contains(country.Id)
-            });
+            return;
         }
 
-        OnPropertyChanged(nameof(AreAllDisplayedItemsSelected));
+        await _uiDispatcher.InvokeAsync(() =>
+        {
+            if (requestVersion != Volatile.Read(ref _refreshVersion))
+            {
+                return;
+            }
+
+            Items.Clear();
+            foreach (var country in countries)
+            {
+                Items.Add(new CountrySelectionItem
+                {
+                    Country = country,
+                    IsSelected = _selectedIds.Contains(country.Id)
+                });
+            }
+
+            OnPropertyChanged(nameof(AreAllDisplayedItemsSelected));
+        }).ConfigureAwait(false);
     }
 
-    private async Task SaveAsync(CancellationToken cancellationToken)
+    private async Task SaveAsync(HashSet<int> selectedIdsSnapshot, CancellationToken cancellationToken)
     {
         var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-        settings.PreferredDxccIds = new HashSet<int>(_selectedIds);
+        settings.PreferredDxccIds = new HashSet<int>(selectedIdsSnapshot);
         await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(false);
     }
 }

@@ -63,7 +63,7 @@
     <string name="cloudlog_import_importing">Logging in and exporting QSOs...</string>
     <string name="cloudlog_import_no_qso_records">The selected range returned no QSO records.</string>
     <string name="cloudlog_import_no_valid_entries">No valid callsign-band pairs were found in the imported QSOs.</string>
-    <string name="cloudlog_import_completed">Imported %1$d new ignored entries, skipped %2$d duplicates from %3$d imported pairs.</string>
+    <string name="cloudlog_import_completed">Imported {0} new ignored entries, skipped {1} duplicates from {2} imported pairs.</string>
     <string name="add_pattern">Add</string>
     <string name="delete_pattern">Delete</string>
     <string name="no_callsign_patterns">No callsign regex added yet.</string>
@@ -73,9 +73,9 @@
     <string name="duplicate_callsign_pattern">This regex already exists.</string>
     <string name="duplicate_ignored_callsign">This callsign is already ignored on that band.</string>
     <string name="empty_callsign_pattern">Please input a regex pattern.</string>
-    <string name="ignore_callsign_on_band">Ignore %2$s on %1$s</string>
-    <string name="ignored_callsign_added">Ignored %2$s on %1$s</string>
-    <string name="ignored_callsign_item_format">%1$s - %2$s</string>
+    <string name="ignore_callsign_on_band">Ignore {1} on {0}</string>
+    <string name="ignored_callsign_added">Ignored {1} on {0}</string>
+    <string name="ignored_callsign_item_format">{0} - {1}</string>
     <string name="ignored_callsign_unknown_band">The current record has no resolved band, so it cannot be ignored.</string>
     <string name="user_ft8_msg_available">There\'s an important decoded msg!</string>
     <string name="reset_database">Reset Database</string>
@@ -119,7 +119,7 @@
     <string name="clear_all_ignored_callsigns_confirm">Clear all ignored callsigns?</string>
     <string name="previous_page">Prev</string>
     <string name="next_page">Next</string>
-    <string name="ignored_callsign_page_status">Page %1$d / %2$d</string>
+    <string name="ignored_callsign_page_status">Page {0} / {1}</string>
     <string name="jump_to_bottom">Jump to bottom</string>
     <string name="open_log">Open Log FIle</string>
     <string name="start_service_failed">Failed to start service. See logs for more...</string>
@@ -132,7 +132,7 @@
     <string name="background_help_message">If your phone does not open the correct screen automatically, open the app details page manually and allow background activity, auto-start, and battery optimization exemptions for Wsjtx Watcher.</string>
     <string name="auto_ignore_logged_qso">Auto-ignore the callsign after a logged QSO</string>
     <string name="qso_logged_notification_title">QSO logged</string>
-    <string name="qso_logged_notification_message">Logged QSO with %1$s</string>
-    <string name="qso_logged_notification_message_with_band">Logged QSO with %1$s on %2$s</string>
+    <string name="qso_logged_notification_message">Logged QSO with {0}</string>
+    <string name="qso_logged_notification_message_with_band">Logged QSO with {0} on {1}</string>
     <string name="notify_id3" translatable="false">9233</string>
 </resources>

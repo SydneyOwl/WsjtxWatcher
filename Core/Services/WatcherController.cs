@@ -241,27 +241,36 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
 
     private async Task ProcessDecodeQueueAsync(CancellationToken cancellationToken)
     {
-        try
+        while (!cancellationToken.IsCancellationRequested)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            PendingDecodeWorkItem firstItem;
+            try
             {
-                PendingDecodeWorkItem firstItem;
-                try
-                {
-                    firstItem = await _decodeQueue.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
+                firstItem = await _decodeQueue.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "Failed to read the next decode work item.");
+                continue;
+            }
 
+            try
+            {
                 var batch = await ReadBatchAsync(firstItem, cancellationToken).ConfigureAwait(false);
                 await ProcessDecodeBatchAsync(batch, cancellationToken).ConfigureAwait(false);
             }
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            Log.Error(exception, "Decode processing loop stopped unexpectedly.");
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "Failed to process a decode batch. Continuing with the next batch.");
+            }
         }
     }
 
@@ -313,15 +322,34 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
 
         if (gridUpdates.Count > 0)
         {
-            await _gridCacheStore.SaveManyAsync(gridUpdates, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await _gridCacheStore.SaveManyAsync(gridUpdates, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                Log.Warning(exception, "Failed to persist decoded grid updates.");
+            }
         }
 
         var acceptedMessages = new List<(DecodedRadioMessage Message, AppSettings Settings)>(batch.Count);
         foreach (var item in batch)
         {
-            var message = await _decodedMessageFactory
-                .CreateAsync(item.DecodeEvent, item.SettingsSnapshot, item.DialFrequencyHz, cancellationToken)
-                .ConfigureAwait(false);
+            DecodedRadioMessage message;
+            try
+            {
+                message = await _decodedMessageFactory
+                    .CreateAsync(item.DecodeEvent, item.SettingsSnapshot, item.DialFrequencyHz, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                Log.Warning(
+                    exception,
+                    "Failed to materialize decoded message for client {ClientId}.",
+                    item.DecodeEvent.ClientId);
+                continue;
+            }
 
             if (item.RunId == Interlocked.Read(ref _runId))
             {
@@ -334,19 +362,40 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
             return;
         }
 
-        await ApplyIgnoredStatusesAsync(acceptedMessages, cancellationToken).ConfigureAwait(false);
-
-        await _uiDispatcher.InvokeAsync(() =>
+        try
         {
-            foreach (var item in acceptedMessages)
+            await ApplyIgnoredStatusesAsync(acceptedMessages, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            Log.Warning(exception, "Failed to apply ignored-callsign state to a decode batch.");
+        }
+
+        try
+        {
+            await _uiDispatcher.InvokeAsync(() =>
             {
-                State.AddMessage(item.Message);
-            }
-        }).ConfigureAwait(false);
+                foreach (var item in acceptedMessages)
+                {
+                    State.AddMessage(item.Message);
+                }
+            }).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            Log.Warning(exception, "Failed to publish decoded messages to watcher state.");
+        }
 
         foreach (var item in acceptedMessages)
         {
-            await NotifyForMessageAsync(item.Message, item.Settings, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await NotifyForMessageAsync(item.Message, item.Settings, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                Log.Warning(exception, "Failed to deliver notifications for a decoded message.");
+            }
         }
     }
 

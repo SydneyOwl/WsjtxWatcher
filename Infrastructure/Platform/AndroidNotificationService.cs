@@ -88,10 +88,10 @@ public sealed class AndroidNotificationService : INotificationService
 
         _lastLoggedQsoNotificationAt = DateTimeOffset.UtcNow;
         var message = string.IsNullOrWhiteSpace(band)
-            ? FormatAndroidTemplate(
+            ? string.Format(
                 _application.GetString(Resource.String.qso_logged_notification_message),
                 callsign)
-            : FormatAndroidTemplate(
+            : string.Format(
                 _application.GetString(Resource.String.qso_logged_notification_message_with_band),
                 callsign,
                 band);
@@ -122,16 +122,5 @@ public sealed class AndroidNotificationService : INotificationService
             .Build();
 
         _notificationManager.Notify(notificationId, notification);
-    }
-
-    private static string FormatAndroidTemplate(string template, params string[] values)
-    {
-        var result = template;
-        for (var index = 0; index < values.Length; index++)
-        {
-            result = result.Replace($"%{index + 1}$s", values[index], StringComparison.Ordinal);
-        }
-
-        return result;
     }
 }
