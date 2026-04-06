@@ -29,6 +29,7 @@
     <string name="relay_probe_missing_tenant">Tenant ID 不能为空。</string>
     <string name="relay_probe_no_certificate">服务器没有返回证书。</string>
     <string name="relay_probe_cert_mismatch">服务器证书与已配对记录不一致，请先点“重新配对服务器”再重试。</string>
+    <string name="relay_frame_too_large">Relay 帧超过 1 MiB 限制。</string>
     <string name="relay_probe_timeout">连接测试超时，请检查地址、证书和网络。</string>
     <string name="relay_probe_success">连接测试成功。</string>
     <string name="relay_test_connection">测试连接</string>

@@ -28,6 +28,7 @@
     <string name="relay_probe_missing_tenant">Tenant ID is required.</string>
     <string name="relay_probe_no_certificate">The server did not provide a certificate.</string>
     <string name="relay_probe_cert_mismatch">The server certificate does not match the paired record. Tap "Re-pair server" and try again.</string>
+    <string name="relay_frame_too_large">The relay frame exceeds the 1 MiB limit.</string>
     <string name="relay_probe_timeout">The connection test timed out. Check the server URL, certificate, and network.</string>
     <string name="relay_probe_success">Connection test succeeded.</string>
     <string name="relay_test_connection">Test connection</string>

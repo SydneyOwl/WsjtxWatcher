@@ -205,6 +205,10 @@ public sealed class RelayConnectionProbe : IRelayConnectionProbe
             }
 
             stream.Write(buffer, 0, result.Count);
+            if (stream.Length > RelayProtocolLimits.MaxFrameBytes)
+            {
+                throw new InvalidOperationException(GetString(Resource.String.relay_frame_too_large));
+            }
             if (result.EndOfMessage)
             {
                 break;

@@ -1,11 +1,13 @@
 ﻿using System.Buffers.Binary;
 using System.Formats.Asn1;
+using System.Globalization;
 using System.Net.Security;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Google.Protobuf;
 using Serilog;
+using Android.App;
 using WsjtxRelay.Proto.V1;
 using WsjtxWatcher.Core.Contracts;
 using WsjtxWatcher.Core.Models;
@@ -24,6 +26,7 @@ public sealed class RelayWsjtGateway : IWsjtGateway
         TimeSpan.FromSeconds(30)
     ];
 
+    private readonly Application _application;
     private readonly ISettingsStore _settingsStore;
     private readonly RelayRuntimeState _runtimeState;
     private readonly IUiDispatcher _uiDispatcher;
@@ -42,8 +45,13 @@ public sealed class RelayWsjtGateway : IWsjtGateway
     private int _heartbeatTimeoutSec = 30;
     private string _observedFingerprint = string.Empty;
 
-    public RelayWsjtGateway(ISettingsStore settingsStore, RelayRuntimeState runtimeState, IUiDispatcher uiDispatcher)
+    public RelayWsjtGateway(
+        Application application,
+        ISettingsStore settingsStore,
+        RelayRuntimeState runtimeState,
+        IUiDispatcher uiDispatcher)
     {
+        _application = application;
         _settingsStore = settingsStore;
         _runtimeState = runtimeState;
         _uiDispatcher = uiDispatcher;
@@ -68,7 +76,7 @@ public sealed class RelayWsjtGateway : IWsjtGateway
             {
                 state.Reset(relayMode: true);
                 state.SetFingerprint(_settings.RelayTrustedFingerprint);
-                state.SetConnectionState(connecting: true, connected: false, status: "Connecting to relay server...");
+                state.SetConnectionState(connecting: true, connected: false, status: GetString(Resource.String.relay_connecting));
             }).ConfigureAwait(false);
 
             _runTask = Task.Run(() => RunAsync(_runCts.Token), _runCts.Token);
@@ -161,7 +169,7 @@ public sealed class RelayWsjtGateway : IWsjtGateway
             try
             {
                 await UpdateRuntimeAsync(state =>
-                    state.SetConnectionState(connecting: true, connected: false, status: "Connecting to relay server...")).ConfigureAwait(false);
+                    state.SetConnectionState(connecting: true, connected: false, status: GetString(Resource.String.relay_connecting))).ConfigureAwait(false);
                 await ConnectAndPumpAsync(cancellationToken).ConfigureAwait(false);
                 attempt = 0;
             }
@@ -176,7 +184,10 @@ public sealed class RelayWsjtGateway : IWsjtGateway
                 attempt += 1;
                 await UpdateRuntimeAsync(state =>
                 {
-                    state.SetConnectionState(connecting: false, connected: false, status: $"Reconnect in {delay.TotalSeconds:0}s");
+                    state.SetConnectionState(
+                        connecting: false,
+                        connected: false,
+                        status: GetFormattedString(Resource.String.relay_reconnect_in, delay.TotalSeconds.ToString("0", CultureInfo.CurrentCulture)));
                     state.LastNotice = exception.Message;
                 }).ConfigureAwait(false);
 
@@ -211,7 +222,10 @@ public sealed class RelayWsjtGateway : IWsjtGateway
 
         var serverHelloEnvelope = await ReceiveEnvelopeAsync(webSocket, cancellationToken).ConfigureAwait(false);
         var serverHello = serverHelloEnvelope.ServerHello
-                          ?? throw new InvalidOperationException($"Expected server_hello, received {serverHelloEnvelope.BodyCase}");
+                          ?? throw new InvalidOperationException(GetFormattedString(
+                              Resource.String.relay_expected_message,
+                              "server_hello",
+                              serverHelloEnvelope.BodyCase));
 
         _heartbeatIntervalSec = serverHello.HeartbeatIntervalSec > 0 ? (int)serverHello.HeartbeatIntervalSec : 10;
         _heartbeatTimeoutSec = serverHello.HeartbeatTimeoutSec >= serverHello.HeartbeatIntervalSec && serverHello.HeartbeatTimeoutSec > 0
@@ -237,13 +251,22 @@ public sealed class RelayWsjtGateway : IWsjtGateway
 
         var authEnvelope = await ReceiveEnvelopeAsync(webSocket, cancellationToken).ConfigureAwait(false);
         var authResult = authEnvelope.AuthResult
-                         ?? throw new InvalidOperationException($"Expected auth_result, received {authEnvelope.BodyCase}");
+                         ?? throw new InvalidOperationException(GetFormattedString(
+                             Resource.String.relay_expected_message,
+                             "auth_result",
+                             authEnvelope.BodyCase));
         if (!authResult.Ok)
         {
-            throw new InvalidOperationException($"Relay auth failed: {authResult.ErrorCode} {authResult.Message}".Trim());
+            var message = string.IsNullOrWhiteSpace(authResult.Message)
+                ? authResult.ErrorCode
+                : authResult.Message;
+            throw new InvalidOperationException(GetFormattedString(Resource.String.relay_auth_failed, message));
         }
 
-        await UpdateRuntimeAsync(state => state.SetConnectionState(connecting: false, connected: true, status: "Relay connected")).ConfigureAwait(false);
+        await UpdateRuntimeAsync(state => state.SetConnectionState(
+            connecting: false,
+            connected: true,
+            status: GetString(Resource.String.relay_connected))).ConfigureAwait(false);
 
         var receiveTask = Task.Run(() => ReceiveLoopAsync(webSocket, cancellationToken), cancellationToken);
         if (!string.IsNullOrWhiteSpace(_desiredSourceName))
@@ -259,7 +282,7 @@ public sealed class RelayWsjtGateway : IWsjtGateway
             await Task.Delay(TimeSpan.FromSeconds(_heartbeatIntervalSec), cancellationToken).ConfigureAwait(false);
             if (DateTimeOffset.UtcNow - _lastIncomingUtc > TimeSpan.FromSeconds(_heartbeatTimeoutSec))
             {
-                throw new TimeoutException("Relay heartbeat timed out.");
+                throw new TimeoutException(GetString(Resource.String.relay_heartbeat_timed_out));
             }
 
             await SendEnvelopeIfConnectedAsync(new Envelope
@@ -352,7 +375,7 @@ public sealed class RelayWsjtGateway : IWsjtGateway
         await UpdateRuntimeAsync(state =>
         {
             state.UpdateCatalog(sources, catalog.CurrentSourceName);
-            state.SetConnectionState(connecting: false, connected: true, status: "Relay connected");
+            state.SetConnectionState(connecting: false, connected: true, status: GetString(Resource.String.relay_connected));
         }).ConfigureAwait(false);
     }
 
@@ -459,7 +482,7 @@ public sealed class RelayWsjtGateway : IWsjtGateway
         }
     }
 
-    private static async Task<Envelope> ReceiveEnvelopeAsync(ClientWebSocket webSocket, CancellationToken cancellationToken)
+    private async Task<Envelope> ReceiveEnvelopeAsync(ClientWebSocket webSocket, CancellationToken cancellationToken)
     {
         using var stream = new MemoryStream();
         var buffer = new byte[16 * 1024];
@@ -468,10 +491,14 @@ public sealed class RelayWsjtGateway : IWsjtGateway
             var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken).ConfigureAwait(false);
             if (result.MessageType == WebSocketMessageType.Close)
             {
-                throw new WebSocketException("Relay websocket closed by server.");
+                throw new WebSocketException(GetString(Resource.String.relay_ws_closed));
             }
 
             stream.Write(buffer, 0, result.Count);
+            if (stream.Length > RelayProtocolLimits.MaxFrameBytes)
+            {
+                throw new InvalidOperationException(GetString(Resource.String.relay_frame_too_large));
+            }
             if (result.EndOfMessage)
             {
                 break;
@@ -480,7 +507,7 @@ public sealed class RelayWsjtGateway : IWsjtGateway
 
         if (stream.Length == 0)
         {
-            throw new InvalidOperationException("Received an empty relay frame.");
+            throw new InvalidOperationException(GetString(Resource.String.relay_empty_frame));
         }
 
         return Envelope.Parser.ParseFrom(stream.ToArray());
@@ -506,20 +533,20 @@ public sealed class RelayWsjtGateway : IWsjtGateway
         webSocket.Dispose();
     }
 
-    private static string ComputeSpkiFingerprint(X509Certificate2 certificate)
+    private string ComputeSpkiFingerprint(X509Certificate2 certificate)
     {
         var spki = ExportSubjectPublicKeyInfo(certificate);
         var hash = SHA256.HashData(spki);
         return Convert.ToHexString(hash);
     }
 
-    private static byte[] ExportSubjectPublicKeyInfo(X509Certificate2 certificate)
+    private byte[] ExportSubjectPublicKeyInfo(X509Certificate2 certificate)
     {
         var writer = new AsnWriter(AsnEncodingRules.DER);
         writer.PushSequence();
 
         writer.PushSequence();
-        writer.WriteObjectIdentifier(certificate.PublicKey.Oid?.Value ?? throw new InvalidOperationException("Certificate public key OID is missing."));
+        writer.WriteObjectIdentifier(certificate.PublicKey.Oid?.Value ?? throw new InvalidOperationException(GetString(Resource.String.relay_certificate_oid_missing)));
         var parameters = certificate.PublicKey.EncodedParameters.RawData;
         if (parameters.Length > 0)
         {
@@ -560,6 +587,16 @@ public sealed class RelayWsjtGateway : IWsjtGateway
         {
             hashAlgorithm.TransformBlock(text, 0, text.Length, null, 0);
         }
+    }
+
+    private string GetString(int resourceId)
+    {
+        return _application.GetString(resourceId) ?? string.Empty;
+    }
+
+    private string GetFormattedString(int resourceId, params object[] args)
+    {
+        return string.Format(CultureInfo.CurrentCulture, GetString(resourceId), args);
     }
 
     private static WsjtSessionEvent MapSessionActivity(SessionActivityEvent relayEvent)
