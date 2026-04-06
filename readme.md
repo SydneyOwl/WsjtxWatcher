@@ -73,9 +73,11 @@ Make sure the computer running WSJT-X / JTDX and the phone are on the same local
    - `Tenant ID`
 6. Save settings.
 7. Return to the main screen and tap `Start Service`.
-8. Open `Select source` and choose the relay source you want to monitor.
+8. Return to settings page and Open `Select source` and choose the relay source you want to monitor.
 
 If this is the first successful connection, the app will pair with the server certificate automatically by storing its fingerprint. If the server certificate changes later, use `Re-pair server` and connect again.
+
+![](./md_assets/page7.jpg)
 
 ## Settings Guide
 
