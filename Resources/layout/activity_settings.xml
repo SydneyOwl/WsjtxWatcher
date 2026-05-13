@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F2F6FB"
+    android:background="@color/m3_surface"
     android:fillViewport="true"
     android:padding="12dp">
 
@@ -22,7 +22,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/data_source"
-                android:textColor="@color/textview_message_color"
+                android:textColor="@color/m3_on_surface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -45,7 +45,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
                     android:text="@string/lan_ip_addr"
-                    android:textColor="@color/textview_message_color"
+                    android:textColor="@color/m3_on_surface"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -54,7 +54,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:textColor="@color/text_view_color"
+                    android:textColor="@color/m3_on_surface_variant"
                     android:textSize="16sp" />
 
                 <TextView
@@ -63,7 +63,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
                     android:text="@string/server_port"
-                    android:textColor="@color/textview_message_color"
+                    android:textColor="@color/m3_on_surface"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -84,11 +84,20 @@
                 android:visibility="gone">
 
                 <TextView
+                    android:id="@+id/relay_setup_help"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:text="@string/relay_setup_help"
+                    android:textColor="@color/m3_on_surface_variant"
+                    android:textSize="14sp" />
+
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
                     android:text="@string/relay_server_url"
-                    android:textColor="@color/textview_message_color"
+                    android:textColor="@color/m3_on_surface"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -97,7 +106,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:hint="@string/relay_server_url_hint"
                     android:inputType="textUri"
                     android:textSize="16sp" />
 
@@ -106,7 +114,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
                     android:text="@string/relay_shared_secret"
-                    android:textColor="@color/textview_message_color"
+                    android:textColor="@color/m3_on_surface"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -123,7 +131,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
                     android:text="@string/relay_tenant_id"
-                    android:textColor="@color/textview_message_color"
+                    android:textColor="@color/m3_on_surface"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -139,8 +147,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
-                    android:text="@string/relay_connection_status"
-                    android:textColor="@color/textview_message_color"
+                    android:text="@string/relay_current_status"
+                    android:textColor="@color/m3_on_surface"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -149,45 +157,83 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:textColor="@color/text_view_color"
+                    android:textColor="@color/m3_on_surface_variant"
                     android:textSize="15sp" />
 
-                <Button
-                    android:id="@+id/relay_test_connection_button"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/relay_pairing_status"
+                    android:textColor="@color/m3_on_surface"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/relay_pairing_status_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textColor="@color/m3_on_surface_variant"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/relay_selected_source_status"
+                    android:textColor="@color/m3_on_surface"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/relay_selected_source_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textColor="@color/m3_on_surface_variant"
+                    android:textSize="15sp" />
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="@string/relay_test_connection" />
+                    android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/relay_selected_source_button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="@string/relay_select_source" />
+                    <Button
+                        android:id="@+id/relay_test_connection_button"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/relay_test_connection" />
 
-                <Button
-                    android:id="@+id/relay_refresh_sources_button"
-                    android:layout_width="match_parent"
+                    <Button
+                        android:id="@+id/relay_selected_source_button"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:text="@string/relay_select_source" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/relay_advanced_actions_label"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="@string/relay_refresh_sources" />
+                    android:layout_marginTop="14dp"
+                    android:text="@string/relay_advanced_actions"
+                    android:textColor="@color/m3_on_surface"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/relay_clear_trust_button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="@string/relay_clear_trust" />
+                    android:layout_marginTop="8dp"
+                    android:text="@string/relay_clear_trust"
+                    android:visibility="gone" />
 
-                <TextView
-                    android:id="@+id/relay_usage_hint"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="@string/relay_usage_hint"
-                    android:textColor="@color/text_view_color"
-                    android:textSize="13sp" />
             </LinearLayout>
 
             <TextView
@@ -196,7 +242,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
                 android:text="@string/my_callsign"
-                android:textColor="@color/textview_message_color"
+                android:textColor="@color/m3_on_surface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -214,7 +260,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
                 android:text="@string/my_location"
-                android:textColor="@color/textview_message_color"
+                android:textColor="@color/m3_on_surface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -232,7 +278,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
                 android:text="@string/version_tap_hint"
-                android:textColor="@color/textview_message_color"
+                android:textColor="@color/m3_on_surface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -241,21 +287,44 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:textColor="@color/fromcall_is_qso_text_color"
+                android:textColor="@color/m3_primary"
                 android:textSize="16sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/settings_card_background"
+            android:orientation="vertical"
+            android:padding="16dp">
 
             <TextView
-                android:id="@+id/textViewLanguage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
                 android:text="@string/language"
-                android:textColor="@color/textview_message_color"
+                android:textColor="@color/m3_on_surface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
             <Spinner
                 android:id="@+id/language_spinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:spinnerMode="dropdown" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:text="@string/theme"
+                android:textColor="@color/m3_on_surface"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <Spinner
+                android:id="@+id/theme_spinner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
@@ -283,7 +352,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/when_callsign_included"
-                    android:textColor="@color/textview_message_color"
+                    android:textColor="@color/m3_on_surface"
                     android:textSize="16sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -328,7 +397,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:text="@string/watched_callsign_match_target"
-                android:textColor="@color/textview_message_color"
+                android:textColor="@color/m3_on_surface"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -343,7 +412,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginTop="18dp"
-                android:background="#1A4F6B89" />
+                android:background="@color/divider" />
 
             <TextView
                 android:id="@+id/on_call_all"
@@ -351,7 +420,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
                 android:text="@string/when_call_all"
-                android:textColor="@color/textview_message_color"
+                android:textColor="@color/m3_on_surface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -386,7 +455,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginTop="18dp"
-                android:background="#1A4F6B89" />
+                android:background="@color/divider" />
 
             <TextView
                 android:id="@+id/on_dxcc"
@@ -394,7 +463,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
                 android:text="@string/on_dxcc"
-                android:textColor="@color/textview_message_color"
+                android:textColor="@color/m3_on_surface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -438,7 +507,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:text="@string/selected_dxcc_match_target"
-                android:textColor="@color/textview_message_color"
+                android:textColor="@color/m3_on_surface"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -461,7 +530,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginTop="18dp"
-                android:background="#1A4F6B89" />
+                android:background="@color/divider" />
 
             <TextView
                 android:id="@+id/on_logged_qso"
@@ -469,7 +538,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
                 android:text="@string/on_logged_qso"
-                android:textColor="@color/textview_message_color"
+                android:textColor="@color/m3_on_surface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -512,7 +581,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/manage_ignored_callsigns"
-                android:textColor="@color/textview_message_color"
+                android:textColor="@color/m3_on_surface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -529,7 +598,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:text="@string/ignored_callsign_match_target"
-                android:textColor="@color/textview_message_color"
+                android:textColor="@color/m3_on_surface"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -564,6 +633,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/open_log" />
+
+            <Button
+                android:id="@+id/add_test_data"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/add_test_data"
+                android:visibility="gone" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -603,7 +680,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/explain_settings"
-                android:textColor="@color/textview_message_color"
+                android:textColor="@color/m3_on_surface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -613,7 +690,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:text="@string/no_power_save"
-                android:textColor="@color/text_view_color"
+                android:textColor="@color/m3_on_surface_variant"
                 android:textSize="15sp" />
 
             <TextView
@@ -622,7 +699,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:text="@string/white_list"
-                android:textColor="@color/textview_message_color"
+                android:textColor="@color/m3_on_surface"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -639,7 +716,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:text="@string/background"
-                android:textColor="@color/textview_message_color"
+                android:textColor="@color/m3_on_surface"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 

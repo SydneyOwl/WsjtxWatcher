@@ -77,7 +77,7 @@ public sealed class MainActivity : LocalizedActivity
         return true;
     }
 
-    public override bool OnMenuItemSelected(int featureId, IMenuItem? item)
+    public override bool OnOptionsItemSelected(IMenuItem? item)
     {
         switch (item?.ItemId)
         {
@@ -94,7 +94,7 @@ public sealed class MainActivity : LocalizedActivity
                 _viewModel.ClearMessages();
                 return true;
             default:
-                return item is not null && base.OnMenuItemSelected(featureId, item);
+                return item is not null && base.OnOptionsItemSelected(item);
         }
     }
 

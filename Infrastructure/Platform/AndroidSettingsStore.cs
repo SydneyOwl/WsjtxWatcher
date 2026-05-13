@@ -64,6 +64,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
             VibrateOnSelectedDxcc = _sharedPreferences.GetBoolean("vibrate_on_dxcc", false),
             VibrateOnLoggedQso = _sharedPreferences.GetBoolean("vibrate_on_logged_qso", false),
             AutoIgnoreLoggedQso = _sharedPreferences.GetBoolean("auto_ignore_logged_qso", true),
+            Theme = ParseTheme(_sharedPreferences.GetInt("theme", 0)),
             IgnoredCallsignMatchTarget = ignoredCallsignMatchTarget,
             WatchedCallsignMatchTarget = watchedCallsignMatchTarget,
             SelectedDxccMatchTarget = selectedDxccMatchTarget,
@@ -96,6 +97,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
         editor.PutBoolean("vibrate_on_dxcc", settings.VibrateOnSelectedDxcc);
         editor.PutBoolean("vibrate_on_logged_qso", settings.VibrateOnLoggedQso);
         editor.PutBoolean("auto_ignore_logged_qso", settings.AutoIgnoreLoggedQso);
+        editor.PutInt("theme", (int)settings.Theme);
         editor.PutInt("ignored_callsign_match_target", (int)settings.IgnoredCallsignMatchTarget);
         editor.PutInt("watched_callsign_match_target", (int)settings.WatchedCallsignMatchTarget);
         editor.PutInt("selected_dxcc_match_target", (int)settings.SelectedDxccMatchTarget);
@@ -140,6 +142,13 @@ public sealed class AndroidSettingsStore : ISettingsStore
         }
 
         return [CallsignPatternMatcher.CreateDefaultPattern(callsign)];
+    }
+
+    private static AppTheme ParseTheme(int value)
+    {
+        return Enum.IsDefined(typeof(AppTheme), value)
+            ? (AppTheme)value
+            : AppTheme.FollowSystem;
     }
 
     private static DataSourceType ParseDataSourceType(int value)

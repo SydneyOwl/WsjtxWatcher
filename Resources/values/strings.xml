@@ -10,9 +10,17 @@
     <string name="server_port">Server Port</string>
     <string name="relay_server_url">Server URL</string>
     <string name="relay_server_url_hint">wss://example.com:8443</string>
+    <string name="relay_setup_help">Fill in the relay server address, shared secret, and tenant ID provided by your relay service. Test the connection first, then choose which source you want this device to follow.</string>
     <string name="relay_shared_secret">Shared Secret</string>
     <string name="relay_tenant_id">Tenant ID</string>
     <string name="relay_connection_status">Relay status</string>
+    <string name="relay_current_status">Connection status</string>
+    <string name="relay_pairing_status">Server pairing</string>
+    <string name="relay_pairing_status_paired">Paired</string>
+    <string name="relay_pairing_status_not_paired">Not paired yet</string>
+    <string name="relay_selected_source_status">Current source</string>
+    <string name="relay_source_not_ready">Test the connection first, then choose a source.</string>
+    <string name="relay_advanced_actions">Advanced</string>
     <string name="relay_connecting">Connecting to relay server...</string>
     <string name="relay_connected">Relay connected</string>
     <string name="relay_reconnect_in">Reconnect in {0}s</string>
@@ -36,7 +44,6 @@
     <string name="relay_select_source">Select source</string>
     <string name="relay_refresh_sources">Refresh source list</string>
     <string name="relay_clear_trust">Re-pair server</string>
-    <string name="relay_usage_hint">Hint: leaving this page saves relay settings automatically. If the watcher service is not running, go back to the main screen and tap "Start service". If it is already running, the relay connection will reconnect automatically after save.</string>
     <string name="relay_source_unknown">No source selected</string>
     <string name="relay_source_picker_title">Select source</string>
     <string name="relay_source_picker_empty">No relay sources available yet.</string>
@@ -64,6 +71,10 @@
     <string name="low_reliability">Low Reliability</string>
     <string name="user_tx_period">User Tx Period</string>
     <string name="language">Language</string>
+    <string name="theme">Theme</string>
+    <string name="theme_follow_system">Follow System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
     <string name="simplified_chinese">Simplified Chinese</string>
     <string name="english">English</string>
     <string name="version">Version</string>
@@ -165,6 +176,8 @@
     <string name="ignored_callsign_page_status">Page {0} / {1}</string>
     <string name="jump_to_bottom">Jump to bottom</string>
     <string name="open_log">Open Log FIle</string>
+    <string name="add_test_data">Add test data</string>
+    <string name="test_data_added">Test data added.</string>
     <string name="start_service_failed">Failed to start service. See logs for more...</string>
     <string name="relay_test_success_manual_start">Connection test succeeded. The configuration is valid; go back to the main screen and tap "Start service" to receive relay data.</string>
     <string name="stop_service_failed">Failed to stop service. See logs for more...</string>

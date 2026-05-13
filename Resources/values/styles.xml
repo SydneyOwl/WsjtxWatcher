@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.AppCompat.Light">
+        <item name="colorAccent">@color/m3_primary</item>
+        <item name="colorPrimary">@color/m3_primary</item>
+        <item name="colorPrimaryDark">@color/m3_primary</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:textColorSecondary">@color/m3_on_surface</item>
+        <item name="android:textColorHint">@color/m3_on_surface</item>
+        <item name="actionBarStyle">@style/AppActionBar</item>
+    </style>
+
+    <style name="AppActionBar" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
+        <item name="android:background">@color/m3_primary</item>
+        <item name="titleTextColor">@color/m3_on_primary</item>
+        <item name="android:textColorSecondary">@color/m3_on_primary</item>
+    </style>
+</resources>

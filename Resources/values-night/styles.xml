@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight">
+        <item name="colorAccent">@color/m3_primary</item>
+        <item name="colorPrimary">@color/m3_primary</item>
+        <item name="colorPrimaryDark">@color/m3_primary_container</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="titleTextColor">@color/m3_on_primary</item>
+        <item name="colorControlNormal">@color/m3_on_primary</item>
+    </style>
+</resources>

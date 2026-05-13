@@ -5,13 +5,25 @@
               android:layout_height="wrap_content"
               android:layout_margin="1dp"
               android:background="@drawable/calling_list_cell_style"
-              android:orientation="vertical"
-              android:paddingStart="6dp"
-              android:paddingTop="4dp"
-              android:paddingEnd="6dp"
-              android:paddingBottom="4dp">
+              android:orientation="horizontal">
+
+    <View
+            android:id="@+id/periodIndicatorView"
+            android:layout_width="3dp"
+            android:layout_height="match_parent"
+            android:background="@color/period_odd_indicator" />
 
     <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingStart="6dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="6dp"
+            android:paddingBottom="4dp">
+
+        <LinearLayout
             android:id="@+id/topView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -68,9 +80,9 @@
                 android:gravity="end"
                 android:text="2144.074MHz"
                 android:textSize="9sp"/>
-    </LinearLayout>
+        </LinearLayout>
 
-    <LinearLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:baselineAligned="false"
@@ -89,12 +101,16 @@
 
         <TextView
                 android:id="@+id/lowTrustTextview"
-                android:layout_width="72dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:fontFamily="monospace"
                 android:maxLines="1"
-                android:paddingStart="10dp"
+                android:layout_marginStart="6dp"
+                android:paddingStart="6dp"
+                android:paddingTop="1dp"
+                android:paddingEnd="6dp"
+                android:paddingBottom="1dp"
                 android:text="FT4 LB"
                 android:textColor="@color/ruler_text_color"
                 android:textSize="10sp"/>
@@ -103,10 +119,11 @@
                 android:id="@+id/callToItemTextView"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="1.25"
                 android:ellipsize="end"
                 android:fontFamily="monospace"
                 android:maxLines="1"
+                android:paddingStart="6dp"
                 android:text="TOOOOO"
                 android:textAlignment="viewStart"
                 android:textSize="10sp"/>
@@ -115,11 +132,11 @@
                 android:id="@+id/CallFromItemTextView"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="1.25"
                 android:ellipsize="end"
                 android:fontFamily="monospace"
                 android:maxLines="1"
-                android:paddingStart="8dp"
+                android:paddingStart="6dp"
                 android:text="FROMMMMM"
                 android:textAlignment="viewStart"
                 android:textSize="10sp"
@@ -127,13 +144,14 @@
 
         <TextView
                 android:id="@+id/callingListDistTextView"
-                android:layout_width="64dp"
+                android:layout_width="50dp"
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:gravity="end"
-                android:paddingStart="8dp"
+                android:paddingStart="6dp"
                 android:text="12345km"
                 android:textSize="9sp"/>
+        </LinearLayout>
     </LinearLayout>
 
 </LinearLayout>
