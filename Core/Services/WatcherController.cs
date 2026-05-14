@@ -171,6 +171,121 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         await _uiDispatcher.InvokeAsync(State.ClearMessages).ConfigureAwait(false);
     }
 
+#if DEBUG
+    public Task AddTestDataAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var now = DateTime.UtcNow;
+        var messages = CreateDebugMessages(now, 120);
+
+        return _uiDispatcher.InvokeAsync(() =>
+        {
+            foreach (var message in messages)
+            {
+                State.AddMessage(message);
+            }
+
+            State.IsWaitingForConnection = false;
+            State.IsTimedOut = false;
+            State.CurrentFrequencyHz = 14_074_000d;
+        });
+    }
+
+    private static IReadOnlyList<DecodedRadioMessage> CreateDebugMessages(DateTime now, int count)
+    {
+        var modes = new[] { "FT8", "FT4", "MSK144", "Q65", "JT65", "FST4" };
+        var frequencies = new[] { 1_840_000d, 3_573_000d, 7_074_000d, 10_136_000d, 14_074_000d, 18_100_000d, 21_074_000d, 24_915_000d, 28_074_000d, 50_313_000d, 144_174_000d };
+        var grids = new[] { "PM95", "OL63", "CM87", "IO91", "JO65", "QF56", "FN20", "OF78", "RE66", "PL05", "KO85" };
+        var callsigns = new[]
+        {
+            ("JA1ABC", "Japan", "日本", 339),
+            ("BD7XYZ", "China", "中国", 318),
+            ("K6TEST", "United States", "美国", 291),
+            ("G4AAA", "England", "英格兰", 223),
+            ("DL1XYZ", "Germany", "德国", 230),
+            ("VK2HAM", "Australia", "澳大利亚", 150),
+            ("VE3FOX", "Canada", "加拿大", 1),
+            ("ZL3DX", "New Zealand", "新西兰", 170),
+            ("LU8RAD", "Argentina", "阿根廷", 100),
+            ("PY2FT8", "Brazil", "巴西", 108),
+            ("UA3CQ", "European Russia", "俄罗斯欧洲部分", 54)
+        };
+
+        var messages = new List<DecodedRadioMessage>(count + 2)
+        {
+            DecodedRadioMessage.CreateSystemNotice("Debug test data")
+        };
+
+        for (var index = 0; index < count; index++)
+        {
+            var mode = modes[index % modes.Length];
+            var frequency = frequencies[index % frequencies.Length];
+            var periodSeconds = ResolveDebugPeriodSeconds(mode);
+            var transmitter = callsigns[index % callsigns.Length];
+            var receiver = callsigns[(index + 3) % callsigns.Length];
+            var grid = grids[index % grids.Length];
+            var isCq = index % 5 == 0;
+            var isLowConfidence = index % 17 == 0;
+            var messageText = isCq
+                ? $"CQ {transmitter.Item1} {grid}"
+                : $"{receiver.Item1} {transmitter.Item1} {FormatDebugReport(index)}";
+
+            messages.Add(new DecodedRadioMessage
+            {
+                DecodeTimeUtc = FormatDebugTime(now.AddSeconds(-index * periodSeconds)),
+                Snr = -24 + index % 31,
+                OffsetTimeSeconds = ((index % 11) - 5) / 10d,
+                OffsetFrequencyHz = 300 + index * 37 % 2600,
+                Mode = mode,
+                Message = messageText,
+                LowConfidence = isLowConfidence,
+                OffAir = index % 29 == 0,
+                Receiver = isCq ? "CQ" : receiver.Item1,
+                Transmitter = transmitter.Item1,
+                TransmitterGrid = grid,
+                DistanceText = $"{350 + index * 113 % 13800} km",
+                ToCountryEnglish = isCq ? string.Empty : receiver.Item2,
+                ToCountryChinese = isCq ? string.Empty : receiver.Item3,
+                FromCountryEnglish = transmitter.Item2,
+                FromCountryChinese = transmitter.Item3,
+                ToCountryId = isCq ? 0 : receiver.Item4,
+                FromCountryId = transmitter.Item4,
+                ContainsMyCallsign = index % 13 == 0,
+                MatchesWatchedCallsignPattern = index % 19 == 0,
+                MatchesSelectedDxcc = index % 11 == 0,
+                DialFrequencyHz = frequency
+            });
+        }
+
+        messages.Add(DecodedRadioMessage.CreateUserTransmit("BD7XYZ K6TEST RR73", "FT8"));
+        return messages;
+    }
+
+    private static string FormatDebugTime(DateTime time)
+    {
+        return $"{time.Hour:D2}:{time.Minute:D2}:{time.Second:D2}";
+    }
+
+    private static int ResolveDebugPeriodSeconds(string mode)
+    {
+        return mode switch
+        {
+            "FT4" => 7,
+            "MSK144" => 15,
+            "Q65" => 30,
+            "JT65" => 60,
+            "FST4" => 120,
+            _ => 15
+        };
+    }
+
+    private static string FormatDebugReport(int index)
+    {
+        var report = -24 + index % 35;
+        return report >= 0 ? $"+{report:D2}" : report.ToString("D2");
+    }
+#endif
+
     public async Task OnSessionActivityAsync(WsjtSessionEvent sessionEvent, CancellationToken cancellationToken = default)
     {
         GetOrCreateSession(sessionEvent.ClientId);

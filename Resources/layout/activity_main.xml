@@ -38,7 +38,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:textColor="@color/textview_message_color"
+                android:textColor="@color/m3_on_surface"
                 android:textSize="14sp"/>
     </LinearLayout>
 
@@ -52,7 +52,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:paddingBottom="64dp"
                 android:scrollbars="vertical"/>
 
         <RelativeLayout
@@ -60,9 +59,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="top"
-                android:background="@color/transmitLayout_background"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_marginTop="2dp"
+                android:background="@drawable/transmit_bar_background"
+                android:elevation="4dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
                 android:visibility="visible">
 
             <ImageView
@@ -71,7 +74,8 @@
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
                     android:layout_marginStart="8dp"
-                    android:src="@drawable/ic_baseline_campaign_transmitting_red_24"/>
+                    android:src="@drawable/ic_baseline_campaign_transmitting_red_24"
+                    android:tint="@color/tx_bar_icon_tint"/>
 
             <TextView
                     android:id="@+id/transmittingMessageTextView"
@@ -82,19 +86,9 @@
                     android:layout_toEndOf="@id/imageView2"
                     android:stateListAnimator="@anim/view_blink"
                     android:text=""
-                    android:textColor="@color/bar_text_view_color"
+                    android:textColor="@color/tx_bar_text"
                     android:visibility="visible"/>
         </RelativeLayout>
-
-        <EditText
-                android:id="@+id/callsign_search"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:layout_marginTop="8dp"
-                android:hint="@string/search_callsign"
-                android:inputType="text"
-                android:maxLines="1"/>
 
         <ImageButton
                 android:id="@+id/jump_to_bottom_button"
@@ -102,13 +96,22 @@
                 android:layout_height="52dp"
                 android:layout_gravity="bottom|end"
                 android:layout_marginEnd="12dp"
-                android:layout_marginBottom="76dp"
+                android:layout_marginBottom="12dp"
                 android:background="@drawable/floating_jump_button_background"
                 android:contentDescription="@string/jump_to_bottom"
                 android:elevation="6dp"
                 android:padding="12dp"
                 android:src="@android:drawable/arrow_down_float"
-                android:tint="@android:color/white"/>
+                android:tint="@color/m3_on_primary"/>
     </FrameLayout>
+
+    <EditText
+            android:id="@+id/callsign_search"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="@string/search_callsign"
+            android:inputType="text"
+            android:maxLines="1"/>
 
 </LinearLayout>

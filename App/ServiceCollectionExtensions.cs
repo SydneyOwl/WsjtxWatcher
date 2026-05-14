@@ -24,6 +24,7 @@ internal static class ServiceCollectionExtensions
         services.AddSingleton<ICloudlogImportSettingsStore, AndroidCloudlogImportSettingsStore>();
         services.AddSingleton<AndroidAppLanguageManager>();
         services.AddSingleton<IAppLanguageService>(serviceProvider => serviceProvider.GetRequiredService<AndroidAppLanguageManager>());
+        services.AddSingleton<IAppThemeService, AndroidAppThemeManager>();
         services.AddSingleton<WatcherDatabaseService>();
         services.AddSingleton<ICountryCatalog, SqliteCountryCatalog>();
         services.AddSingleton<IGridCacheStore, SqliteGridCacheStore>();

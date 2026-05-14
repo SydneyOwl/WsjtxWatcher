@@ -94,6 +94,9 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool autoIgnoreLoggedQso = true;
 
+    [ObservableProperty]
+    private AppTheme selectedTheme = AppTheme.FollowSystem;
+
     public SettingsViewModel(
         ISettingsStore settingsStore,
         ICloudlogImportSettingsStore cloudlogImportSettingsStore,
@@ -171,6 +174,7 @@ public partial class SettingsViewModel : ObservableObject
         SelectedDxccMatchTarget = settings.SelectedDxccMatchTarget;
         AutoIgnoreLoggedQso = settings.AutoIgnoreLoggedQso;
         SelectedDxccCount = settings.PreferredDxccIds.Count;
+        SelectedTheme = settings.Theme;
         OnPropertyChanged(nameof(LocalIpAddress));
         OnPropertyChanged(nameof(IsIgnoringBatteryOptimizations));
         OnPropertyChanged(nameof(CurrentAppLanguage));
@@ -261,6 +265,13 @@ public partial class SettingsViewModel : ObservableObject
             (RelayTrustedFingerprint ?? string.Empty).Trim()), cancellationToken);
     }
 
+#if DEBUG
+    public Task AddTestDataAsync(CancellationToken cancellationToken = default)
+    {
+        return _watcherController.AddTestDataAsync(cancellationToken);
+    }
+#endif
+
     private AppSettings CreateSettings(
         IReadOnlyCollection<int> preferredDxccIds,
         IReadOnlyCollection<string> watchedCallsignPatterns)
@@ -290,7 +301,8 @@ public partial class SettingsViewModel : ObservableObject
             IgnoredCallsignMatchTarget = IgnoredCallsignMatchTarget,
             WatchedCallsignMatchTarget = WatchedCallsignMatchTarget,
             SelectedDxccMatchTarget = SelectedDxccMatchTarget,
-            PreferredDxccIds = new HashSet<int>(preferredDxccIds)
+            PreferredDxccIds = new HashSet<int>(preferredDxccIds),
+            Theme = SelectedTheme
         };
     }
 

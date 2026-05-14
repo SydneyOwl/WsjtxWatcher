@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F2F6FB"
+    android:background="@color/m3_surface"
     android:orientation="vertical"
     android:padding="12dp">
 
@@ -10,7 +10,7 @@
         android:id="@+id/relay_source_page_status"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/textview_message_color"
+        android:textColor="@color/m3_on_surface"
         android:textSize="15sp"
         android:textStyle="bold" />
 
@@ -36,7 +36,7 @@
         android:gravity="center"
         android:padding="12dp"
         android:text="@string/relay_source_picker_empty"
-        android:textColor="@color/text_view_color"
+        android:textColor="@color/m3_on_surface_variant"
         android:textSize="15sp"
         android:visibility="gone" />
 </LinearLayout>

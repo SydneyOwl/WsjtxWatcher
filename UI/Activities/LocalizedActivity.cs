@@ -1,11 +1,11 @@
-using Android.App;
 using Android.Content;
+using AndroidX.AppCompat.App;
 using WsjtxWatcher.App;
 using WsjtxWatcher.Infrastructure.Platform;
 
 namespace WsjtxWatcher.UI.Activities;
 
-public abstract class LocalizedActivity : Activity
+public abstract class LocalizedActivity : AppCompatActivity
 {
     protected override void AttachBaseContext(Context? @base)
     {

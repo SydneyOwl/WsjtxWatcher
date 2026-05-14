@@ -48,6 +48,7 @@ public sealed class RelaySourceSelectionActivity : LocalizedActivity
         };
 
         Render();
+        _ = _viewModel.RefreshAsync();
     }
 
     protected override void OnDestroy()

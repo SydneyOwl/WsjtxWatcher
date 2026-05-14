@@ -28,6 +28,7 @@
         <PackageReference Include="WsjtxUtils.WsjtxMessages" Version="1.0.0.69" />
         <PackageReference Include="WsjtxUtils.WsjtxUdpServer" Version="1.0.0.69" />
         <PackageReference Include="Xamarin.AndroidX.RecyclerView" Version="1.3.2.10" />
+        <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.7.0.5" />
     </ItemGroup>
     <ItemGroup>
       <Compile Include="App\**\*.cs" />

@@ -25,6 +25,7 @@ public sealed class AppSettings
     public IgnoredCallsignMatchTarget IgnoredCallsignMatchTarget { get; set; } = IgnoredCallsignMatchTarget.TransmitterOnly;
     public WatchedCallsignMatchTarget WatchedCallsignMatchTarget { get; set; } = WatchedCallsignMatchTarget.TransmitterOnly;
     public SelectedDxccMatchTarget SelectedDxccMatchTarget { get; set; } = SelectedDxccMatchTarget.TransmitterOnly;
+    public AppTheme Theme { get; set; } = AppTheme.FollowSystem;
     public HashSet<int> PreferredDxccIds { get; set; } = new(DefaultPreferredDxccIds);
 
     public static IReadOnlyCollection<int> DefaultPreferredDxccIds { get; } = new[]
@@ -64,6 +65,7 @@ public sealed class AppSettings
             VibrateOnAnyMessage = VibrateOnAnyMessage,
             VibrateOnSelectedDxcc = VibrateOnSelectedDxcc,
             VibrateOnLoggedQso = VibrateOnLoggedQso,
+            Theme = Theme,
             AutoIgnoreLoggedQso = AutoIgnoreLoggedQso,
             IgnoredCallsignMatchTarget = IgnoredCallsignMatchTarget,
             WatchedCallsignMatchTarget = WatchedCallsignMatchTarget,

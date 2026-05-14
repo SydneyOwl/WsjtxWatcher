@@ -1,5 +1,6 @@
 using Android.App;
 using Serilog;
+using WsjtxWatcher.Core.Contracts;
 using WsjtxWatcher.Infrastructure.Platform;
 
 namespace WsjtxWatcher.App;
@@ -40,5 +41,6 @@ public sealed class WsjtxWatcherApplication : Application
 
         AppHost.Initialize(this);
         AppHost.Current.GetRequiredService<AndroidAppLanguageManager>().ApplyCurrentLanguage();
+        _ = AppHost.Current.GetRequiredService<IAppThemeService>();
     }
 }
