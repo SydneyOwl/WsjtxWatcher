@@ -2,7 +2,7 @@ namespace WsjtxWatcher.Core.Models;
 
 public enum AlertRuleKind
 {
-    MyCall,
+    WatchedCallsign,
     AnyMessage,
     SelectedDxcc,
     LoggedQso

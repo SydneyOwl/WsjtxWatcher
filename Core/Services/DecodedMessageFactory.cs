@@ -32,14 +32,16 @@ public sealed class DecodedMessageFactory
             : await _countryCatalog.FindCountryByCallsignAsync(participants.Receiver, cancellationToken).ConfigureAwait(false);
         var effectiveFrequencyHz = decodeEvent.ReportedFrequencyHz > 0d ? decodeEvent.ReportedFrequencyHz : dialFrequencyHz;
         var containsMyCallsign = CallsignPatternMatcher.ContainsCallsign(messageText, settings.MyCallsign);
-        var matchesWatchedCallsignPattern = MatchesWatchedCallsignTarget(
-            settings.WatchedCallsignMatchTarget,
-            MatchesCallsignPattern(participants.Transmitter, settings.WatchedCallsignPatterns),
-            MatchesCallsignPattern(participants.Receiver, settings.WatchedCallsignPatterns));
-        var matchesSelectedDxcc = MatchesSelectedDxccTarget(
-            settings.SelectedDxccMatchTarget,
-            MatchesPreferredDxcc(fromCountry, settings.PreferredDxccIds),
-            MatchesPreferredDxcc(toCountry, settings.PreferredDxccIds));
+        var previewMessage = new DecodedRadioMessage
+        {
+            Message = messageText,
+            Receiver = participants.Receiver,
+            Transmitter = participants.Transmitter,
+            ToCountryId = toCountry?.Id ?? 0,
+            FromCountryId = fromCountry?.Id ?? 0
+        };
+        var matchesWatchedCallsignPattern = AlertRuleMatcher.MatchesAnyWatchedCallsignRule(settings, previewMessage);
+        var matchesSelectedDxcc = AlertRuleMatcher.MatchesAnySelectedDxccRule(settings, previewMessage);
 
         return new DecodedRadioMessage
         {
@@ -137,39 +139,4 @@ public sealed class DecodedMessageFactory
         return $"{time.Hours:D2}:{time.Minutes:D2}:{time.Seconds:D2}";
     }
 
-    private static bool MatchesCallsignPattern(string callsign, IEnumerable<string> patterns)
-    {
-        return !string.IsNullOrWhiteSpace(callsign) && CallsignPatternMatcher.IsMatch(callsign, patterns);
-    }
-
-    private static bool MatchesPreferredDxcc(CountryInfo? country, IReadOnlyCollection<int> preferredDxccIds)
-    {
-        return country is not null && preferredDxccIds.Contains(country.Id);
-    }
-
-    private static bool MatchesWatchedCallsignTarget(
-        WatchedCallsignMatchTarget matchTarget,
-        bool transmitterMatch,
-        bool receiverMatch)
-    {
-        return matchTarget switch
-        {
-            WatchedCallsignMatchTarget.ReceiverOnly => receiverMatch,
-            WatchedCallsignMatchTarget.ReceiverOrTransmitter => receiverMatch || transmitterMatch,
-            _ => transmitterMatch
-        };
-    }
-
-    private static bool MatchesSelectedDxccTarget(
-        SelectedDxccMatchTarget matchTarget,
-        bool transmitterMatch,
-        bool receiverMatch)
-    {
-        return matchTarget switch
-        {
-            SelectedDxccMatchTarget.ReceiverOnly => receiverMatch,
-            SelectedDxccMatchTarget.ReceiverOrTransmitter => receiverMatch || transmitterMatch,
-            _ => transmitterMatch
-        };
-    }
 }

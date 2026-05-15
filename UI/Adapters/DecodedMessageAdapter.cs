@@ -492,17 +492,17 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
 
     private static bool IsAnyMessageHighlightEnabled(AppSettings settings)
     {
-        return settings.NotifyOnAnyMessage || settings.VibrateOnAnyMessage;
+        return settings.HasEnabledAlertRule(AlertRuleKind.AnyMessage);
     }
 
     private static bool IsWatchedCallsignHighlightEnabled(AppSettings settings)
     {
-        return settings.NotifyOnMyCall || settings.VibrateOnMyCall;
+        return settings.HasEnabledAlertRule(AlertRuleKind.WatchedCallsign);
     }
 
     private static bool IsDxccHighlightEnabled(AppSettings settings)
     {
-        return settings.NotifyOnSelectedDxcc || settings.VibrateOnSelectedDxcc;
+        return settings.HasEnabledAlertRule(AlertRuleKind.SelectedDxcc);
     }
 
     private static int GetModeColor(string mode)

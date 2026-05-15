@@ -30,10 +30,11 @@ public partial class DxccSelectionViewModel : ObservableObject
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
         var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
+        var rule = AlertRuleCatalog.GetRequiredRule(settings, AlertRuleCatalog.SelectedDxccRuleId);
         await _uiDispatcher.InvokeAsync(() =>
         {
             _selectedIds.Clear();
-            _selectedIds.UnionWith(settings.PreferredDxccIds);
+            _selectedIds.UnionWith(rule.SelectedDxccIds);
             SearchText = string.Empty;
         }).ConfigureAwait(false);
 
@@ -150,7 +151,9 @@ public partial class DxccSelectionViewModel : ObservableObject
     private async Task SaveAsync(HashSet<int> selectedIdsSnapshot, CancellationToken cancellationToken)
     {
         var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-        settings.PreferredDxccIds = new HashSet<int>(selectedIdsSnapshot);
+        var rule = AlertRuleCatalog.GetRequiredRule(settings, AlertRuleCatalog.SelectedDxccRuleId);
+        rule.SelectedDxccIds = new HashSet<int>(selectedIdsSnapshot);
+        AlertRuleCatalog.UpsertRule(settings, rule);
         await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(false);
     }
 }
