@@ -26,8 +26,49 @@
             android:text="@string/open_notification_settings"
             android:visibility="gone" />
 
+        <Button
+            android:id="@+id/new_custom_rule"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/new_custom_rule" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="@string/system_rules_section"
+            android:textColor="@color/m3_on_surface"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
         <LinearLayout
-            android:id="@+id/alert_rule_list"
+            android:id="@+id/system_rule_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="@string/custom_rules_section"
+            android:textColor="@color/m3_on_surface"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/empty_custom_rules"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/no_custom_rules"
+            android:textColor="@color/m3_on_surface_variant"
+            android:textSize="14sp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/custom_rule_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" />

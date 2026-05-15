@@ -9,6 +9,7 @@ namespace WsjtxWatcher.Infrastructure.Platform;
 public sealed class AndroidSettingsStore : ISettingsStore
 {
     private const string StorageKey = "8fdad8ad";
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly ISharedPreferences _sharedPreferences;
 
     public AndroidSettingsStore(Application application)
@@ -18,13 +19,6 @@ public sealed class AndroidSettingsStore : ISettingsStore
 
     public Task<AppSettings> LoadAsync(CancellationToken cancellationToken = default)
     {
-        var ignoredCallsignMatchTargetValue = _sharedPreferences.GetInt(
-            "ignored_callsign_match_target",
-            (int)IgnoredCallsignMatchTarget.TransmitterOnly);
-        var ignoredCallsignMatchTarget = Enum.IsDefined(typeof(IgnoredCallsignMatchTarget), ignoredCallsignMatchTargetValue)
-            ? (IgnoredCallsignMatchTarget)ignoredCallsignMatchTargetValue
-            : IgnoredCallsignMatchTarget.TransmitterOnly;
-
         var settings = new AppSettings
         {
             DataSourceType = ParseDataSourceType(_sharedPreferences.GetInt("data_source_type", (int)DataSourceType.Udp)),
@@ -39,8 +33,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
             MyGrid = _sharedPreferences.GetString("grid", string.Empty) ?? string.Empty,
             AlertRules = LoadAlertRules(),
             AutoIgnoreLoggedQso = _sharedPreferences.GetBoolean("auto_ignore_logged_qso", true),
-            Theme = ParseTheme(_sharedPreferences.GetInt("theme", 0)),
-            IgnoredCallsignMatchTarget = ignoredCallsignMatchTarget
+            Theme = ParseTheme(_sharedPreferences.GetInt("theme", 0))
         };
 
         return Task.FromResult(settings);
@@ -59,10 +52,9 @@ public sealed class AndroidSettingsStore : ISettingsStore
         editor.PutString("language", settings.Language);
         editor.PutString("callsign", settings.MyCallsign);
         editor.PutString("grid", settings.MyGrid);
-        editor.PutString("alert_rules", JsonSerializer.Serialize(AlertRuleCatalog.Normalize(settings.AlertRules)));
+        editor.PutString("alert_rules", JsonSerializer.Serialize(AlertRuleCatalog.NormalizeCustomRules(settings.AlertRules), JsonOptions));
         editor.PutBoolean("auto_ignore_logged_qso", settings.AutoIgnoreLoggedQso);
         editor.PutInt("theme", (int)settings.Theme);
-        editor.PutInt("ignored_callsign_match_target", (int)settings.IgnoredCallsignMatchTarget);
         if (!editor.Commit())
         {
             throw new InvalidOperationException("Failed to persist application settings.");
@@ -79,6 +71,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
         {
             throw new InvalidOperationException("Failed to clear application settings.");
         }
+
         return SaveAsync(new AppSettings(), cancellationToken);
     }
 
@@ -89,15 +82,15 @@ public sealed class AndroidSettingsStore : ISettingsStore
         {
             try
             {
-                var rules = JsonSerializer.Deserialize<List<AlertRule>>(json);
-                return AlertRuleCatalog.Normalize(rules);
+                var rules = JsonSerializer.Deserialize<List<AlertRule>>(json, JsonOptions);
+                return AlertRuleCatalog.NormalizeCustomRules(rules);
             }
             catch (JsonException)
             {
             }
         }
 
-        return AlertRuleCatalog.CreateDefaultRules();
+        return [];
     }
 
     private static AppTheme ParseTheme(int value)

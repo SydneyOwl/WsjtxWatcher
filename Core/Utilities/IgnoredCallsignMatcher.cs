@@ -62,52 +62,6 @@ public static class IgnoredCallsignMatcher
         return !string.IsNullOrWhiteSpace(key) && matchedLookupKeys.Contains(key);
     }
 
-    public static void AddLookupKeys(
-        ISet<string> lookupKeys,
-        DecodedRadioMessage message,
-        IgnoredCallsignMatchTarget matchTarget)
-    {
-        var band = NormalizeBand(RadioBandUtility.GetBandName(message.DialFrequencyHz));
-        if (string.IsNullOrWhiteSpace(band) || matchTarget == IgnoredCallsignMatchTarget.Disabled)
-        {
-            return;
-        }
-
-        switch (matchTarget)
-        {
-            case IgnoredCallsignMatchTarget.ReceiverOnly:
-                AddLookupKey(lookupKeys, message.Receiver, band);
-                break;
-            case IgnoredCallsignMatchTarget.ReceiverOrTransmitter:
-                AddLookupKey(lookupKeys, message.Receiver, band);
-                AddLookupKey(lookupKeys, message.Transmitter, band);
-                break;
-            default:
-                AddLookupKey(lookupKeys, message.Transmitter, band);
-                break;
-        }
-    }
-
-    public static bool IsIgnored(
-        DecodedRadioMessage message,
-        IReadOnlySet<string> matchedLookupKeys,
-        IgnoredCallsignMatchTarget matchTarget)
-    {
-        var band = NormalizeBand(RadioBandUtility.GetBandName(message.DialFrequencyHz));
-        if (string.IsNullOrWhiteSpace(band))
-        {
-            return false;
-        }
-
-        return matchTarget switch
-        {
-            IgnoredCallsignMatchTarget.Disabled => false,
-            IgnoredCallsignMatchTarget.ReceiverOnly => Contains(matchedLookupKeys, message.Receiver, band),
-            IgnoredCallsignMatchTarget.ReceiverOrTransmitter => Contains(matchedLookupKeys, message.Receiver, band) || Contains(matchedLookupKeys, message.Transmitter, band),
-            _ => Contains(matchedLookupKeys, message.Transmitter, band)
-        };
-    }
-
     public static string CreateLookupKey(string? callsign, string? band)
     {
         var normalizedCallsign = NormalizeCallsign(callsign);
@@ -119,16 +73,6 @@ public static class IgnoredCallsignMatcher
 
         return string.Concat(normalizedBand, "|", normalizedCallsign);
     }
-
-    private static void AddLookupKey(ISet<string> lookupKeys, string? callsign, string band)
-    {
-        var key = CreateLookupKey(callsign, band);
-        if (!string.IsNullOrWhiteSpace(key))
-        {
-            lookupKeys.Add(key);
-        }
-    }
-
     private sealed class IgnoredCallsignEntryComparer : IEqualityComparer<IgnoredCallsignEntry>
     {
         public static IgnoredCallsignEntryComparer Instance { get; } = new();

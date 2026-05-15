@@ -12,9 +12,8 @@ public sealed class AppSettings
     public string Language { get; set; } = string.Empty;
     public string MyCallsign { get; set; } = string.Empty;
     public string MyGrid { get; set; } = string.Empty;
-    public List<AlertRule> AlertRules { get; set; } = AlertRuleCatalog.CreateDefaultRules();
+    public List<AlertRule> AlertRules { get; set; } = [];
     public bool AutoIgnoreLoggedQso { get; set; } = true;
-    public IgnoredCallsignMatchTarget IgnoredCallsignMatchTarget { get; set; } = IgnoredCallsignMatchTarget.TransmitterOnly;
     public AppTheme Theme { get; set; } = AppTheme.FollowSystem;
 
     public AppSettings Clone()
@@ -31,18 +30,9 @@ public sealed class AppSettings
             Language = Language,
             MyCallsign = MyCallsign,
             MyGrid = MyGrid,
-            AlertRules = AlertRuleCatalog.Normalize(AlertRules),
+            AlertRules = AlertRuleCatalog.NormalizeCustomRules(AlertRules),
             Theme = Theme,
-            AutoIgnoreLoggedQso = AutoIgnoreLoggedQso,
-            IgnoredCallsignMatchTarget = IgnoredCallsignMatchTarget
+            AutoIgnoreLoggedQso = AutoIgnoreLoggedQso
         };
-    }
-
-    public bool HasEnabledAlertRule(AlertRuleKind kind)
-    {
-        return AlertRules.Any(rule =>
-            rule.Kind == kind &&
-            rule.IsEnabled &&
-            (rule.SendNotification || rule.Vibrate));
     }
 }

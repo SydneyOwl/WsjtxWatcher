@@ -18,13 +18,6 @@ namespace WsjtxWatcher.UI.Activities;
 public sealed class SettingsActivity : LocalizedActivity
 {
     private const string RepositoryUrl = "https://github.com/sydneyowl/wsjtxwatcher";
-    private readonly IgnoredCallsignMatchTarget[] _ignoredCallsignMatchTargets =
-    [
-        IgnoredCallsignMatchTarget.Disabled,
-        IgnoredCallsignMatchTarget.TransmitterOnly,
-        IgnoredCallsignMatchTarget.ReceiverOnly,
-        IgnoredCallsignMatchTarget.ReceiverOrTransmitter
-    ];
     private readonly DataSourceType[] _dataSourceTypes = [DataSourceType.Udp, DataSourceType.Relay];
     private readonly AppLanguage[] _supportedLanguages = [AppLanguage.SimplifiedChinese, AppLanguage.English];
     private readonly AppTheme[] _themeTypes = [AppTheme.FollowSystem, AppTheme.Light, AppTheme.Dark];
@@ -36,7 +29,6 @@ public sealed class SettingsActivity : LocalizedActivity
     private Button _addWhitelistButton = null!;
     private EditText _callsignValue = null!;
     private Spinner _dataSourceSpinner = null!;
-    private Spinner _ignoredCallsignMatchTargetSpinner = null!;
     private TextView _ipAddressValue = null!;
     private Button _configureAlertRulesButton = null!;
     private Button _manageIgnoredCallsignsButton = null!;
@@ -77,7 +69,6 @@ public sealed class SettingsActivity : LocalizedActivity
         _isBinding = true;
         BindViews();
         InitializeDataSourceSpinner();
-        InitializeIgnoredCallsignMatchTargetSpinner();
         InitializeLanguageSpinner();
         InitializeThemeSpinner();
         BindEvents();
@@ -133,7 +124,6 @@ public sealed class SettingsActivity : LocalizedActivity
         _callsignValue = FindViewById<EditText>(Resource.Id.callsign_value)!;
         _locationValue = FindViewById<EditText>(Resource.Id.location_value)!;
         _versionValue = FindViewById<TextView>(Resource.Id.version_value)!;
-        _ignoredCallsignMatchTargetSpinner = FindViewById<Spinner>(Resource.Id.ignored_callsign_match_target_spinner)!;
         _languageSpinner = FindViewById<Spinner>(Resource.Id.language_spinner)!;
         _themeSpinner = FindViewById<Spinner>(Resource.Id.theme_spinner)!;
         _manageIgnoredCallsignsButton = FindViewById<Button>(Resource.Id.manage_ignored_callsigns)!;
@@ -154,14 +144,6 @@ public sealed class SettingsActivity : LocalizedActivity
         var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, labels);
         adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
         _dataSourceSpinner.Adapter = adapter;
-    }
-
-    private void InitializeIgnoredCallsignMatchTargetSpinner()
-    {
-        var labels = _ignoredCallsignMatchTargets.Select(GetIgnoredCallsignMatchTargetLabel).ToArray();
-        var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, labels);
-        adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
-        _ignoredCallsignMatchTargetSpinner.Adapter = adapter;
     }
 
     private void InitializeLanguageSpinner()
@@ -238,16 +220,6 @@ public sealed class SettingsActivity : LocalizedActivity
             var selectedTheme = _themeTypes[Math.Clamp(args.Position, 0, _themeTypes.Length - 1)];
             _viewModel.SelectedTheme = selectedTheme;
             _themeService.ApplyTheme(selectedTheme);
-        };
-
-        _ignoredCallsignMatchTargetSpinner.ItemSelected += (_, args) =>
-        {
-            if (_isBinding)
-            {
-                return;
-            }
-
-            _viewModel.IgnoredCallsignMatchTarget = _ignoredCallsignMatchTargets[Math.Clamp(args.Position, 0, _ignoredCallsignMatchTargets.Length - 1)];
         };
 
         _portValue.TextChanged += (_, _) =>
@@ -413,7 +385,6 @@ public sealed class SettingsActivity : LocalizedActivity
             _versionValue.PaintFlags |= PaintFlags.UnderlineText;
             _languageSpinner.SetSelection(GetLanguageIndex(_viewModel.SelectedLanguage));
             _themeSpinner.SetSelection(GetThemeIndex(_viewModel.SelectedTheme));
-            _ignoredCallsignMatchTargetSpinner.SetSelection(GetIgnoredCallsignMatchTargetIndex(_viewModel.IgnoredCallsignMatchTarget));
             _manageIgnoredCallsignsButton.Text = $"{GetString(Resource.String.manage_ignored_callsigns)} ({_viewModel.IgnoredCallsignCount})";
             _autoIgnoreLoggedQsoCheckbox.Checked = _viewModel.AutoIgnoreLoggedQso;
             UpdateDataSourceSectionVisibility();
@@ -466,23 +437,6 @@ public sealed class SettingsActivity : LocalizedActivity
             AppTheme.Light => GetString(Resource.String.theme_light),
             AppTheme.Dark => GetString(Resource.String.theme_dark),
             _ => GetString(Resource.String.theme_follow_system)
-        };
-    }
-
-    private int GetIgnoredCallsignMatchTargetIndex(IgnoredCallsignMatchTarget matchTarget)
-    {
-        var index = Array.IndexOf(_ignoredCallsignMatchTargets, matchTarget);
-        return index >= 0 ? index : 0;
-    }
-
-    private string GetIgnoredCallsignMatchTargetLabel(IgnoredCallsignMatchTarget matchTarget)
-    {
-        return matchTarget switch
-        {
-            IgnoredCallsignMatchTarget.Disabled => GetString(Resource.String.ignored_callsign_match_target_disabled),
-            IgnoredCallsignMatchTarget.ReceiverOnly => GetString(Resource.String.ignored_callsign_match_target_receiver),
-            IgnoredCallsignMatchTarget.ReceiverOrTransmitter => GetString(Resource.String.ignored_callsign_match_target_both),
-            _ => GetString(Resource.String.ignored_callsign_match_target_transmitter)
         };
     }
 

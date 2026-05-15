@@ -394,23 +394,6 @@
                 android:layout_marginTop="10dp"
                 android:text="@string/manage_ignored_callsigns" />
 
-            <TextView
-                android:id="@+id/ignored_callsign_match_target_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/ignored_callsign_match_target"
-                android:textColor="@color/m3_on_surface"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <Spinner
-                android:id="@+id/ignored_callsign_match_target_spinner"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:spinnerMode="dropdown" />
-
             <CheckBox
                 android:id="@+id/auto_ignore_logged_qso_checkbox"
                 android:layout_width="match_parent"

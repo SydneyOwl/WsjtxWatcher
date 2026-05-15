@@ -54,9 +54,6 @@ public partial class SettingsViewModel : ObservableObject
     private int ignoredCallsignCount;
 
     [ObservableProperty]
-    private IgnoredCallsignMatchTarget ignoredCallsignMatchTarget = IgnoredCallsignMatchTarget.TransmitterOnly;
-
-    [ObservableProperty]
     private bool autoIgnoreLoggedQso = true;
 
     [ObservableProperty]
@@ -125,7 +122,6 @@ public partial class SettingsViewModel : ObservableObject
         MyCallsign = settings.MyCallsign;
         MyGrid = settings.MyGrid;
         IgnoredCallsignCount = await ignoredCallsignCountTask.ConfigureAwait(false);
-        IgnoredCallsignMatchTarget = settings.IgnoredCallsignMatchTarget;
         AutoIgnoreLoggedQso = settings.AutoIgnoreLoggedQso;
         SelectedTheme = settings.Theme;
         OnPropertyChanged(nameof(LocalIpAddress));
@@ -235,9 +231,8 @@ public partial class SettingsViewModel : ObservableObject
             Language = SelectedLanguage.ToStorageValue(),
             MyCallsign = (MyCallsign ?? string.Empty).Trim().ToUpperInvariant(),
             MyGrid = (MyGrid ?? string.Empty).Trim().ToUpperInvariant(),
-            AlertRules = AlertRuleCatalog.Normalize(alertRules),
+            AlertRules = AlertRuleCatalog.NormalizeCustomRules(alertRules),
             AutoIgnoreLoggedQso = AutoIgnoreLoggedQso,
-            IgnoredCallsignMatchTarget = IgnoredCallsignMatchTarget,
             Theme = SelectedTheme
         };
     }

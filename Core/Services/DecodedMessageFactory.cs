@@ -31,17 +31,8 @@ public sealed class DecodedMessageFactory
             ? null
             : await _countryCatalog.FindCountryByCallsignAsync(participants.Receiver, cancellationToken).ConfigureAwait(false);
         var effectiveFrequencyHz = decodeEvent.ReportedFrequencyHz > 0d ? decodeEvent.ReportedFrequencyHz : dialFrequencyHz;
+        var currentBand = RadioBandUtility.GetBandName(effectiveFrequencyHz);
         var containsMyCallsign = CallsignPatternMatcher.ContainsCallsign(messageText, settings.MyCallsign);
-        var previewMessage = new DecodedRadioMessage
-        {
-            Message = messageText,
-            Receiver = participants.Receiver,
-            Transmitter = participants.Transmitter,
-            ToCountryId = toCountry?.Id ?? 0,
-            FromCountryId = fromCountry?.Id ?? 0
-        };
-        var matchesWatchedCallsignPattern = AlertRuleMatcher.MatchesAnyWatchedCallsignRule(settings, previewMessage);
-        var matchesSelectedDxcc = AlertRuleMatcher.MatchesAnySelectedDxccRule(settings, previewMessage);
 
         return new DecodedRadioMessage
         {
@@ -64,9 +55,8 @@ public sealed class DecodedMessageFactory
             ToCountryId = toCountry?.Id ?? 0,
             FromCountryId = fromCountry?.Id ?? 0,
             ContainsMyCallsign = containsMyCallsign,
-            MatchesWatchedCallsignPattern = matchesWatchedCallsignPattern,
-            MatchesSelectedDxcc = matchesSelectedDxcc,
-            DialFrequencyHz = effectiveFrequencyHz
+            DialFrequencyHz = effectiveFrequencyHz,
+            CurrentBand = currentBand
         };
     }
 
@@ -138,5 +128,4 @@ public sealed class DecodedMessageFactory
         var time = TimeSpan.FromMilliseconds(milliseconds);
         return $"{time.Hours:D2}:{time.Minutes:D2}:{time.Seconds:D2}";
     }
-
 }

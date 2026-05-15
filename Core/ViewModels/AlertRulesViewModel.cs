@@ -15,6 +15,6 @@ public sealed class AlertRulesViewModel
     public async Task<IReadOnlyList<AlertRule>> LoadAsync(CancellationToken cancellationToken = default)
     {
         var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-        return AlertRuleCatalog.Normalize(settings.AlertRules);
+        return AlertRuleCatalog.GetAllRules(settings);
     }
 }

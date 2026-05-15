@@ -1,30 +1,39 @@
+using System.Text.Json.Serialization;
+
 namespace WsjtxWatcher.Core.Models;
 
 public sealed class AlertRule
 {
     public string Id { get; set; } = string.Empty;
-    public AlertRuleKind Kind { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public RuleSource Source { get; set; } = RuleSource.UserDefined;
     public bool IsEnabled { get; set; }
-    public bool SendNotification { get; set; }
-    public bool Vibrate { get; set; }
+    public RuleTriggerType TriggerType { get; set; } = RuleTriggerType.DecodeMessage;
+    public RuleConditionGroup RootCondition { get; set; } = RuleConditionGroup.CreateAll();
+    public RuleActionConfig Actions { get; set; } = new();
     public int CooldownSeconds { get; set; } = 10;
-    public AlertRuleMatchTarget MatchTarget { get; set; } = AlertRuleMatchTarget.TransmitterOnly;
-    public List<string> CallsignPatterns { get; set; } = [];
-    public HashSet<int> SelectedDxccIds { get; set; } = [];
+    public int Priority { get; set; } = 100;
+    public int SortOrder { get; set; }
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+
+    [JsonIgnore]
+    public bool IsReadOnly => Source == RuleSource.SystemPreset;
 
     public AlertRule Clone()
     {
         return new AlertRule
         {
             Id = Id,
-            Kind = Kind,
+            Name = Name,
+            Source = Source,
             IsEnabled = IsEnabled,
-            SendNotification = SendNotification,
-            Vibrate = Vibrate,
+            TriggerType = TriggerType,
+            RootCondition = RootCondition.Clone(),
+            Actions = Actions.Clone(),
             CooldownSeconds = CooldownSeconds,
-            MatchTarget = MatchTarget,
-            CallsignPatterns = [.. CallsignPatterns],
-            SelectedDxccIds = new HashSet<int>(SelectedDxccIds)
+            Priority = Priority,
+            SortOrder = SortOrder,
+            CreatedAtUtc = CreatedAtUtc
         };
     }
 }

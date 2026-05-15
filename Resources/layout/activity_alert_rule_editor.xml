@@ -26,13 +26,82 @@
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
+            <TextView
+                android:id="@+id/alert_rule_read_only_help"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/rule_read_only_help"
+                android:textColor="@color/m3_on_surface_variant"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/rule_source_label"
+                android:textColor="@color/m3_on_surface"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/rule_source_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/m3_on_surface_variant" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/rule_name_label"
+                android:textColor="@color/m3_on_surface"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/rule_name_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:inputType="text" />
+
             <CheckBox
                 android:id="@+id/alert_rule_enabled_checkbox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="@string/alert_rule_enabled"
-                android:textSize="15sp" />
+                android:text="@string/alert_rule_enabled" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/rule_trigger_label"
+                android:textColor="@color/m3_on_surface"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/rule_trigger_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/m3_on_surface_variant" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/rule_priority"
+                android:textColor="@color/m3_on_surface"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/rule_priority_value"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:inputType="number" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -45,8 +114,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/alert_rule_notify"
-                    android:textSize="15sp" />
+                    android:text="@string/alert_rule_notify" />
 
                 <CheckBox
                     android:id="@+id/vibration_checkbox"
@@ -54,8 +122,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:layout_weight="1"
-                    android:text="@string/alert_rule_vibration"
-                    android:textSize="15sp" />
+                    android:text="@string/alert_rule_vibration" />
             </LinearLayout>
 
             <Button
@@ -72,32 +139,14 @@
                 android:layout_marginTop="12dp"
                 android:text="@string/alert_rule_cooldown"
                 android:textColor="@color/m3_on_surface"
-                android:textSize="14sp"
                 android:textStyle="bold" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <EditText
+                android:id="@+id/alert_rule_cooldown_value"
+                android:layout_width="120dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <EditText
-                    android:id="@+id/alert_rule_cooldown_value"
-                    android:layout_width="88dp"
-                    android:layout_height="wrap_content"
-                    android:inputType="number"
-                    android:maxLines="1"
-                    android:textSize="15sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="s"
-                    android:textColor="@color/m3_on_surface_variant"
-                    android:textSize="14sp" />
-            </LinearLayout>
+                android:layout_marginTop="4dp"
+                android:inputType="number" />
 
             <TextView
                 android:id="@+id/alert_rule_cooldown_help"
@@ -107,43 +156,27 @@
                 android:textColor="@color/m3_on_surface_variant"
                 android:textSize="13sp" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/rule_conditions"
+                android:textColor="@color/m3_on_surface"
+                android:textStyle="bold" />
+
             <LinearLayout
-                android:id="@+id/alert_rule_match_target_section"
+                android:id="@+id/rule_condition_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/alert_rule_match_target"
-                    android:textColor="@color/m3_on_surface"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <Spinner
-                    android:id="@+id/alert_rule_match_target_spinner"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:spinnerMode="dropdown" />
-            </LinearLayout>
+                android:layout_marginTop="10dp"
+                android:orientation="vertical" />
 
             <Button
-                android:id="@+id/manage_callsign_patterns"
+                android:id="@+id/delete_rule"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/manage_callsign_patterns"
-                android:visibility="gone" />
-
-            <Button
-                android:id="@+id/set_dxcc"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/set_dxcc_entity"
+                android:layout_marginTop="16dp"
+                android:text="@string/delete_rule"
                 android:visibility="gone" />
         </LinearLayout>
     </LinearLayout>
