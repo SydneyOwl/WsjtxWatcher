@@ -56,9 +56,13 @@ public sealed class AndroidSettingsStore : ISettingsStore
             MyGrid = _sharedPreferences.GetString("grid", string.Empty) ?? string.Empty,
             WatchedCallsignPatterns = [.. watchedPatterns],
             NotifyOnMyCall = _sharedPreferences.GetBoolean("notify_on_my_call", false),
+            MyCallCooldownSeconds = _sharedPreferences.GetInt("my_call_cooldown_seconds", AppSettings.DefaultAlertCooldownSeconds),
             NotifyOnAnyMessage = _sharedPreferences.GetBoolean("notify_on_any", false),
+            AnyMessageCooldownSeconds = _sharedPreferences.GetInt("any_message_cooldown_seconds", AppSettings.DefaultAlertCooldownSeconds),
             NotifyOnSelectedDxcc = _sharedPreferences.GetBoolean("notify_on_dxcc", false),
+            SelectedDxccCooldownSeconds = _sharedPreferences.GetInt("selected_dxcc_cooldown_seconds", AppSettings.DefaultAlertCooldownSeconds),
             NotifyOnLoggedQso = _sharedPreferences.GetBoolean("notify_on_logged_qso", false),
+            LoggedQsoCooldownSeconds = _sharedPreferences.GetInt("logged_qso_cooldown_seconds", AppSettings.DefaultAlertCooldownSeconds),
             VibrateOnMyCall = _sharedPreferences.GetBoolean("vibrate_on_my_call", false),
             VibrateOnAnyMessage = _sharedPreferences.GetBoolean("vibrate_on_any", false),
             VibrateOnSelectedDxcc = _sharedPreferences.GetBoolean("vibrate_on_dxcc", false),
@@ -89,9 +93,13 @@ public sealed class AndroidSettingsStore : ISettingsStore
         editor.PutString("grid", settings.MyGrid);
         editor.PutString("callsign_patterns", JsonSerializer.Serialize(CallsignPatternMatcher.NormalizePatterns(settings.WatchedCallsignPatterns)));
         editor.PutBoolean("notify_on_my_call", settings.NotifyOnMyCall);
+        editor.PutInt("my_call_cooldown_seconds", settings.MyCallCooldownSeconds);
         editor.PutBoolean("notify_on_any", settings.NotifyOnAnyMessage);
+        editor.PutInt("any_message_cooldown_seconds", settings.AnyMessageCooldownSeconds);
         editor.PutBoolean("notify_on_dxcc", settings.NotifyOnSelectedDxcc);
+        editor.PutInt("selected_dxcc_cooldown_seconds", settings.SelectedDxccCooldownSeconds);
         editor.PutBoolean("notify_on_logged_qso", settings.NotifyOnLoggedQso);
+        editor.PutInt("logged_qso_cooldown_seconds", settings.LoggedQsoCooldownSeconds);
         editor.PutBoolean("vibrate_on_my_call", settings.VibrateOnMyCall);
         editor.PutBoolean("vibrate_on_any", settings.VibrateOnAnyMessage);
         editor.PutBoolean("vibrate_on_dxcc", settings.VibrateOnSelectedDxcc);

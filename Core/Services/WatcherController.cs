@@ -25,7 +25,9 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
     private readonly CancellationTokenSource _disposeCts = new();
     private readonly SemaphoreSlim _ignoredCallsignMutationLock = new(1, 1);
     private readonly SemaphoreSlim _lifecycleLock = new(1, 1);
+    private readonly object _alertCooldownLock = new();
     private readonly Dictionary<string, ClientSessionState> _clientSessions = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<AlertRuleKind, DateTimeOffset> _lastAlertAt = new();
     private readonly object _sessionSync = new();
     private readonly Task _decodeProcessingTask;
     private readonly WatchdogTimer _watchdogTimer;
@@ -537,17 +539,23 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
             return;
         }
 
-        if (settingsSnapshot.VibrateOnAnyMessage)
+        if ((settingsSnapshot.VibrateOnAnyMessage || settingsSnapshot.NotifyOnAnyMessage)
+            && TryConsumeAlertCooldown(AlertRuleKind.AnyMessage, settingsSnapshot.AnyMessageCooldownSeconds))
         {
-            await _deviceFeedbackService.VibrateAsync(cancellationToken).ConfigureAwait(false);
+            if (settingsSnapshot.VibrateOnAnyMessage)
+            {
+                await _deviceFeedbackService.VibrateAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            if (settingsSnapshot.NotifyOnAnyMessage)
+            {
+                await _notificationService.ShowMessageAlertAsync(message.Message, cancellationToken).ConfigureAwait(false);
+            }
         }
 
-        if (settingsSnapshot.NotifyOnAnyMessage)
-        {
-            await _notificationService.ShowMessageAlertAsync(message.Message, cancellationToken).ConfigureAwait(false);
-        }
-
-        if (message.MatchesWatchedCallsignPattern)
+        if (message.MatchesWatchedCallsignPattern
+            && (settingsSnapshot.VibrateOnMyCall || settingsSnapshot.NotifyOnMyCall)
+            && TryConsumeAlertCooldown(AlertRuleKind.MyCall, settingsSnapshot.MyCallCooldownSeconds))
         {
             if (settingsSnapshot.VibrateOnMyCall)
             {
@@ -560,7 +568,9 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
             }
         }
 
-        if (message.MatchesSelectedDxcc)
+        if (message.MatchesSelectedDxcc
+            && (settingsSnapshot.VibrateOnSelectedDxcc || settingsSnapshot.NotifyOnSelectedDxcc)
+            && TryConsumeAlertCooldown(AlertRuleKind.SelectedDxcc, settingsSnapshot.SelectedDxccCooldownSeconds))
         {
             if (settingsSnapshot.VibrateOnSelectedDxcc)
             {
@@ -720,6 +730,11 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         }
 
         var band = ResolveLoggedQsoBand(qsoLoggedEvent);
+        if (!TryConsumeAlertCooldown(AlertRuleKind.LoggedQso, settingsSnapshot.LoggedQsoCooldownSeconds))
+        {
+            return;
+        }
+
         if (settingsSnapshot.VibrateOnLoggedQso)
         {
             await _deviceFeedbackService.VibrateAsync(cancellationToken).ConfigureAwait(false);
@@ -728,6 +743,27 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         if (settingsSnapshot.NotifyOnLoggedQso)
         {
             await _notificationService.ShowQsoLoggedAlertAsync(callsign, band, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private bool TryConsumeAlertCooldown(AlertRuleKind ruleKind, int cooldownSeconds)
+    {
+        if (cooldownSeconds <= 0)
+        {
+            return true;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        lock (_alertCooldownLock)
+        {
+            if (_lastAlertAt.TryGetValue(ruleKind, out var lastAlertAt)
+                && now - lastAlertAt < TimeSpan.FromSeconds(cooldownSeconds))
+            {
+                return false;
+            }
+
+            _lastAlertAt[ruleKind] = now;
+            return true;
         }
     }
 

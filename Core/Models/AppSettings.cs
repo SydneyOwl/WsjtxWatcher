@@ -2,6 +2,8 @@ namespace WsjtxWatcher.Core.Models;
 
 public sealed class AppSettings
 {
+    public const int DefaultAlertCooldownSeconds = 10;
+
     public DataSourceType DataSourceType { get; set; } = DataSourceType.Udp;
     public string Port { get; set; } = "2237";
     public string RelayServerUrl { get; set; } = string.Empty;
@@ -14,9 +16,13 @@ public sealed class AppSettings
     public string MyGrid { get; set; } = string.Empty;
     public List<string> WatchedCallsignPatterns { get; set; } = [];
     public bool NotifyOnMyCall { get; set; }
+    public int MyCallCooldownSeconds { get; set; } = DefaultAlertCooldownSeconds;
     public bool NotifyOnAnyMessage { get; set; }
+    public int AnyMessageCooldownSeconds { get; set; } = DefaultAlertCooldownSeconds;
     public bool NotifyOnSelectedDxcc { get; set; }
+    public int SelectedDxccCooldownSeconds { get; set; } = DefaultAlertCooldownSeconds;
     public bool NotifyOnLoggedQso { get; set; }
+    public int LoggedQsoCooldownSeconds { get; set; } = DefaultAlertCooldownSeconds;
     public bool VibrateOnMyCall { get; set; }
     public bool VibrateOnAnyMessage { get; set; }
     public bool VibrateOnSelectedDxcc { get; set; }
@@ -58,9 +64,13 @@ public sealed class AppSettings
             MyGrid = MyGrid,
             WatchedCallsignPatterns = [.. WatchedCallsignPatterns],
             NotifyOnMyCall = NotifyOnMyCall,
+            MyCallCooldownSeconds = MyCallCooldownSeconds,
             NotifyOnAnyMessage = NotifyOnAnyMessage,
+            AnyMessageCooldownSeconds = AnyMessageCooldownSeconds,
             NotifyOnSelectedDxcc = NotifyOnSelectedDxcc,
+            SelectedDxccCooldownSeconds = SelectedDxccCooldownSeconds,
             NotifyOnLoggedQso = NotifyOnLoggedQso,
+            LoggedQsoCooldownSeconds = LoggedQsoCooldownSeconds,
             VibrateOnMyCall = VibrateOnMyCall,
             VibrateOnAnyMessage = VibrateOnAnyMessage,
             VibrateOnSelectedDxcc = VibrateOnSelectedDxcc,

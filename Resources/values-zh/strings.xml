@@ -75,6 +75,13 @@
     <string name="theme_follow_system">跟随系统</string>
     <string name="theme_light">浅色</string>
     <string name="theme_dark">深色</string>
+    <string name="configure_alert_rules">配置提醒规则</string>
+    <string name="alert_rules">提醒规则</string>
+    <string name="alert_rules_help">这里统一管理现有的预置提醒规则。冷却时间内重复触发的提醒会被忽略。</string>
+    <string name="alert_rule_notify">发送通知</string>
+    <string name="alert_rule_vibration">振动</string>
+    <string name="alert_rule_cooldown">冷却时间</string>
+    <string name="alert_rule_cooldown_help">{0}s 内产生重复提示将忽略</string>
     <string name="simplified_chinese">中文</string>
     <string name="english">英语</string>
     <string name="version">版本</string>

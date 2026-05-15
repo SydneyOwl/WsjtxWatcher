@@ -26,10 +26,19 @@ public partial class SettingsViewModel : ObservableObject
     private bool notifyOnMyCall;
 
     [ObservableProperty]
+    private int myCallCooldownSeconds = AppSettings.DefaultAlertCooldownSeconds;
+
+    [ObservableProperty]
     private bool notifyOnSelectedDxcc;
 
     [ObservableProperty]
+    private int selectedDxccCooldownSeconds = AppSettings.DefaultAlertCooldownSeconds;
+
+    [ObservableProperty]
     private bool notifyOnLoggedQso;
+
+    [ObservableProperty]
+    private int loggedQsoCooldownSeconds = AppSettings.DefaultAlertCooldownSeconds;
 
     [ObservableProperty]
     private bool vibrateOnLoggedQso;
@@ -63,6 +72,9 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private bool vibrateOnAnyMessage;
+
+    [ObservableProperty]
+    private int anyMessageCooldownSeconds = AppSettings.DefaultAlertCooldownSeconds;
 
     [ObservableProperty]
     private bool vibrateOnMyCall;
@@ -162,9 +174,13 @@ public partial class SettingsViewModel : ObservableObject
         WatchedCallsignPatternCount = settings.WatchedCallsignPatterns.Count;
         IgnoredCallsignCount = await ignoredCallsignCountTask.ConfigureAwait(false);
         NotifyOnMyCall = settings.NotifyOnMyCall;
+        MyCallCooldownSeconds = settings.MyCallCooldownSeconds;
         NotifyOnAnyMessage = settings.NotifyOnAnyMessage;
+        AnyMessageCooldownSeconds = settings.AnyMessageCooldownSeconds;
         NotifyOnSelectedDxcc = settings.NotifyOnSelectedDxcc;
+        SelectedDxccCooldownSeconds = settings.SelectedDxccCooldownSeconds;
         NotifyOnLoggedQso = settings.NotifyOnLoggedQso;
+        LoggedQsoCooldownSeconds = settings.LoggedQsoCooldownSeconds;
         VibrateOnMyCall = settings.VibrateOnMyCall;
         VibrateOnAnyMessage = settings.VibrateOnAnyMessage;
         VibrateOnSelectedDxcc = settings.VibrateOnSelectedDxcc;
@@ -290,9 +306,13 @@ public partial class SettingsViewModel : ObservableObject
             MyGrid = (MyGrid ?? string.Empty).Trim().ToUpperInvariant(),
             WatchedCallsignPatterns = [.. CallsignPatternMatcher.NormalizePatterns(watchedCallsignPatterns)],
             NotifyOnMyCall = NotifyOnMyCall,
+            MyCallCooldownSeconds = Math.Max(0, MyCallCooldownSeconds),
             NotifyOnAnyMessage = NotifyOnAnyMessage,
+            AnyMessageCooldownSeconds = Math.Max(0, AnyMessageCooldownSeconds),
             NotifyOnSelectedDxcc = NotifyOnSelectedDxcc,
+            SelectedDxccCooldownSeconds = Math.Max(0, SelectedDxccCooldownSeconds),
             NotifyOnLoggedQso = NotifyOnLoggedQso,
+            LoggedQsoCooldownSeconds = Math.Max(0, LoggedQsoCooldownSeconds),
             VibrateOnMyCall = VibrateOnMyCall,
             VibrateOnAnyMessage = VibrateOnAnyMessage,
             VibrateOnSelectedDxcc = VibrateOnSelectedDxcc,

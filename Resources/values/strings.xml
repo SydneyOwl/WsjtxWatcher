@@ -75,6 +75,13 @@
     <string name="theme_follow_system">Follow System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="configure_alert_rules">Configure alert rules</string>
+    <string name="alert_rules">Alert Rules</string>
+    <string name="alert_rules_help">Manage the built-in alert presets here. Repeat alerts within the cooldown window are ignored.</string>
+    <string name="alert_rule_notify">Send notification</string>
+    <string name="alert_rule_vibration">Vibration</string>
+    <string name="alert_rule_cooldown">Cooldown</string>
+    <string name="alert_rule_cooldown_help">Repeat alerts within {0}s are ignored.</string>
     <string name="simplified_chinese">Simplified Chinese</string>
     <string name="english">English</string>
     <string name="version">Version</string>
