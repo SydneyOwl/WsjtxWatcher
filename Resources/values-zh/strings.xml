@@ -89,10 +89,10 @@
     <string name="alert_rule_actions_vibration_only">仅振动</string>
     <string name="alert_rule_actions_notify_and_vibration">通知和振动</string>
     <string name="alert_rule_summary_patterns">正则：{0}</string>
+    <string name="alert_rule_summary_my_callsign">我的呼号</string>
     <string name="alert_rule_summary_dxcc">选中 DXCC：{0}</string>
     <string name="alert_rule_summary_target">目标：{0}</string>
     <string name="alert_rule_summary_cooldown">冷却：{0}s</string>
-    <string name="alert_rule_default_callsign_patterns">跟随当前呼号</string>
     <string name="alert_rule_edit">编辑规则</string>
     <string name="simplified_chinese">中文</string>
     <string name="english">英语</string>
@@ -102,6 +102,7 @@
     <string name="language_restart_title">程序将退出</string>
     <string name="language_restart_message">程序将退出，请重启应用以使语言切换生效。</string>
     <string name="when_callsign_included">当信息包含指定呼号时：</string>
+    <string name="when_my_callsign_included">当信息包含我的呼号时：</string>
     <string name="send_notification">发送通知</string>
     <string name="vibration">振动</string>
     <string name="manage_callsign_patterns">正则</string>

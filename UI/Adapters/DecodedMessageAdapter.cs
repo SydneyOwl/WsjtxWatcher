@@ -497,7 +497,8 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
 
     private static bool IsWatchedCallsignHighlightEnabled(AppSettings settings)
     {
-        return settings.HasEnabledAlertRule(AlertRuleKind.WatchedCallsign);
+        return settings.HasEnabledAlertRule(AlertRuleKind.WatchedCallsign) ||
+               settings.HasEnabledAlertRule(AlertRuleKind.MyCallsign);
     }
 
     private static bool IsDxccHighlightEnabled(AppSettings settings)

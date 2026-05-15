@@ -89,10 +89,10 @@
     <string name="alert_rule_actions_vibration_only">Vibration only</string>
     <string name="alert_rule_actions_notify_and_vibration">Notification and vibration</string>
     <string name="alert_rule_summary_patterns">Patterns: {0}</string>
+    <string name="alert_rule_summary_my_callsign">My callsign</string>
     <string name="alert_rule_summary_dxcc">Selected DXCC: {0}</string>
     <string name="alert_rule_summary_target">Target: {0}</string>
     <string name="alert_rule_summary_cooldown">Cooldown: {0}s</string>
-    <string name="alert_rule_default_callsign_patterns">Follow current callsign</string>
     <string name="alert_rule_edit">Edit rule</string>
     <string name="simplified_chinese">Simplified Chinese</string>
     <string name="english">English</string>
@@ -102,6 +102,7 @@
     <string name="language_restart_title">Exit app?</string>
     <string name="language_restart_message">The app will now close. Please reopen it to apply the language change.</string>
     <string name="when_callsign_included">When the message matches specified callsigns:</string>
+    <string name="when_my_callsign_included">When the message matches my callsign:</string>
     <string name="send_notification">Send notification</string>
     <string name="vibration">Vibration</string>
     <string name="manage_callsign_patterns">Regex</string>

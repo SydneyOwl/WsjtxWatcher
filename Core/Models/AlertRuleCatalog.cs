@@ -4,6 +4,7 @@ namespace WsjtxWatcher.Core.Models;
 
 public static class AlertRuleCatalog
 {
+    public const string MyCallsignRuleId = "my_callsign";
     public const string WatchedCallsignRuleId = "watched_callsign";
     public const string AnyMessageRuleId = "any_message";
     public const string SelectedDxccRuleId = "selected_dxcc";
@@ -28,6 +29,13 @@ public static class AlertRuleCatalog
     {
         return
         [
+            new AlertRule
+            {
+                Id = MyCallsignRuleId,
+                Kind = AlertRuleKind.MyCallsign,
+                CooldownSeconds = DefaultCooldownSeconds,
+                MatchTarget = AlertRuleMatchTarget.TransmitterOnly
+            },
             new AlertRule
             {
                 Id = WatchedCallsignRuleId,
@@ -118,18 +126,9 @@ public static class AlertRuleCatalog
         settings.AlertRules = Normalize(settings.AlertRules);
     }
 
-    public static IReadOnlyList<string> GetEffectiveCallsignPatterns(AlertRule rule, string myCallsign)
+    public static IReadOnlyList<string> GetEffectiveCallsignPatterns(AlertRule rule)
     {
-        var normalizedPatterns = CallsignPatternMatcher.NormalizePatterns(rule.CallsignPatterns);
-        if (normalizedPatterns.Count > 0)
-        {
-            return normalizedPatterns;
-        }
-
-        var defaultPattern = CallsignPatternMatcher.CreateDefaultPattern(myCallsign);
-        return string.IsNullOrWhiteSpace(defaultPattern)
-            ? []
-            : [defaultPattern];
+        return [.. CallsignPatternMatcher.NormalizePatterns(rule.CallsignPatterns)];
     }
 
     public static AlertRule Sanitize(AlertRule rule)
@@ -145,10 +144,11 @@ public static class AlertRuleCatalog
     {
         return rule.Kind switch
         {
-            AlertRuleKind.WatchedCallsign => 0,
-            AlertRuleKind.AnyMessage => 1,
-            AlertRuleKind.SelectedDxcc => 2,
-            AlertRuleKind.LoggedQso => 3,
+            AlertRuleKind.MyCallsign => 0,
+            AlertRuleKind.WatchedCallsign => 1,
+            AlertRuleKind.AnyMessage => 2,
+            AlertRuleKind.SelectedDxcc => 3,
+            AlertRuleKind.LoggedQso => 4,
             _ => 100
         };
     }

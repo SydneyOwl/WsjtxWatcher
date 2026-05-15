@@ -19,7 +19,7 @@ public sealed class CallsignPatternViewModel
     {
         var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
         var rule = AlertRuleCatalog.GetRequiredRule(settings, AlertRuleCatalog.WatchedCallsignRuleId);
-        return AlertRuleCatalog.GetEffectiveCallsignPatterns(rule, settings.MyCallsign);
+        return AlertRuleCatalog.GetEffectiveCallsignPatterns(rule);
     }
 
     public async Task SaveAsync(IEnumerable<string> patterns, CancellationToken cancellationToken = default)

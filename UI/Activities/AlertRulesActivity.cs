@@ -124,16 +124,15 @@ public sealed class AlertRulesActivity : LocalizedActivity
 
         var extra = rule.Kind switch
         {
-            AlertRuleKind.WatchedCallsign => string.Format(
-                GetString(Resource.String.alert_rule_summary_patterns),
-                rule.CallsignPatterns.Count == 0 ? GetString(Resource.String.alert_rule_default_callsign_patterns) : rule.CallsignPatterns.Count.ToString()),
+            AlertRuleKind.MyCallsign => GetString(Resource.String.alert_rule_summary_my_callsign),
+            AlertRuleKind.WatchedCallsign => BuildWatchedCallsignSummary(rule),
             AlertRuleKind.SelectedDxcc => string.Format(
                 GetString(Resource.String.alert_rule_summary_dxcc),
                 rule.SelectedDxccIds.Count),
             _ => string.Empty
         };
 
-        var target = rule.Kind is AlertRuleKind.WatchedCallsign or AlertRuleKind.SelectedDxcc
+        var target = rule.Kind is AlertRuleKind.MyCallsign or AlertRuleKind.WatchedCallsign or AlertRuleKind.SelectedDxcc
             ? string.Format(GetString(Resource.String.alert_rule_summary_target), GetMatchTargetLabel(rule.MatchTarget))
             : string.Empty;
 
@@ -141,10 +140,21 @@ public sealed class AlertRulesActivity : LocalizedActivity
             .Where(part => !string.IsNullOrWhiteSpace(part)));
     }
 
+    private string BuildWatchedCallsignSummary(AlertRule rule)
+    {
+        var parts = new List<string>
+        {
+            string.Format(GetString(Resource.String.alert_rule_summary_patterns), rule.CallsignPatterns.Count)
+        };
+
+        return string.Join(" · ", parts);
+    }
+
     private string GetRuleTitle(AlertRuleKind kind)
     {
         return kind switch
         {
+            AlertRuleKind.MyCallsign => GetString(Resource.String.when_my_callsign_included),
             AlertRuleKind.WatchedCallsign => GetString(Resource.String.when_callsign_included),
             AlertRuleKind.AnyMessage => GetString(Resource.String.when_call_all),
             AlertRuleKind.SelectedDxcc => GetString(Resource.String.on_dxcc),

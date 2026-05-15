@@ -190,16 +190,14 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
             _vibrationCheckbox.Checked = _rule.Vibrate;
             _cooldownValue.Text = _rule.CooldownSeconds.ToString();
             _matchTargetSpinner.SetSelection(GetMatchTargetIndex(_rule.MatchTarget));
-            _matchTargetSection.Visibility = _rule.Kind is AlertRuleKind.WatchedCallsign or AlertRuleKind.SelectedDxcc
+            _matchTargetSection.Visibility = _rule.Kind is AlertRuleKind.MyCallsign or AlertRuleKind.WatchedCallsign or AlertRuleKind.SelectedDxcc
                 ? ViewStates.Visible
                 : ViewStates.Gone;
             _manageCallsignPatternsButton.Visibility = _rule.Kind == AlertRuleKind.WatchedCallsign ? ViewStates.Visible : ViewStates.Gone;
             _setDxccButton.Visibility = _rule.Kind == AlertRuleKind.SelectedDxcc ? ViewStates.Visible : ViewStates.Gone;
             if (_rule.Kind == AlertRuleKind.WatchedCallsign)
             {
-                var patternSummary = _rule.CallsignPatterns.Count == 0
-                    ? GetString(Resource.String.alert_rule_default_callsign_patterns)
-                    : _rule.CallsignPatterns.Count.ToString();
+                var patternSummary = _rule.CallsignPatterns.Count.ToString();
                 _manageCallsignPatternsButton.Text = $"{GetString(Resource.String.manage_callsign_patterns)} ({patternSummary})";
             }
 
@@ -297,6 +295,7 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
     {
         return kind switch
         {
+            AlertRuleKind.MyCallsign => GetString(Resource.String.when_my_callsign_included),
             AlertRuleKind.WatchedCallsign => GetString(Resource.String.when_callsign_included),
             AlertRuleKind.AnyMessage => GetString(Resource.String.when_call_all),
             AlertRuleKind.SelectedDxcc => GetString(Resource.String.on_dxcc),
