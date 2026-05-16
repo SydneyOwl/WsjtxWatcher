@@ -243,7 +243,7 @@
     <string name="halt_tx">终止发射</string>
     <string name="re_decode">重新解码</string>
     <string name="clear_record">清空记录</string>
-    <string name="when_call_all">当收到信息时（适用于VHF DX）</string>
+    <string name="when_call_all">当收到任何信息时（VHF DX）</string>
     <string name="denied_notification">您拒绝了通知权限，当指定解码记录出现后，软件将无法推送通知。</string>
     <string name="denied_vibrate">请在设置中启用“振动”权限！</string>
     <string name="open_notification_settings">打开通知设置</string>

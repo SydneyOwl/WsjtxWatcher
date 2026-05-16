@@ -185,8 +185,8 @@
     <string name="language_restart_required">Language changes take effect after you restart the app.</string>
     <string name="language_restart_title">Exit app?</string>
     <string name="language_restart_message">The app will now close. Please reopen it to apply the language change.</string>
-    <string name="when_callsign_included">When the message matches specified callsigns:</string>
-    <string name="when_my_callsign_included">When the message matches my callsign:</string>
+    <string name="when_callsign_included">When decoded message contain specified callsigns:</string>
+    <string name="when_my_callsign_included">When decoded message contains my callsign:</string>
     <string name="send_notification">Send notification</string>
     <string name="vibration">Vibration</string>
     <string name="manage_callsign_patterns">Regex</string>
@@ -243,7 +243,7 @@
     <string name="halt_tx">Halt Tx</string>
     <string name="re_decode">Decode Again</string>
     <string name="clear_record">Clear Record</string>
-    <string name="when_call_all">When a WSJT-X message is received (for VHF DX)</string>
+    <string name="when_call_all">When any WSJT-X message is received (VHF DX)</string>
     <string name="denied_notification">You denied notification permission. The app will not be able to push notifications for matching decoded records.</string>
     <string name="denied_vibrate">Please enable vibrate access in settings!</string>
     <string name="open_notification_settings">Open notification settings</string>
