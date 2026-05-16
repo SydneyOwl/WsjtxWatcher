@@ -17,25 +17,25 @@ public static class AlertRuleCatalog
             CreateSystemRule(
                 SystemMyCallsignRuleId,
                 "My callsign",
+                true,
                 RuleTriggerType.DecodeMessage,
-                RuleConditionGroup.CreateAny(
-                    RulePredicate.Create(RuleField.TransmitterCallsign, RuleOperator.Equals, RuleOperand.ForContextRef(RuleContextRef.MyCallsign)),
-                    RulePredicate.Create(RuleField.ReceiverCallsign, RuleOperator.Equals, RuleOperand.ForContextRef(RuleContextRef.MyCallsign)))),
+                RuleConditionGroup.CreateAny(RulePredicate.Create(RuleField.ReceiverCallsign, RuleOperator.Equals, RuleOperand.ForContextRef(RuleContextRef.MyCallsign)))),
             CreateSystemRule(
                 SystemWatchedCallsignRuleId,
                 "Watched callsign",
+                true,
                 RuleTriggerType.DecodeMessage,
-                RuleConditionGroup.CreateAny(
-                    RulePredicate.Create(RuleField.TransmitterCallsign, RuleOperator.Regex, RuleOperand.ForString("^JA")),
-                    RulePredicate.Create(RuleField.ReceiverCallsign, RuleOperator.Regex, RuleOperand.ForString("^JA")))),
+                RuleConditionGroup.CreateAny()),
             CreateSystemRule(
                 SystemAnyMessageRuleId,
                 "Any message",
+                false,
                 RuleTriggerType.DecodeMessage,
                 RuleConditionGroup.CreateAll(new RuleConstantPredicate { Value = true })),
             CreateSystemRule(
                 SystemDxccRuleId,
                 "Selected DXCC",
+                true,
                 RuleTriggerType.DecodeMessage,
                 RuleConditionGroup.CreateAny(
                     RulePredicate.Create(RuleField.FromCountryId, RuleOperator.In, RuleOperand.ForNumberList(DefaultSelectedDxccIds.Select(id => (double)id))),
@@ -43,6 +43,7 @@ public static class AlertRuleCatalog
             CreateSystemRule(
                 SystemLoggedQsoRuleId,
                 "Logged QSO",
+                true,
                 RuleTriggerType.LoggedQso,
                 RuleConditionGroup.CreateAll(new RuleConstantPredicate { Value = true }))
         ];
@@ -156,14 +157,14 @@ public static class AlertRuleCatalog
             || string.Equals(ruleId, SystemLoggedQsoRuleId, StringComparison.Ordinal);
     }
 
-    private static AlertRule CreateSystemRule(string id, string name, RuleTriggerType triggerType, RuleConditionGroup rootCondition)
+    private static AlertRule CreateSystemRule(string id, string name, bool enableByDefault, RuleTriggerType triggerType, RuleConditionGroup rootCondition)
     {
         return new AlertRule
         {
             Id = id,
             Name = name,
             Source = RuleSource.SystemPreset,
-            IsEnabled = true,
+            IsEnabled = enableByDefault,
             TriggerType = triggerType,
             RootCondition = rootCondition,
             Actions = new RuleActionConfig(),
