@@ -17,6 +17,7 @@ public static class AlertRuleCatalog
             CreateSystemRule(
                 SystemMyCallsignRuleId,
                 "My callsign",
+                1,
                 true,
                 RuleTriggerType.DecodeMessage,
                 RuleConditionGroup.CreateAny(RulePredicate.Create(RuleField.ReceiverCallsign, RuleOperator.Equals, RuleOperand.ForContextRef(RuleContextRef.MyCallsign))),
@@ -24,6 +25,7 @@ public static class AlertRuleCatalog
             CreateSystemRule(
                 SystemWatchedCallsignRuleId,
                 "Watched callsign",
+                2,
                 true,
                 RuleTriggerType.DecodeMessage,
                 RuleConditionGroup.CreateAny(),
@@ -33,15 +35,9 @@ public static class AlertRuleCatalog
                     Vibrate = true
                 }),
             CreateSystemRule(
-                SystemAnyMessageRuleId,
-                "Any message",
-                false,
-                RuleTriggerType.DecodeMessage,
-                RuleConditionGroup.CreateAll(new RuleConstantPredicate { Value = true }),
-                new RuleActionConfig()),
-            CreateSystemRule(
                 SystemDxccRuleId,
                 "Selected DXCC",
+                3,
                 true,
                 RuleTriggerType.DecodeMessage,
                 RuleConditionGroup.CreateAny(
@@ -51,6 +47,7 @@ public static class AlertRuleCatalog
             CreateSystemRule(
                 SystemLoggedQsoRuleId,
                 "Logged QSO",
+                4,
                 true,
                 RuleTriggerType.LoggedQso,
                 RuleConditionGroup.CreateAll(new RuleConstantPredicate { Value = true }),
@@ -58,7 +55,15 @@ public static class AlertRuleCatalog
                 {
                     SendNotification = true,
                     Vibrate = true
-                })
+                }),
+            CreateSystemRule(
+                SystemAnyMessageRuleId,
+                "Any message",
+                5,
+                false,
+                RuleTriggerType.DecodeMessage,
+                RuleConditionGroup.CreateAll(new RuleConstantPredicate { Value = true }),
+                new RuleActionConfig()),
         ];
     }
 
@@ -170,7 +175,7 @@ public static class AlertRuleCatalog
             || string.Equals(ruleId, SystemLoggedQsoRuleId, StringComparison.Ordinal);
     }
 
-    private static AlertRule CreateSystemRule(string id, string name, bool enableByDefault, RuleTriggerType triggerType, RuleConditionGroup rootCondition, RuleActionConfig config)
+    private static AlertRule CreateSystemRule(string id, string name, int order, bool enableByDefault, RuleTriggerType triggerType, RuleConditionGroup rootCondition, RuleActionConfig config)
     {
         return new AlertRule
         {
@@ -183,7 +188,7 @@ public static class AlertRuleCatalog
             Actions = config,
             CooldownSeconds = DefaultCooldownSeconds,
             Priority = DefaultPriority,
-            SortOrder = 0,
+            SortOrder = order,
             CreatedAtUtc = DateTime.UnixEpoch
         };
     }
