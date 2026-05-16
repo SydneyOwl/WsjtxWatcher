@@ -31,6 +31,7 @@ public sealed class SettingsActivity : LocalizedActivity
     private Spinner _dataSourceSpinner = null!;
     private TextView _ipAddressValue = null!;
     private Button _configureAlertRulesButton = null!;
+    private Button _manageDxccButton = null!;
     private Button _manageIgnoredCallsignsButton = null!;
     private Button _openNotificationSettingsButton = null!;
     private Button _openLogButton = null!;
@@ -127,6 +128,7 @@ public sealed class SettingsActivity : LocalizedActivity
         _languageSpinner = FindViewById<Spinner>(Resource.Id.language_spinner)!;
         _themeSpinner = FindViewById<Spinner>(Resource.Id.theme_spinner)!;
         _manageIgnoredCallsignsButton = FindViewById<Button>(Resource.Id.manage_ignored_callsigns)!;
+        _manageDxccButton = FindViewById<Button>(Resource.Id.manage_dxcc)!;
         _openNotificationSettingsButton = FindViewById<Button>(Resource.Id.open_notification_settings)!;
         _configureAlertRulesButton = FindViewById<Button>(Resource.Id.configure_alert_rules)!;
         _resetDatabaseButton = FindViewById<Button>(Resource.Id.reset_database)!;
@@ -332,6 +334,7 @@ public sealed class SettingsActivity : LocalizedActivity
 
         _openNotificationSettingsButton.Click += (_, _) => _notificationService.OpenNotificationSettings();
         _configureAlertRulesButton.Click += (_, _) => StartActivity(typeof(AlertRulesActivity));
+        _manageDxccButton.Click += (_, _) => StartActivity(typeof(DxccSelectionActivity));
         _relayTestConnectionButton.Click += async (_, _) => await TestRelayConnectionAsync().ConfigureAwait(false);
         _relaySelectedSourceButton.Click += async (_, _) =>
         {
@@ -385,6 +388,7 @@ public sealed class SettingsActivity : LocalizedActivity
             _versionValue.PaintFlags |= PaintFlags.UnderlineText;
             _languageSpinner.SetSelection(GetLanguageIndex(_viewModel.SelectedLanguage));
             _themeSpinner.SetSelection(GetThemeIndex(_viewModel.SelectedTheme));
+            _manageDxccButton.Text = $"{GetString(Resource.String.set_dxcc_entity)} ({_viewModel.SelectedDxccCount})";
             _manageIgnoredCallsignsButton.Text = $"{GetString(Resource.String.manage_ignored_callsigns)} ({_viewModel.IgnoredCallsignCount})";
             _autoIgnoreLoggedQsoCheckbox.Checked = _viewModel.AutoIgnoreLoggedQso;
             UpdateDataSourceSectionVisibility();

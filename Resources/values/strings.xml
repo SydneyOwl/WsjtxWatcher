@@ -127,6 +127,7 @@
     <string name="context_my_callsign">My callsign</string>
     <string name="context_my_grid">My grid</string>
     <string name="predicate_named_set">Named set</string>
+    <string name="rule_lists">Watch Lists</string>
     <string name="predicate_band_mode">Band matching</string>
     <string name="named_set_match_band">Match band</string>
     <string name="named_set_ignore_band">Ignore band</string>
@@ -261,7 +262,7 @@
     <string name="notify_id2" translatable="false">6311</string>
     <string name="on_dxcc">When selected DXCC appears:</string>
     <string name="on_logged_qso">When a QSO is logged:</string>
-    <string name="set_dxcc_entity">Select DXCC</string>
+    <string name="set_dxcc_entity">DXCC List</string>
     <string name="selected_dxcc_match_target">DXCC match target</string>
     <string name="selected_dxcc_match_target_transmitter">Transmitter only</string>
     <string name="selected_dxcc_match_target_receiver">Receiver only</string>

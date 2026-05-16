@@ -495,12 +495,6 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
         bandModeAdapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
         bandModeSpinner.Adapter = bandModeAdapter;
 
-        var configureNamedSetButton = new Button(this);
-        configureNamedSetButton.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent)
-        {
-            TopMargin = Dp(10)
-        };
-
         layout.AddView(fieldLabel);
         layout.AddView(fieldSpinner);
         layout.AddView(operatorLabel);
@@ -514,7 +508,6 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
         layout.AddView(namedSetSpinner);
         layout.AddView(bandModeLabel);
         layout.AddView(bandModeSpinner);
-        layout.AddView(configureNamedSetButton);
 
         var selectedFieldIndex = fieldDefinitions.FindIndex(definition => definition.Field == workingPredicate.Field);
         fieldSpinner.SetSelection(selectedFieldIndex >= 0 ? selectedFieldIndex : 0);
@@ -588,13 +581,6 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
             namedSetSpinner.Visibility = namedSetOperator ? ViewStates.Visible : ViewStates.Gone;
             bandModeLabel.Visibility = namedSetOperator && usesBandMatchMode ? ViewStates.Visible : ViewStates.Gone;
             bandModeSpinner.Visibility = namedSetOperator && usesBandMatchMode ? ViewStates.Visible : ViewStates.Gone;
-            configureNamedSetButton.Visibility = namedSetOperator ? ViewStates.Visible : ViewStates.Gone;
-            configureNamedSetButton.Text = selectedNamedSet switch
-            {
-                RuleNamedSetRef.IgnoredCallsigns => GetString(Resource.String.manage_ignored_callsigns),
-                RuleNamedSetRef.DxccList => GetString(Resource.String.set_dxcc_entity),
-                _ => GetString(Resource.String.predicate_named_set)
-            };
         }
 
         var initialFieldDefinition = fieldDefinitions[Math.Clamp(fieldSpinner.SelectedItemPosition, 0, fieldDefinitions.Count - 1)];
@@ -611,7 +597,9 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
         }
         else if (workingPredicate.Operand.Kind == RuleValueType.NamedSetRef)
         {
-            namedSetSpinner.SetSelection((int)(workingPredicate.Operand.NamedSetRefValue ?? RuleNamedSetRef.IgnoredCallsigns));
+            var selectedNamedSet = workingPredicate.Operand.NamedSetRefValue ?? RuleNamedSetRef.IgnoredCallsigns;
+            var selectedNamedSetIndex = supportedNamedSets.IndexOf(selectedNamedSet);
+            namedSetSpinner.SetSelection(selectedNamedSetIndex >= 0 ? selectedNamedSetIndex : 0);
             bandModeSpinner.SetSelection(workingPredicate.Operand.NamedSetBandMatchModeValue == NamedSetBandMatchMode.IgnoreBand ? 1 : 0);
         }
         else if (workingPredicate.Operand.Kind == RuleValueType.Number)
@@ -645,23 +633,6 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
         };
         operatorSpinner.ItemSelected += (_, _) => UpdateValueViews();
         namedSetSpinner.ItemSelected += (_, _) => UpdateValueViews();
-        configureNamedSetButton.Click += (_, _) =>
-        {
-            var selectedNamedSet = supportedNamedSets.Count == 0
-                ? RuleNamedSetRef.IgnoredCallsigns
-                : supportedNamedSets[Math.Clamp(namedSetSpinner.SelectedItemPosition, 0, supportedNamedSets.Count - 1)];
-            var activityType = selectedNamedSet switch
-            {
-                RuleNamedSetRef.IgnoredCallsigns => typeof(IgnoredCallsignActivity),
-                RuleNamedSetRef.DxccList => typeof(DxccSelectionActivity),
-                _ => null
-            };
-
-            if (activityType is not null)
-            {
-                StartActivity(new Intent(this, activityType));
-            }
-        };
         UpdateValueViews();
 
         var dialog = new AlertDialog.Builder(this)
@@ -671,14 +642,19 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
             .SetNegativeButton(Android.Resource.String.Cancel, (_, _) => { })
             .Create()!;
         dialog.Show();
-        dialog.GetButton((int)DialogButtonType.Positive)?.SetOnClickListener(new ViewClickAction(_ =>
+        var positiveButton = dialog.GetButton((int)DialogButtonType.Positive);
+        positiveButton?.SetOnClickListener(new ViewClickAction(_ =>
         {
             var definition = fieldDefinitions[Math.Clamp(fieldSpinner.SelectedItemPosition, 0, fieldDefinitions.Count - 1)];
             var selectedOperator = definition.SupportedOperators[Math.Clamp(operatorSpinner.SelectedItemPosition, 0, definition.SupportedOperators.Count - 1)];
             workingPredicate.Field = definition.Field;
             workingPredicate.Operator = selectedOperator;
 
-            if (!TryBuildOperand(definition, selectedOperator, valueSourceSpinner.SelectedItemPosition, valueEditText.Text, boolSpinner.SelectedItemPosition, namedSetSpinner.SelectedItemPosition, bandModeSpinner.SelectedItemPosition, out var operand, out var errorResId))
+            var selectedNamedSet = supportedNamedSets.Count == 0
+                ? RuleNamedSetRef.IgnoredCallsigns
+                : supportedNamedSets[Math.Clamp(namedSetSpinner.SelectedItemPosition, 0, supportedNamedSets.Count - 1)];
+
+            if (!TryBuildOperand(definition, selectedOperator, valueSourceSpinner.SelectedItemPosition, valueEditText.Text, boolSpinner.SelectedItemPosition, selectedNamedSet, bandModeSpinner.SelectedItemPosition, out var operand, out var errorResId))
             {
                 Toast.MakeText(this, errorResId, ToastLength.Short)?.Show();
                 return;
@@ -709,7 +685,7 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
         int valueSourceIndex,
         string? rawValue,
         int boolIndex,
-        int namedSetIndex,
+        RuleNamedSetRef selectedNamedSet,
         int bandModeIndex,
         out RuleOperand operand,
         out int errorResId)
@@ -725,7 +701,7 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
 
         if (selectedOperator is RuleOperator.InNamedSet or RuleOperator.NotInNamedSet)
         {
-            operand = RuleOperand.ForNamedSet((RuleNamedSetRef)namedSetIndex, bandModeIndex == 1 ? NamedSetBandMatchMode.IgnoreBand : NamedSetBandMatchMode.MatchBand);
+            operand = RuleOperand.ForNamedSet(selectedNamedSet, bandModeIndex == 1 ? NamedSetBandMatchMode.IgnoreBand : NamedSetBandMatchMode.MatchBand);
             return true;
         }
 

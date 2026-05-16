@@ -1,195 +1,269 @@
 # WsjtxWatcher
 
-## Introduction
-
 `WsjtxWatcher` is an Android companion app for `WSJT-X` and `JTDX`.
 
-It can receive live WSJT-X traffic in two ways:
+It lets you watch live decode traffic on your phone and receive alerts when a message or a logged QSO matches the rules you configured. 
+It is designed for daily station monitoring, remote watching, DX hunting, and VHF-style activity watching.
 
-- direct UDP from the same local network
-- a relay-backed `Third-party data source`
+Currently supported languages:
 
-The app shows decoded traffic in real time and can notify you when messages match your watched callsign patterns, selected DXCC entities, or other configured conditions. It is especially useful for remote monitoring and VHF / DX style watching.
+- Simplified Chinese
+- English
 
-When the app is in the foreground, you can watch live traffic directly. When it is in the background or the phone is locked, it can still raise notifications based on your configured rules.
+Suggested screenshot:
 
-Currently, the app supports Simplified Chinese and English.
+- Main screen with live decode list
 
-<img src="./md_assets/page3.png" style="zoom: 60%;" />
+## What The App Can Do
 
-## Supported Android Versions
+- Receive live WSJT-X / JTDX traffic over local UDP
+- Receive live traffic from a remote relay source
+- Show decoded messages in real time
+- Highlight and notify on messages that match alert rules
+- Alert on selected DXCC entities
+- Alert on logged QSOs
+- Maintain an ignored-callsign list
+- Auto-ignore worked stations after a logged QSO
+- Keep running in the background when Android permissions allow it
+
+## Android Support
 
 - Android 8.0 and above
 
 ## Data Source Modes
 
-### UDP
+The app supports two ways to receive data.
 
-Use this mode when your phone and the WSJT-X / JTDX computer are on the same LAN.
+### 1. UDP
 
-In this mode:
+Use this mode when your phone and the computer running `WSJT-X` / `JTDX` are on the same local network.
 
-- the app listens on the phone's local IP and UDP port
-- WSJT-X or JTDX sends UDP packets directly to the phone
+In this mode the app listens on the phone's local IP and UDP port and `WSJT-X` or `JTDX` sends UDP packets directly to the phone
 
-### Third-party data source
+Suggested screenshot:
+
+- Settings page showing UDP mode
+
+### 2. Third-party Data Source
 
 See: [wsjtx-relay](https://github.com/SydneyOwl/wsjtx-relay)
 
-Use this mode when the source is remote or when direct LAN UDP is not possible.
+Use this mode when the source station is remote, or when direct LAN UDP is not possible.
 
 In this mode:
 
-- a remote `wsjtx-relay-server` accepts live relay connections
-- a `wsjtx-relay-client` runs near WSJT-X / JTDX and uploads live events
-- `WsjtxWatcher` connects to the relay server as a watcher
-- the app selects one available relay source and consumes its live events
+- a remote `wsjtx-relay-server` accepts watcher connections
+- a `wsjtx-relay-client` runs near `WSJT-X` / `JTDX`
+- `wsjtx-relay-client` uploads live events to the relay server
+- `WsjtxWatcher` connects as a watcher and follows one selected source
 
-This mode is live-only. It does not replay old decode history after reconnect.
+Suggested screenshot:
+
+- Settings page showing relay mode
+- Source selection page
 
 ## Quick Start
 
 ### Option A: Local UDP
 
 1. Open `Settings`.
-2. Keep `Data source` set to `UDP`.
-3. Enter your own callsign and Maidenhead locator, then adjust any notification settings you want.
-4. Return to the main screen and tap `Start Service`.
-5. In WSJT-X or JTDX, send UDP output to the app's displayed LAN IP and server port.
+2. Set `Data source` to `UDP`.
+3. Return to the main page and tap `Start Service`.
+4. In `WSJT-X` or `JTDX`, set the UDP destination to the phone's displayed LAN IP and server port.
 
-<img src="./md_assets/page4.png" style="zoom: 67%;" />
+Make sure your computer and your phone are on the same LAN.
 
-Make sure the computer running WSJT-X / JTDX and the phone are on the same local network.
+Suggested screenshot:
 
-### Option B: Third-party data source
+- Main page showing service controls
+- WSJT-X UDP settings example
 
-1. Deploy and start `wsjtx-relay-server`.
-2. Run `wsjtx-relay-client` on the station side so it can receive WSJT-X UDP locally and push events to the relay.
-3. Open `Settings` in `WsjtxWatcher`.
-4. Change `Data source` to `Third-party data source`.
-5. Fill in:
-   - `Server URL`
-   - `Shared Secret`
-   - `Tenant ID`
-6. Save settings.
-7. Return to the main screen and tap `Start Service`.
-8. Return to settings page and Open `Select source` and choose the relay source you want to monitor.
+### Option B: Relay / Third-party Data Source
 
-If this is the first successful connection, the app will pair with the server certificate automatically by storing its fingerprint. If the server certificate changes later, use `Re-pair server` and connect again.
+**please see https://github.com/SydneyOwl/wsjtx-relay for more**
 
-![](./md_assets/page7.jpg)
+1. Deploy and start `wsjtx-relay-server` on your own server(public ip needed).
+2. Run `wsjtx-relay-client` on the computer that runs jtdx/wsjtx.
+3. Open `Settings` in `WsjtxWatcher` and set `Data source` to `Third-party data source`.
+4. Fill configs and tap `Test connection`. if succeed you can click `Select source` to select the client your configured before.
+5. Return to the main page and tap `Start Service`.
+
+On the first successful relay connection, the app stores the server fingerprint automatically. 
+if the server certificate changes later(e.g. redeployed wsjtx-relay-server), use `Re-pair server` and test again
+
+Suggested screenshot:
+
+- Relay settings form
+- Test connection success state
+- Relay source selection dialog
+
+## Main Screen
+
+The main screen is used for live monitoring.
+
+Suggested screenshot:
+
+- Main monitoring screen
 
 ## Settings Guide
 
 ### Common Settings
 
-- `Data source`
-  - selects either `UDP` or `Third-party data source`
-- `Callsign`
-  - your own station callsign
-  - used to highlight messages containing your callsign
-  - also used as the default watched callsign pattern when no custom pattern list exists
-- `Location`
-  - your 4-character Maidenhead grid
-  - used for distance calculations when possible
-- `Language`
-  - switches between Simplified Chinese and English
-  - the app saves settings, stops the background service, and exits so the new language can take effect after restart
-
 ### UDP Settings
 
-- `LAN IP` / `Server Port`
-  - the local UDP address that WSJT-X or JTDX should send messages to
+- `LAN IP` / `Server Port` is the **local** UDP endpoint that `WSJT-X` / `JTDX` should send to
 
 ### Third-party Data Source Settings
 
-- `Server URL`
-  - relay server base URL
-  - use a value such as `wss://example.com:8443`
-- `Shared Secret`
-  - relay authentication secret
-  - must match the relay client and relay server
-- `Tenant ID`
-  - the shared private ID used by both the relay client and the watcher
-  - think of it as the private relay room both sides must join
-  - use a long random value, not an easy name such as `home` or `test`
-- `Relay status`
-  - current connection or reconnect state of the relay watcher
-- `Test connection`
-  - validates URL, certificate pairing, and shared-secret authentication
-- `Select source`
-  - opens the relay source picker
-  - the selected source becomes the preferred source for future reconnects
-- `Refresh source list`
-  - reconnects to the relay and reloads the available source catalog
-- `Re-pair server`
-  - clears the stored trusted fingerprint
-  - use this if the relay server certificate has changed
+- `Server URL`: relay server base URL. e.g. `wss://example.com:8443`
+- `Shared Secret`: relay authentication secret
+- `Tenant ID`: private shared identifier used by both the uploader side and the watcher side
+- `Relay status`: current relay connection state
+- `Test connection`:validates URL, certificate trust, and shared-secret authentication
+- `Select source`: opens the relay source picker
+- `Refresh source list`:reloads the relay source catalog
+- `Re-pair server`: clears the stored trusted fingerprint so the app can pair again
 
-### Notification Triggers
+Suggested screenshot:
 
-- `When the message matches specified callsigns`
-  - triggers notification or vibration when the decoded `de` / `dx` callsign matches one of your watched regex patterns
-- `Specified callsign match target`
-  - chooses whether watched callsign matching checks the `transmitter`, the `receiver`, or `both`
-- `Regex`
-  - opens the watched callsign regex editor
-- `When a WSJT-X message is received`
-  - triggers notification or vibration for every decoded message
-  - mainly useful for VHF / DX style monitoring
-- `When selected DXCC appears`
-  - triggers notification or vibration when the decoded `de` / `dx` callsign resolves to one of your selected DXCC entities
-- `DXCC match target`
-  - chooses whether DXCC matching checks the `transmitter`, the `receiver`, or `both`
-- `Select DXCC`
-  - opens the DXCC selection list
-- `When a QSO is logged`
-  - triggers notification or vibration after WSJT-X reports a completed logged QSO
+- Relay settings block with buttons
 
-### Ignore And Automation
+## Alert Basics
+
+- `Settings -> Configure alert rules`
+
+From there you can view/edit built-in rules or create your own rules
+
+**please note that When multiple rules match at the same time only the highest-priority rule triggers(lower `Priority` number means higher priority)**
+
+Suggested screenshot:
+
+- Rule list page
+- Rule card with `Edit rule` button and enable switch
+
+### Configure alert rules
+
+#### Rule Trigger Types
+
+There are two trigger types:
+
+- `Decode message rule`is checked every time a new decoded message arrives
+- `Logged QSO rule` is checked every time `WSJT-X` reports a logged QSO
+
+#### Rule Actions
+
+Each rule can do one or both of the following:
+
+- `Send notification`
+- `Vibration`
+
+#### Cooldown
+
+`Cooldown` prevents the same rule from repeatedly notifying within a short time window.
+
+for example if a rule has `Cooldown = 10`  and it already triggered once then the same rule will not trigger again for the next 10 seconds
+
+#### Condition Tree
+
+Each rule contains a condition tree.
+
+It is made of groups and predicates. one group can have multiple predicates.
+
+##### Predicates
+
+A predicate is `field + operator + value`
+
+For example we have following predicate:
+
+- field: `Transmitter callsign`
+- operator: `Regex`
+- value: `^BA1`
+
+this Means transmitter callsign begins with `BA1` will be matched (e.g. CQ BA1xxx)
+
+Suggested screenshot:
+
+- Rule editor page
+- Condition tree with one group and several predicates
+
+##### Groups
+
+A group controls how its child conditions are combined.
+
+- `Match all`
+  - all child conditions must be true
+  - equivalent to logical `AND`
+- `Match any`
+  - any child condition may be true
+  - equivalent to logical `OR`
+
+Groups can be nested, so more advanced matching logic is possible.
+
+Example:
+
+```
+`(Transmitter callsign starts with JA OR Receiver callsign starts with JA) AND Mode = FT8`
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^
+              predicate 1                           predicate 2                predicate 3
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^
+                                    group 1                                       group 2
+```
+
+##### Named Sets
+
+Named sets are reusable global lists that a rule can reference.
+
+This is useful when you want to maintain one shared list and let multiple rules use it.
+
+Currently supported named sets:
 
 - `Ignored callsigns`
-  - opens the ignored callsign list
-  - ignored entries are matched by `callsign + band`
-- `Ignored callsign match target`
-  - chooses whether ignored matching applies to the `transmitter`, the `receiver`, `both`, or neither
-- `Auto-ignore the callsign after a logged QSO`
-  - automatically adds the worked DX callsign on that band to the ignored list after a logged QSO
+- `DXCC list`
 
-### Permissions And Maintenance
+###### Ignored Callsigns
 
-- `Open notification settings`
-  - appears when Android notifications are disabled for the app
-- `Open Log File`
-  - opens the app log for troubleshooting
-- `Reset Database`
-  - clears cached grid information and the current decoded message list
-- `Reset All`
-  - resets settings, clears cached data, and stops the listener service
-- `Add to whitelist` / `Add background`
-  - opens Android battery or background settings that help the listener stay alive
+Open:`Settings -> Ignored callsigns`
 
-## Matching Logic
+From there you can modify entries manually or import ignored callsigns from `Cloudlog` / `Wavelog`
 
-- Ignored callsign matching target is configurable in settings: `transmitter only`, `receiver only`, `receiver/transmitter`, or `do not ignore`; ignored matching always uses `callsign + band`.
-- Selected DXCC matching is configurable in settings: `transmitter only`, `receiver only`, or `receiver/transmitter`.
-- Watched callsign regex matching is configurable in settings: `transmitter only`, `receiver only`, or `receiver/transmitter`.
-- Watched callsign regex matching is applied to parsed `de` / `dx` callsigns, not to the full decoded message text.
-- `Contains my callsign` detection is based on the full decoded message text.
+There is also `Auto-ignore the callsign after a logged QSO`. When enabled, the app automatically adds the worked DX callsign on that band to the ignored list after a logged QSO.
+
+later you can use `Ignored Callsigns` as predicate values.
+
+Suggested screenshot:
+
+- Ignored callsign import page
+
+###### DXCC List
+
+
+##### Built-in Rule Ideas
+
+The exact defaults may change over time, but the built-in rule set is designed around these common scenarios:
+
+- my callsign appears
+- watched callsign logic
+- any message
+- selected DXCC appears
+- logged QSO
+
+These rules are intended as ready-made starting points. You can keep them as-is, edit them, or disable the ones you do not want.
+
+## Matching Notes
+
+- Watched-callsign matching works on parsed `de` / `dx` callsigns, not on the full decoded message text.
+- `Contains my callsign` style logic uses the full decoded message text.
+- Ignored-callsign matching can be configured by target and can optionally include band.
+- DXCC matching can be configured against transmitter, receiver, or both, depending on the rule structure you build.
+- If multiple rules match the same event, only the highest-priority rule triggers.
 
 ## Relay Notes
 
 - `Third-party data source` is implemented through the `wsjtx-relay` stack.
 - The first successful relay connection stores the server fingerprint automatically.
 - If the relay server certificate changes, use `Re-pair server` before reconnecting.
-- After relay reconnect, the app receives current source state and snapshot data, but not historical decode replay.
+- After relay reconnect, the app receives current source state and snapshot data, but not historical replay.
 
-## Todos
-
-- ~~Add support for more message types~~
-- ~~Third-party data source / relay support~~
-- ~~Sync QSO records from Cloudlog / Wavelog~~
-- Other enhancements
 
 ## Acknowledgments
 

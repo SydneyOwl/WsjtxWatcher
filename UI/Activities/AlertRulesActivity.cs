@@ -122,14 +122,20 @@ public sealed class AlertRulesActivity : LocalizedActivity
             TopMargin = Dp(6)
         };
 
+        var actionRow = new LinearLayout(this)
+        {
+            Orientation = Orientation.Horizontal
+        };
+        actionRow.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent)
+        {
+            TopMargin = Dp(12)
+        };
+
         var button = new Button(this)
         {
             Text = GetString(Resource.String.alert_rule_edit)
         };
-        button.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent)
-        {
-            TopMargin = Dp(12)
-        };
+        button.LayoutParameters = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f);
         button.Click += (_, _) =>
         {
             var intent = new Intent(this, typeof(AlertRuleEditorActivity));
@@ -137,10 +143,34 @@ public sealed class AlertRulesActivity : LocalizedActivity
             StartActivity(intent);
         };
 
+        var enabledSwitch = new Switch(this)
+        {
+            Checked = rule.IsEnabled
+        };
+        enabledSwitch.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent)
+        {
+            LeftMargin = Dp(12)
+        };
+        enabledSwitch.CheckedChange += async (_, args) =>
+        {
+            enabledSwitch.Enabled = false;
+            try
+            {
+                await _viewModel.SetEnabledAsync(rule.Id, args.IsChecked).ConfigureAwait(false);
+            }
+            finally
+            {
+                RunOnUiThread(() => enabledSwitch.Enabled = true);
+            }
+        };
+
+        actionRow.AddView(button);
+        actionRow.AddView(enabledSwitch);
+
         card.AddView(title);
         card.AddView(source);
         card.AddView(subtitle);
-        card.AddView(button);
+        card.AddView(actionRow);
         return card;
     }
 

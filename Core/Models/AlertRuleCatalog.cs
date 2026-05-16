@@ -28,7 +28,9 @@ public static class AlertRuleCatalog
                 2,
                 true,
                 RuleTriggerType.DecodeMessage,
-                RuleConditionGroup.CreateAny(),
+                RuleConditionGroup.CreateAny(
+                    RulePredicate.Create(RuleField.TransmitterCallsign, RuleOperator.In, RuleOperand.ForStringList(["EXAMPLE_CALLSIGN1", "EXAMPLE_CALLSIGN2"])) ,
+                    RulePredicate.Create(RuleField.ReceiverCallsign, RuleOperator.In, RuleOperand.ForStringList(["EXAMPLE_CALLSIGN1", "EXAMPLE_CALLSIGN2"]) )),
                 new RuleActionConfig()
                 {
                     SendNotification = true,

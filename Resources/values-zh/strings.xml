@@ -127,6 +127,7 @@
     <string name="context_my_callsign">我的呼号</string>
     <string name="context_my_grid">我的网格</string>
     <string name="predicate_named_set">命名集合</string>
+    <string name="rule_lists">关注与忽略名单</string>
     <string name="predicate_band_mode">Band 匹配</string>
     <string name="named_set_match_band">按 band 匹配</string>
     <string name="named_set_ignore_band">忽略 band</string>
@@ -258,7 +259,7 @@
     <string name="listening_msg">正在监听WSJT-X信息...</string>
     <string name="on_dxcc">当选中的DXCC出现时：</string>
     <string name="on_logged_qso">当完成 QSO 时：</string>
-    <string name="set_dxcc_entity">选择DXCC</string>
+    <string name="set_dxcc_entity">DXCC 列表</string>
     <string name="selected_dxcc_match_target">DXCC 匹配目标</string>
     <string name="selected_dxcc_match_target_transmitter">仅发射方</string>
     <string name="selected_dxcc_match_target_receiver">仅接收方</string>

@@ -54,6 +54,9 @@ public partial class SettingsViewModel : ObservableObject
     private int ignoredCallsignCount;
 
     [ObservableProperty]
+    private int selectedDxccCount;
+
+    [ObservableProperty]
     private bool autoIgnoreLoggedQso = true;
 
     [ObservableProperty]
@@ -121,6 +124,7 @@ public partial class SettingsViewModel : ObservableObject
         SelectedLanguage = _appLanguageService.ResolveConfiguredLanguage(settings.Language);
         MyCallsign = settings.MyCallsign;
         MyGrid = settings.MyGrid;
+        SelectedDxccCount = settings.PreferredDxccIds.Count;
         IgnoredCallsignCount = await ignoredCallsignCountTask.ConfigureAwait(false);
         AutoIgnoreLoggedQso = settings.AutoIgnoreLoggedQso;
         SelectedTheme = settings.Theme;
