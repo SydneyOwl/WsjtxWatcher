@@ -38,8 +38,8 @@ public static class AlertRuleCatalog
                 true,
                 RuleTriggerType.DecodeMessage,
                 RuleConditionGroup.CreateAny(
-                    RulePredicate.Create(RuleField.FromCountryId, RuleOperator.In, RuleOperand.ForNumberList(DefaultSelectedDxccIds.Select(id => (double)id))),
-                    RulePredicate.Create(RuleField.ToCountryId, RuleOperator.In, RuleOperand.ForNumberList(DefaultSelectedDxccIds.Select(id => (double)id))))),
+                    RulePredicate.Create(RuleField.FromCountryId, RuleOperator.InNamedSet, RuleOperand.ForNamedSet(RuleNamedSetRef.DxccList)),
+                    RulePredicate.Create(RuleField.ToCountryId, RuleOperator.InNamedSet, RuleOperand.ForNamedSet(RuleNamedSetRef.DxccList)))),
             CreateSystemRule(
                 SystemLoggedQsoRuleId,
                 "Logged QSO",
