@@ -19,19 +19,26 @@ public static class AlertRuleCatalog
                 "My callsign",
                 true,
                 RuleTriggerType.DecodeMessage,
-                RuleConditionGroup.CreateAny(RulePredicate.Create(RuleField.ReceiverCallsign, RuleOperator.Equals, RuleOperand.ForContextRef(RuleContextRef.MyCallsign)))),
+                RuleConditionGroup.CreateAny(RulePredicate.Create(RuleField.ReceiverCallsign, RuleOperator.Equals, RuleOperand.ForContextRef(RuleContextRef.MyCallsign))),
+                new RuleActionConfig()),
             CreateSystemRule(
                 SystemWatchedCallsignRuleId,
                 "Watched callsign",
                 true,
                 RuleTriggerType.DecodeMessage,
-                RuleConditionGroup.CreateAny()),
+                RuleConditionGroup.CreateAny(),
+                new RuleActionConfig()
+                {
+                    SendNotification = true,
+                    Vibrate = true
+                }),
             CreateSystemRule(
                 SystemAnyMessageRuleId,
                 "Any message",
                 false,
                 RuleTriggerType.DecodeMessage,
-                RuleConditionGroup.CreateAll(new RuleConstantPredicate { Value = true })),
+                RuleConditionGroup.CreateAll(new RuleConstantPredicate { Value = true }),
+                new RuleActionConfig()),
             CreateSystemRule(
                 SystemDxccRuleId,
                 "Selected DXCC",
@@ -39,13 +46,19 @@ public static class AlertRuleCatalog
                 RuleTriggerType.DecodeMessage,
                 RuleConditionGroup.CreateAny(
                     RulePredicate.Create(RuleField.FromCountryId, RuleOperator.InNamedSet, RuleOperand.ForNamedSet(RuleNamedSetRef.DxccList)),
-                    RulePredicate.Create(RuleField.ToCountryId, RuleOperator.InNamedSet, RuleOperand.ForNamedSet(RuleNamedSetRef.DxccList)))),
+                    RulePredicate.Create(RuleField.ToCountryId, RuleOperator.InNamedSet, RuleOperand.ForNamedSet(RuleNamedSetRef.DxccList))),
+                new RuleActionConfig()),
             CreateSystemRule(
                 SystemLoggedQsoRuleId,
                 "Logged QSO",
                 true,
                 RuleTriggerType.LoggedQso,
-                RuleConditionGroup.CreateAll(new RuleConstantPredicate { Value = true }))
+                RuleConditionGroup.CreateAll(new RuleConstantPredicate { Value = true }),
+                new RuleActionConfig()
+                {
+                    SendNotification = true,
+                    Vibrate = true
+                })
         ];
     }
 
@@ -157,7 +170,7 @@ public static class AlertRuleCatalog
             || string.Equals(ruleId, SystemLoggedQsoRuleId, StringComparison.Ordinal);
     }
 
-    private static AlertRule CreateSystemRule(string id, string name, bool enableByDefault, RuleTriggerType triggerType, RuleConditionGroup rootCondition)
+    private static AlertRule CreateSystemRule(string id, string name, bool enableByDefault, RuleTriggerType triggerType, RuleConditionGroup rootCondition, RuleActionConfig config)
     {
         return new AlertRule
         {
@@ -167,7 +180,7 @@ public static class AlertRuleCatalog
             IsEnabled = enableByDefault,
             TriggerType = triggerType,
             RootCondition = rootCondition,
-            Actions = new RuleActionConfig(),
+            Actions = config,
             CooldownSeconds = DefaultCooldownSeconds,
             Priority = DefaultPriority,
             SortOrder = 0,
