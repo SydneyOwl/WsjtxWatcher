@@ -102,6 +102,7 @@ internal static class RuleTextFormatter
         return namedSetRef switch
         {
             RuleNamedSetRef.IgnoredCallsigns => context.GetString(Resource.String.rule_named_set_ignored_callsigns),
+            RuleNamedSetRef.DxccList => context.GetString(Resource.String.rule_named_set_dxcc_list),
             _ => namedSetRef.ToString()
         };
     }
@@ -179,7 +180,9 @@ internal static class RuleTextFormatter
                 _ => string.Empty
             },
             RuleValueType.NamedSetRef when operand.NamedSetRefValue.HasValue =>
-                $"{GetNamedSetLabel(context, operand.NamedSetRefValue.Value)} [{GetBandMatchModeLabel(context, operand.NamedSetBandMatchModeValue)}]",
+                operand.NamedSetRefValue.Value == RuleNamedSetRef.DxccList
+                    ? GetNamedSetLabel(context, operand.NamedSetRefValue.Value)
+                    : $"{GetNamedSetLabel(context, operand.NamedSetRefValue.Value)} [{GetBandMatchModeLabel(context, operand.NamedSetBandMatchModeValue)}]",
             _ => string.Empty
         };
     }

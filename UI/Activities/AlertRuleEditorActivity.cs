@@ -483,12 +483,7 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
 
         var namedSetLabel = CreateDialogLabel(Resource.String.predicate_named_set);
         var namedSetSpinner = new Spinner(this);
-        var namedSetAdapter = new ArrayAdapter<string>(
-            this,
-            Android.Resource.Layout.SimpleSpinnerItem,
-            Enum.GetValues<RuleNamedSetRef>().Select(namedSet => RuleTextFormatter.GetNamedSetLabel(this, namedSet)).ToArray());
-        namedSetAdapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
-        namedSetSpinner.Adapter = namedSetAdapter;
+        var supportedNamedSets = new List<RuleNamedSetRef>();
 
         var bandModeLabel = CreateDialogLabel(Resource.String.predicate_band_mode);
         var bandModeSpinner = new Spinner(this);
@@ -499,6 +494,12 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
         });
         bandModeAdapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
         bandModeSpinner.Adapter = bandModeAdapter;
+
+        var configureNamedSetButton = new Button(this);
+        configureNamedSetButton.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent)
+        {
+            TopMargin = Dp(10)
+        };
 
         layout.AddView(fieldLabel);
         layout.AddView(fieldSpinner);
@@ -513,9 +514,20 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
         layout.AddView(namedSetSpinner);
         layout.AddView(bandModeLabel);
         layout.AddView(bandModeSpinner);
+        layout.AddView(configureNamedSetButton);
 
         var selectedFieldIndex = fieldDefinitions.FindIndex(definition => definition.Field == workingPredicate.Field);
         fieldSpinner.SetSelection(selectedFieldIndex >= 0 ? selectedFieldIndex : 0);
+
+        IReadOnlyList<RuleNamedSetRef> GetSupportedNamedSets(RuleField field)
+        {
+            return field switch
+            {
+                RuleField.TransmitterCallsign or RuleField.ReceiverCallsign or RuleField.LoggedQsoCallsign => [RuleNamedSetRef.IgnoredCallsigns],
+                RuleField.FromCountryId or RuleField.ToCountryId => [RuleNamedSetRef.DxccList],
+                _ => Enum.GetValues<RuleNamedSetRef>()
+            };
+        }
 
         void BindOperatorSpinner(RuleFieldDefinition definition)
         {
@@ -527,6 +539,32 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
             operatorSpinner.SetSelection(operatorIndex >= 0 ? operatorIndex : 0);
         }
 
+        void BindNamedSetSpinner(RuleFieldDefinition definition)
+        {
+            supportedNamedSets.Clear();
+            supportedNamedSets.AddRange(GetSupportedNamedSets(definition.Field));
+            if (supportedNamedSets.Count == 0)
+            {
+                supportedNamedSets.Add(RuleNamedSetRef.IgnoredCallsigns);
+            }
+
+            if (workingPredicate.Operand.NamedSetRefValue.HasValue && !supportedNamedSets.Contains(workingPredicate.Operand.NamedSetRefValue.Value))
+            {
+                workingPredicate.Operand = RuleOperand.ForNamedSet(supportedNamedSets[0]);
+            }
+
+            var namedSetLabels = supportedNamedSets
+                .Select(namedSet => RuleTextFormatter.GetNamedSetLabel(this, namedSet))
+                .ToArray();
+            var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, namedSetLabels);
+            adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
+            namedSetSpinner.Adapter = adapter;
+
+            var selectedNamedSet = workingPredicate.Operand.NamedSetRefValue ?? supportedNamedSets[0];
+            var selectedNamedSetIndex = supportedNamedSets.IndexOf(selectedNamedSet);
+            namedSetSpinner.SetSelection(selectedNamedSetIndex >= 0 ? selectedNamedSetIndex : 0);
+        }
+
         void UpdateValueViews()
         {
             var definition = fieldDefinitions[Math.Clamp(fieldSpinner.SelectedItemPosition, 0, fieldDefinitions.Count - 1)];
@@ -536,6 +574,10 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
             var boolValue = definition.ValueType == RuleValueType.Boolean && !noValueOperator;
             var listValue = selectedOperator is RuleOperator.In or RuleOperator.NotIn;
             var contextEligible = definition.ValueType == RuleValueType.String && !namedSetOperator && !listValue && !boolValue && !noValueOperator;
+            var selectedNamedSet = supportedNamedSets.Count == 0
+                ? RuleNamedSetRef.IgnoredCallsigns
+                : supportedNamedSets[Math.Clamp(namedSetSpinner.SelectedItemPosition, 0, supportedNamedSets.Count - 1)];
+            var usesBandMatchMode = selectedNamedSet == RuleNamedSetRef.IgnoredCallsigns;
 
             valueSourceLabel.Visibility = contextEligible ? ViewStates.Visible : ViewStates.Gone;
             valueSourceSpinner.Visibility = contextEligible ? ViewStates.Visible : ViewStates.Gone;
@@ -544,12 +586,20 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
             boolSpinner.Visibility = boolValue ? ViewStates.Visible : ViewStates.Gone;
             namedSetLabel.Visibility = namedSetOperator ? ViewStates.Visible : ViewStates.Gone;
             namedSetSpinner.Visibility = namedSetOperator ? ViewStates.Visible : ViewStates.Gone;
-            bandModeLabel.Visibility = namedSetOperator ? ViewStates.Visible : ViewStates.Gone;
-            bandModeSpinner.Visibility = namedSetOperator ? ViewStates.Visible : ViewStates.Gone;
+            bandModeLabel.Visibility = namedSetOperator && usesBandMatchMode ? ViewStates.Visible : ViewStates.Gone;
+            bandModeSpinner.Visibility = namedSetOperator && usesBandMatchMode ? ViewStates.Visible : ViewStates.Gone;
+            configureNamedSetButton.Visibility = namedSetOperator ? ViewStates.Visible : ViewStates.Gone;
+            configureNamedSetButton.Text = selectedNamedSet switch
+            {
+                RuleNamedSetRef.IgnoredCallsigns => GetString(Resource.String.manage_ignored_callsigns),
+                RuleNamedSetRef.DxccList => GetString(Resource.String.set_dxcc_entity),
+                _ => GetString(Resource.String.predicate_named_set)
+            };
         }
 
         var initialFieldDefinition = fieldDefinitions[Math.Clamp(fieldSpinner.SelectedItemPosition, 0, fieldDefinitions.Count - 1)];
         BindOperatorSpinner(initialFieldDefinition);
+        BindNamedSetSpinner(initialFieldDefinition);
 
         if (workingPredicate.Operand.Kind == RuleValueType.ContextRef)
         {
@@ -590,9 +640,28 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
                 workingPredicate.Operator = definition.SupportedOperators[0];
             }
             BindOperatorSpinner(definition);
+            BindNamedSetSpinner(definition);
             UpdateValueViews();
         };
         operatorSpinner.ItemSelected += (_, _) => UpdateValueViews();
+        namedSetSpinner.ItemSelected += (_, _) => UpdateValueViews();
+        configureNamedSetButton.Click += (_, _) =>
+        {
+            var selectedNamedSet = supportedNamedSets.Count == 0
+                ? RuleNamedSetRef.IgnoredCallsigns
+                : supportedNamedSets[Math.Clamp(namedSetSpinner.SelectedItemPosition, 0, supportedNamedSets.Count - 1)];
+            var activityType = selectedNamedSet switch
+            {
+                RuleNamedSetRef.IgnoredCallsigns => typeof(IgnoredCallsignActivity),
+                RuleNamedSetRef.DxccList => typeof(DxccSelectionActivity),
+                _ => null
+            };
+
+            if (activityType is not null)
+            {
+                StartActivity(new Intent(this, activityType));
+            }
+        };
         UpdateValueViews();
 
         var dialog = new AlertDialog.Builder(this)

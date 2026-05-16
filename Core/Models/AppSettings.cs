@@ -13,6 +13,7 @@ public sealed class AppSettings
     public string MyCallsign { get; set; } = string.Empty;
     public string MyGrid { get; set; } = string.Empty;
     public List<AlertRule> AlertRules { get; set; } = [];
+    public HashSet<int> PreferredDxccIds { get; set; } = [.. AlertRuleCatalog.DefaultSelectedDxccIds];
     public bool AutoIgnoreLoggedQso { get; set; } = true;
     public AppTheme Theme { get; set; } = AppTheme.FollowSystem;
 
@@ -31,6 +32,7 @@ public sealed class AppSettings
             MyCallsign = MyCallsign,
             MyGrid = MyGrid,
             AlertRules = AlertRuleCatalog.NormalizeRules(AlertRules),
+            PreferredDxccIds = [.. PreferredDxccIds],
             Theme = Theme,
             AutoIgnoreLoggedQso = AutoIgnoreLoggedQso
         };

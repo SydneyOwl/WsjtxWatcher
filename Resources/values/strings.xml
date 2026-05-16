@@ -168,6 +168,7 @@
     <string name="rule_operator_exists">Exists</string>
     <string name="rule_operator_not_exists">Does not exist</string>
     <string name="rule_named_set_ignored_callsigns">Ignored callsigns</string>
+    <string name="rule_named_set_dxcc_list">DXCC list</string>
     <string name="rule_read_only_help">System preset rules are read-only and only document the default logic.</string>
     <string name="create_rule_title">Choose trigger type</string>
     <string name="create_rule_decode">Decode message rule</string>

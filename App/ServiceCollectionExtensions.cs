@@ -49,6 +49,7 @@ internal static class ServiceCollectionExtensions
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<AlertRulesViewModel>();
         services.AddTransient<AlertRuleEditorViewModel>();
+        services.AddTransient<DxccSelectionViewModel>();
         services.AddTransient<RelaySourceSelectionViewModel>();
         services.AddSingleton<IgnoredCallsignViewModel>();
         return services;

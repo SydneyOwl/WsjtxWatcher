@@ -168,6 +168,7 @@
     <string name="rule_operator_exists">存在</string>
     <string name="rule_operator_not_exists">不存在</string>
     <string name="rule_named_set_ignored_callsigns">忽略呼号集</string>
+    <string name="rule_named_set_dxcc_list">DXCC 列表</string>
     <string name="rule_read_only_help">系统内置规则为只读，仅用于展示默认逻辑。</string>
     <string name="create_rule_title">选择规则触发类型</string>
     <string name="create_rule_decode">消息解码规则</string>

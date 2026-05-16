@@ -32,6 +32,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
             MyCallsign = _sharedPreferences.GetString("callsign", string.Empty) ?? string.Empty,
             MyGrid = _sharedPreferences.GetString("grid", string.Empty) ?? string.Empty,
             AlertRules = LoadAlertRules(),
+            PreferredDxccIds = LoadPreferredDxccIds(),
             AutoIgnoreLoggedQso = _sharedPreferences.GetBoolean("auto_ignore_logged_qso", true),
             Theme = ParseTheme(_sharedPreferences.GetInt("theme", 0))
         };
@@ -53,6 +54,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
         editor.PutString("callsign", settings.MyCallsign);
         editor.PutString("grid", settings.MyGrid);
         editor.PutString("alert_rules", JsonSerializer.Serialize(AlertRuleCatalog.NormalizeRules(settings.AlertRules), JsonOptions));
+        editor.PutStringSet("preferred_dxcc", settings.PreferredDxccIds.Select(id => id.ToString()).ToHashSet());
         editor.PutBoolean("auto_ignore_logged_qso", settings.AutoIgnoreLoggedQso);
         editor.PutInt("theme", (int)settings.Theme);
         if (!editor.Commit())
@@ -91,6 +93,23 @@ public sealed class AndroidSettingsStore : ISettingsStore
         }
 
         return AlertRuleCatalog.CreateSystemRules().Select(rule => rule.Clone()).ToList();
+    }
+
+    private HashSet<int> LoadPreferredDxccIds()
+    {
+        if (!_sharedPreferences.Contains("preferred_dxcc"))
+        {
+            return [.. AlertRuleCatalog.DefaultSelectedDxccIds];
+        }
+
+        var rawValues = _sharedPreferences.GetStringSet("preferred_dxcc", null);
+
+        var ids = (rawValues ?? [])
+            .Select(value => int.TryParse(value, out var id) ? id : 0)
+            .Where(id => id > 0)
+            .ToHashSet();
+
+        return ids;
     }
 
     private static AppTheme ParseTheme(int value)
