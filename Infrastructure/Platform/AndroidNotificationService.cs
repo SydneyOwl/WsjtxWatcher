@@ -10,8 +10,6 @@ public sealed class AndroidNotificationService : INotificationService
 {
     private readonly Application _application;
     private readonly NotificationManager _notificationManager;
-    private DateTimeOffset _lastMessageNotificationAt = DateTimeOffset.MinValue;
-    private DateTimeOffset _lastLoggedQsoNotificationAt = DateTimeOffset.MinValue;
 
     public AndroidNotificationService(Application application)
     {
@@ -61,12 +59,6 @@ public sealed class AndroidNotificationService : INotificationService
             return Task.CompletedTask;
         }
 
-        if (DateTimeOffset.UtcNow - _lastMessageNotificationAt < TimeSpan.FromSeconds(10))
-        {
-            return Task.CompletedTask;
-        }
-
-        _lastMessageNotificationAt = DateTimeOffset.UtcNow;
         ShowAlert(
             int.Parse(_application.GetString(Resource.String.notify_id1)),
             _application.GetString(Resource.String.user_ft8_msg_available),
@@ -81,12 +73,6 @@ public sealed class AndroidNotificationService : INotificationService
             return Task.CompletedTask;
         }
 
-        if (DateTimeOffset.UtcNow - _lastLoggedQsoNotificationAt < TimeSpan.FromSeconds(3))
-        {
-            return Task.CompletedTask;
-        }
-
-        _lastLoggedQsoNotificationAt = DateTimeOffset.UtcNow;
         var message = string.IsNullOrWhiteSpace(band)
             ? string.Format(
                 _application.GetString(Resource.String.qso_logged_notification_message),

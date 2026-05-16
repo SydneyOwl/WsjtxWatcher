@@ -339,184 +339,28 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <LinearLayout
-                android:id="@+id/on_call_op_row"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/on_call_op"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/when_callsign_included"
-                    android:textColor="@color/m3_on_surface"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/cboxLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal">
-
-                <CheckBox
-                    android:id="@+id/send_notification_checkbox"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:checked="false"
-                    android:text="@string/send_notification"
-                    android:textSize="15sp" />
-
-                <CheckBox
-                    android:id="@+id/vibration_checkbox"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="1"
-                    android:checked="false"
-                    android:text="@string/vibration"
-                    android:textSize="15sp" />
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/manage_callsign_patterns"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/manage_callsign_patterns" />
-
             <TextView
-                android:id="@+id/watched_callsign_match_target_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/watched_callsign_match_target"
-                android:textColor="@color/m3_on_surface"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <Spinner
-                android:id="@+id/watched_callsign_match_target_spinner"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:spinnerMode="dropdown" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="18dp"
-                android:background="@color/divider" />
-
-            <TextView
-                android:id="@+id/on_call_all"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:text="@string/when_call_all"
+                android:text="@string/alert_rules"
                 android:textColor="@color/m3_on_surface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
-            <LinearLayout
-                android:id="@+id/cboxLayout_all"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal">
-
-                <CheckBox
-                    android:id="@+id/send_notification_all_checkbox"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:checked="false"
-                    android:text="@string/send_notification"
-                    android:textSize="15sp" />
-
-                <CheckBox
-                    android:id="@+id/vibration_all_checkbox"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="1"
-                    android:checked="false"
-                    android:text="@string/vibration"
-                    android:textSize="15sp" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="18dp"
-                android:background="@color/divider" />
-
             <TextView
-                android:id="@+id/on_dxcc"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:text="@string/on_dxcc"
-                android:textColor="@color/m3_on_surface"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <LinearLayout
-                android:id="@+id/cboxLayout_dxcc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal">
-
-                <CheckBox
-                    android:id="@+id/send_notification_dxcc_checkbox"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:checked="false"
-                    android:text="@string/send_notification"
-                    android:textSize="15sp" />
-
-                <CheckBox
-                    android:id="@+id/vibration_dxcc_checkbox"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="1"
-                    android:checked="false"
-                    android:text="@string/vibration"
-                    android:textSize="15sp" />
-            </LinearLayout>
+                android:layout_marginTop="8dp"
+                android:text="@string/alert_rules_help"
+                android:textColor="@color/m3_on_surface_variant"
+                android:textSize="14sp" />
 
             <Button
-                android:id="@+id/set_dxcc"
+                android:id="@+id/configure_alert_rules"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="@string/set_dxcc_entity" />
-
-            <TextView
-                android:id="@+id/selected_dxcc_match_target_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/selected_dxcc_match_target"
-                android:textColor="@color/m3_on_surface"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <Spinner
-                android:id="@+id/selected_dxcc_match_target_spinner"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:spinnerMode="dropdown" />
+                android:text="@string/configure_alert_rules" />
 
             <Button
                 android:id="@+id/open_notification_settings"
@@ -525,48 +369,6 @@
                 android:layout_marginTop="12dp"
                 android:text="@string/open_notification_settings"
                 android:visibility="gone" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="18dp"
-                android:background="@color/divider" />
-
-            <TextView
-                android:id="@+id/on_logged_qso"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:text="@string/on_logged_qso"
-                android:textColor="@color/m3_on_surface"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal">
-
-                <CheckBox
-                    android:id="@+id/send_notification_logged_qso_checkbox"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:checked="false"
-                    android:text="@string/send_notification"
-                    android:textSize="15sp" />
-
-                <CheckBox
-                    android:id="@+id/vibration_logged_qso_checkbox"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="1"
-                    android:checked="false"
-                    android:text="@string/vibration"
-                    android:textSize="15sp" />
-            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
@@ -591,23 +393,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:text="@string/manage_ignored_callsigns" />
-
-            <TextView
-                android:id="@+id/ignored_callsign_match_target_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/ignored_callsign_match_target"
-                android:textColor="@color/m3_on_surface"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <Spinner
-                android:id="@+id/ignored_callsign_match_target_spinner"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:spinnerMode="dropdown" />
 
             <CheckBox
                 android:id="@+id/auto_ignore_logged_qso_checkbox"

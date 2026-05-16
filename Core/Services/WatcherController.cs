@@ -9,11 +9,14 @@ namespace WsjtxWatcher.Core.Services;
 public sealed class WatcherController : IWsjtEventSink, IDisposable
 {
     private readonly ICountryCatalog _countryCatalog;
+    private readonly AlertRuleCooldownGate _alertRuleCooldownGate;
+    private readonly AlertRuleEvaluator _alertRuleEvaluator;
     private readonly IDeviceFeedbackService _deviceFeedbackService;
     private readonly DecodedMessageFactory _decodedMessageFactory;
     private readonly IGridCacheStore _gridCacheStore;
     private readonly IIgnoredCallsignStore _ignoredCallsignStore;
     private readonly INotificationService _notificationService;
+    private readonly RuleNamedSetResolver _ruleNamedSetResolver;
     private readonly ISettingsStore _settingsStore;
     private readonly IUiDispatcher _uiDispatcher;
     private readonly IWsjtGateway _wsjtGateway;
@@ -40,17 +43,23 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         IIgnoredCallsignStore ignoredCallsignStore,
         INotificationService notificationService,
         IDeviceFeedbackService deviceFeedbackService,
+        RuleNamedSetResolver ruleNamedSetResolver,
         IUiDispatcher uiDispatcher,
         IWsjtGateway wsjtGateway,
-        DecodedMessageFactory decodedMessageFactory)
+        DecodedMessageFactory decodedMessageFactory,
+        AlertRuleEvaluator alertRuleEvaluator,
+        AlertRuleCooldownGate alertRuleCooldownGate)
     {
         State = state;
         _settingsStore = settingsStore;
         _countryCatalog = countryCatalog;
+        _alertRuleCooldownGate = alertRuleCooldownGate;
+        _alertRuleEvaluator = alertRuleEvaluator;
         _gridCacheStore = gridCacheStore;
         _ignoredCallsignStore = ignoredCallsignStore;
         _notificationService = notificationService;
         _deviceFeedbackService = deviceFeedbackService;
+        _ruleNamedSetResolver = ruleNamedSetResolver;
         _uiDispatcher = uiDispatcher;
         _wsjtGateway = wsjtGateway;
         _decodedMessageFactory = decodedMessageFactory;
@@ -71,13 +80,15 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         _settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
+        await _ruleNamedSetResolver.RefreshAsync(cancellationToken).ConfigureAwait(false);
         await _countryCatalog.EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task ReloadSettingsAsync(CancellationToken cancellationToken = default)
     {
         _settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-        await RefreshIgnoredMessagesAsync(cancellationToken).ConfigureAwait(false);
+        await _ruleNamedSetResolver.RefreshAsync(cancellationToken).ConfigureAwait(false);
+        await RefreshMessageRuleMatchesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
@@ -251,9 +262,9 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
                 ToCountryId = isCq ? 0 : receiver.Item4,
                 FromCountryId = transmitter.Item4,
                 ContainsMyCallsign = index % 13 == 0,
-                MatchesWatchedCallsignPattern = index % 19 == 0,
-                MatchesSelectedDxcc = index % 11 == 0,
-                DialFrequencyHz = frequency
+                DialFrequencyHz = frequency,
+                CurrentBand = RadioBandUtility.GetBandName(frequency),
+                MatchesAlertRule = index % 19 == 0 || index % 11 == 0
             });
         }
 
@@ -463,7 +474,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
             }
         }
 
-        var acceptedMessages = new List<(DecodedRadioMessage Message, AppSettings Settings)>(batch.Count);
+        var acceptedMessages = new List<(DecodedRadioMessage Message, AppSettings Settings, IReadOnlyList<AlertRuleEvaluation> Evaluations)>(batch.Count);
         foreach (var item in batch)
         {
             DecodedRadioMessage message;
@@ -484,22 +495,15 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
 
             if (item.RunId == Interlocked.Read(ref _runId))
             {
-                acceptedMessages.Add((message, item.SettingsSnapshot));
+                var evaluations = _alertRuleEvaluator.Evaluate(message, item.SettingsSnapshot);
+                message.MatchesAlertRule = evaluations.Count > 0;
+                acceptedMessages.Add((message, item.SettingsSnapshot, evaluations));
             }
         }
 
         if (acceptedMessages.Count == 0)
         {
             return;
-        }
-
-        try
-        {
-            await ApplyIgnoredStatusesAsync(acceptedMessages, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            Log.Warning(exception, "Failed to apply ignored-callsign state to a decode batch.");
         }
 
         try
@@ -521,7 +525,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         {
             try
             {
-                await NotifyForMessageAsync(item.Message, item.Settings, cancellationToken).ConfigureAwait(false);
+                await NotifyForMessageAsync(item.Message, item.Evaluations, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
@@ -530,47 +534,27 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         }
     }
 
-    private async Task NotifyForMessageAsync(DecodedRadioMessage message, AppSettings settingsSnapshot, CancellationToken cancellationToken)
+    private async Task NotifyForMessageAsync(DecodedRadioMessage message, IReadOnlyList<AlertRuleEvaluation> triggerResults, CancellationToken cancellationToken)
     {
-        if (message.IsIgnored)
+        if (triggerResults.Count == 0)
         {
             return;
         }
 
-        if (settingsSnapshot.VibrateOnAnyMessage)
+        var trigger = triggerResults[0];
+        if (!_alertRuleCooldownGate.TryEnter(trigger.RuleId, trigger.CooldownSeconds))
+        {
+            return;
+        }
+
+        if (trigger.Vibrate)
         {
             await _deviceFeedbackService.VibrateAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        if (settingsSnapshot.NotifyOnAnyMessage)
+        if (trigger.SendNotification)
         {
-            await _notificationService.ShowMessageAlertAsync(message.Message, cancellationToken).ConfigureAwait(false);
-        }
-
-        if (message.MatchesWatchedCallsignPattern)
-        {
-            if (settingsSnapshot.VibrateOnMyCall)
-            {
-                await _deviceFeedbackService.VibrateAsync(cancellationToken).ConfigureAwait(false);
-            }
-
-            if (settingsSnapshot.NotifyOnMyCall)
-            {
-                await _notificationService.ShowMessageAlertAsync(message.Message, cancellationToken).ConfigureAwait(false);
-            }
-        }
-
-        if (message.MatchesSelectedDxcc)
-        {
-            if (settingsSnapshot.VibrateOnSelectedDxcc)
-            {
-                await _deviceFeedbackService.VibrateAsync(cancellationToken).ConfigureAwait(false);
-            }
-
-            if (settingsSnapshot.NotifyOnSelectedDxcc)
-            {
-                await _notificationService.ShowMessageAlertAsync(message.Message, cancellationToken).ConfigureAwait(false);
-            }
+            await _notificationService.ShowMessageAlertAsync(trigger.Message, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -702,17 +686,12 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
             _ignoredCallsignMutationLock.Release();
         }
 
-        await RefreshIgnoredMessagesAsync(cancellationToken).ConfigureAwait(false);
+        await RefreshMessageRuleMatchesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private async Task NotifyForLoggedQsoAsync(WsjtQsoLoggedEvent qsoLoggedEvent, CancellationToken cancellationToken)
     {
         var settingsSnapshot = _settings.Clone();
-        if (!settingsSnapshot.NotifyOnLoggedQso && !settingsSnapshot.VibrateOnLoggedQso)
-        {
-            return;
-        }
-
         var callsign = IgnoredCallsignMatcher.NormalizeCallsign(qsoLoggedEvent.DxCall);
         if (string.IsNullOrWhiteSpace(callsign))
         {
@@ -720,12 +699,23 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         }
 
         var band = ResolveLoggedQsoBand(qsoLoggedEvent);
-        if (settingsSnapshot.VibrateOnLoggedQso)
+        var trigger = _alertRuleEvaluator.Evaluate(qsoLoggedEvent, settingsSnapshot, callsign, band).FirstOrDefault();
+        if (trigger is null)
+        {
+            return;
+        }
+
+        if (!_alertRuleCooldownGate.TryEnter(trigger.RuleId, trigger.CooldownSeconds))
+        {
+            return;
+        }
+
+        if (trigger.Vibrate)
         {
             await _deviceFeedbackService.VibrateAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        if (settingsSnapshot.NotifyOnLoggedQso)
+        if (trigger.SendNotification)
         {
             await _notificationService.ShowQsoLoggedAlertAsync(callsign, band, cancellationToken).ConfigureAwait(false);
         }
@@ -745,33 +735,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         return IgnoredCallsignMatcher.NormalizeBand(RadioBandUtility.GetBandName(frequencyHz));
     }
 
-    private async Task ApplyIgnoredStatusesAsync(
-        IReadOnlyList<(DecodedRadioMessage Message, AppSettings Settings)> acceptedMessages,
-        CancellationToken cancellationToken)
-    {
-        var lookupKeys = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var item in acceptedMessages)
-        {
-            IgnoredCallsignMatcher.AddLookupKeys(
-                lookupKeys,
-                item.Message,
-                item.Settings.IgnoredCallsignMatchTarget);
-        }
-
-        var matchedKeys = lookupKeys.Count == 0
-            ? EmptyLookupSet.Instance
-            : await _ignoredCallsignStore.FindMatchesAsync(lookupKeys, cancellationToken).ConfigureAwait(false);
-
-        foreach (var item in acceptedMessages)
-        {
-            item.Message.IsIgnored = IgnoredCallsignMatcher.IsIgnored(
-                item.Message,
-                matchedKeys,
-                item.Settings.IgnoredCallsignMatchTarget);
-        }
-    }
-
-    private async Task RefreshIgnoredMessagesAsync(CancellationToken cancellationToken)
+    private async Task RefreshMessageRuleMatchesAsync(CancellationToken cancellationToken)
     {
         var settingsSnapshot = _settings.Clone();
         DecodedRadioMessage[] messages = [];
@@ -787,24 +751,11 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
             return;
         }
 
-        var lookupKeys = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var message in messages)
-        {
-            IgnoredCallsignMatcher.AddLookupKeys(lookupKeys, message, settingsSnapshot.IgnoredCallsignMatchTarget);
-        }
-
-        var matchedKeys = lookupKeys.Count == 0
-            ? EmptyLookupSet.Instance
-            : await _ignoredCallsignStore.FindMatchesAsync(lookupKeys, cancellationToken).ConfigureAwait(false);
-
         await _uiDispatcher.InvokeAsync(() =>
         {
             foreach (var message in messages)
             {
-                message.IsIgnored = IgnoredCallsignMatcher.IsIgnored(
-                    message,
-                    matchedKeys,
-                    settingsSnapshot.IgnoredCallsignMatchTarget);
+                message.MatchesAlertRule = _alertRuleEvaluator.Evaluate(message, settingsSnapshot).Count > 0;
             }
 
             State.RefreshMessagePresentation();
@@ -891,31 +842,4 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
         public DateTimeOffset LastActivityUtc { get; set; }
     }
 
-    private sealed class EmptyLookupSet : IReadOnlySet<string>
-    {
-        public static EmptyLookupSet Instance { get; } = new();
-
-        public int Count => 0;
-
-        public bool Contains(string item) => false;
-
-        public IEnumerator<string> GetEnumerator()
-        {
-            yield break;
-        }
-
-        public bool IsProperSubsetOf(IEnumerable<string> other) => true;
-
-        public bool IsProperSupersetOf(IEnumerable<string> other) => !other.Any();
-
-        public bool IsSubsetOf(IEnumerable<string> other) => true;
-
-        public bool IsSupersetOf(IEnumerable<string> other) => !other.Any();
-
-        public bool Overlaps(IEnumerable<string> other) => false;
-
-        public bool SetEquals(IEnumerable<string> other) => !other.Any();
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
-    }
 }

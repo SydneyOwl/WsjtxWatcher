@@ -23,10 +23,9 @@ public sealed class DecodedRadioMessage
     public int ToCountryId { get; init; }
     public int FromCountryId { get; init; }
     public bool ContainsMyCallsign { get; init; }
-    public bool MatchesWatchedCallsignPattern { get; init; }
-    public bool MatchesSelectedDxcc { get; init; }
     public double DialFrequencyHz { get; init; }
-    public bool IsIgnored { get; set; }
+    public string CurrentBand { get; init; } = string.Empty;
+    public bool MatchesAlertRule { get; set; }
 
     public static DecodedRadioMessage CreateUserTransmit(string message, string mode)
     {

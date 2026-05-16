@@ -19,20 +19,6 @@ public partial class SettingsViewModel : ObservableObject
     private readonly ISettingsStore _settingsStore;
     private readonly Services.WatcherController _watcherController;
     private readonly RelayRuntimeState _relayRuntimeState;
-    [ObservableProperty]
-    private bool notifyOnAnyMessage;
-
-    [ObservableProperty]
-    private bool notifyOnMyCall;
-
-    [ObservableProperty]
-    private bool notifyOnSelectedDxcc;
-
-    [ObservableProperty]
-    private bool notifyOnLoggedQso;
-
-    [ObservableProperty]
-    private bool vibrateOnLoggedQso;
 
     [ObservableProperty]
     private string port = "2237";
@@ -62,34 +48,10 @@ public partial class SettingsViewModel : ObservableObject
     private string myGrid = string.Empty;
 
     [ObservableProperty]
-    private bool vibrateOnAnyMessage;
-
-    [ObservableProperty]
-    private bool vibrateOnMyCall;
-
-    [ObservableProperty]
-    private bool vibrateOnSelectedDxcc;
-
-    [ObservableProperty]
-    private int selectedDxccCount;
-
-    [ObservableProperty]
     private AppLanguage selectedLanguage = AppLanguage.English;
 
     [ObservableProperty]
-    private int watchedCallsignPatternCount;
-
-    [ObservableProperty]
     private int ignoredCallsignCount;
-
-    [ObservableProperty]
-    private IgnoredCallsignMatchTarget ignoredCallsignMatchTarget = IgnoredCallsignMatchTarget.TransmitterOnly;
-
-    [ObservableProperty]
-    private WatchedCallsignMatchTarget watchedCallsignMatchTarget = WatchedCallsignMatchTarget.TransmitterOnly;
-
-    [ObservableProperty]
-    private SelectedDxccMatchTarget selectedDxccMatchTarget = SelectedDxccMatchTarget.TransmitterOnly;
 
     [ObservableProperty]
     private bool autoIgnoreLoggedQso = true;
@@ -159,21 +121,8 @@ public partial class SettingsViewModel : ObservableObject
         SelectedLanguage = _appLanguageService.ResolveConfiguredLanguage(settings.Language);
         MyCallsign = settings.MyCallsign;
         MyGrid = settings.MyGrid;
-        WatchedCallsignPatternCount = settings.WatchedCallsignPatterns.Count;
         IgnoredCallsignCount = await ignoredCallsignCountTask.ConfigureAwait(false);
-        NotifyOnMyCall = settings.NotifyOnMyCall;
-        NotifyOnAnyMessage = settings.NotifyOnAnyMessage;
-        NotifyOnSelectedDxcc = settings.NotifyOnSelectedDxcc;
-        NotifyOnLoggedQso = settings.NotifyOnLoggedQso;
-        VibrateOnMyCall = settings.VibrateOnMyCall;
-        VibrateOnAnyMessage = settings.VibrateOnAnyMessage;
-        VibrateOnSelectedDxcc = settings.VibrateOnSelectedDxcc;
-        VibrateOnLoggedQso = settings.VibrateOnLoggedQso;
-        IgnoredCallsignMatchTarget = settings.IgnoredCallsignMatchTarget;
-        WatchedCallsignMatchTarget = settings.WatchedCallsignMatchTarget;
-        SelectedDxccMatchTarget = settings.SelectedDxccMatchTarget;
         AutoIgnoreLoggedQso = settings.AutoIgnoreLoggedQso;
-        SelectedDxccCount = settings.PreferredDxccIds.Count;
         SelectedTheme = settings.Theme;
         OnPropertyChanged(nameof(LocalIpAddress));
         OnPropertyChanged(nameof(IsIgnoringBatteryOptimizations));
@@ -186,9 +135,7 @@ public partial class SettingsViewModel : ObservableObject
     public async Task<SettingsSaveResult> SaveAsync(CancellationToken cancellationToken = default)
     {
         var existingSettings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-        var normalizedSettings = CreateSettings(
-            existingSettings.PreferredDxccIds,
-            existingSettings.WatchedCallsignPatterns);
+        var normalizedSettings = CreateSettings(existingSettings.AlertRules);
         var restartRequired = RequiresGatewayRestart(existingSettings, normalizedSettings);
         var sourceSwitchRequired = RequiresRelaySourceSwitch(existingSettings, normalizedSettings);
         var serviceWasRunning = _watcherController.State.IsServiceRunning;
@@ -214,9 +161,7 @@ public partial class SettingsViewModel : ObservableObject
     public async Task SaveAndStopAsync(CancellationToken cancellationToken = default)
     {
         var existingSettings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-        var normalizedSettings = CreateSettings(
-            existingSettings.PreferredDxccIds,
-            existingSettings.WatchedCallsignPatterns);
+        var normalizedSettings = CreateSettings(existingSettings.AlertRules);
 
         await _settingsStore.SaveAsync(normalizedSettings, cancellationToken).ConfigureAwait(false);
         await _watcherController.StopAsync(cancellationToken).ConfigureAwait(false);
@@ -272,9 +217,7 @@ public partial class SettingsViewModel : ObservableObject
     }
 #endif
 
-    private AppSettings CreateSettings(
-        IReadOnlyCollection<int> preferredDxccIds,
-        IReadOnlyCollection<string> watchedCallsignPatterns)
+    private AppSettings CreateSettings(IReadOnlyCollection<AlertRule> alertRules)
     {
         return new AppSettings
         {
@@ -288,20 +231,8 @@ public partial class SettingsViewModel : ObservableObject
             Language = SelectedLanguage.ToStorageValue(),
             MyCallsign = (MyCallsign ?? string.Empty).Trim().ToUpperInvariant(),
             MyGrid = (MyGrid ?? string.Empty).Trim().ToUpperInvariant(),
-            WatchedCallsignPatterns = [.. CallsignPatternMatcher.NormalizePatterns(watchedCallsignPatterns)],
-            NotifyOnMyCall = NotifyOnMyCall,
-            NotifyOnAnyMessage = NotifyOnAnyMessage,
-            NotifyOnSelectedDxcc = NotifyOnSelectedDxcc,
-            NotifyOnLoggedQso = NotifyOnLoggedQso,
-            VibrateOnMyCall = VibrateOnMyCall,
-            VibrateOnAnyMessage = VibrateOnAnyMessage,
-            VibrateOnSelectedDxcc = VibrateOnSelectedDxcc,
-            VibrateOnLoggedQso = VibrateOnLoggedQso,
+            AlertRules = AlertRuleCatalog.NormalizeCustomRules(alertRules),
             AutoIgnoreLoggedQso = AutoIgnoreLoggedQso,
-            IgnoredCallsignMatchTarget = IgnoredCallsignMatchTarget,
-            WatchedCallsignMatchTarget = WatchedCallsignMatchTarget,
-            SelectedDxccMatchTarget = SelectedDxccMatchTarget,
-            PreferredDxccIds = new HashSet<int>(preferredDxccIds),
             Theme = SelectedTheme
         };
     }

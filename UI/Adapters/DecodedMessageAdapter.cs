@@ -134,7 +134,6 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
     private void BindViewHolder(ViewHolder holder, DecodedRadioMessage message)
     {
         var settings = _settingsProvider();
-        var isIgnored = message.IsIgnored;
         var languageCode = Java.Util.Locale.Default?.Language ?? "en";
         var isCompactMessage = message.IsUserTransmit || message.IsSystemNotice;
         var displayMessage = message.IsUserTransmit
@@ -152,9 +151,7 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
 
         holder.Message.PaintFlags = PaintFlags.LinearText;
         holder.Message.SetTextColor(GetColor(Resource.Color.m3_on_surface_variant));
-        holder.Message.TextFormatted = isIgnored
-            ? new Java.Lang.String(displayMessage)
-            : BuildMessageText(displayMessage, message, settings);
+        holder.Message.TextFormatted = BuildMessageText(displayMessage, message, settings);
 
         if (!isCompactMessage)
         {
@@ -169,14 +166,7 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
             holder.Distance.Text = message.DistanceText;
             ApplyModeStatus(holder.LowConfidence, message);
             holder.Band.Text = FormatFrequency(message);
-            holder.Message.SetTextColor(GetColor(isIgnored
-                ? Resource.Color.text_muted
-                : Resource.Color.m3_on_surface_variant));
-
-            if (isIgnored)
-            {
-                holder.Message.PaintFlags |= PaintFlags.StrikeThruText;
-            }
+            holder.Message.SetTextColor(GetColor(Resource.Color.m3_on_surface_variant));
         }
         else
         {
@@ -396,13 +386,6 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
             return (Resource.Color.period_my_tx_fill, Resource.Color.period_my_tx_stroke);
         }
 
-        if (message.IsIgnored)
-        {
-            return IsOddPeriod(message.DecodeTimeUtc)
-                ? (Resource.Color.period_odd_fill, Resource.Color.period_odd_stroke)
-                : (Resource.Color.period_even_fill, Resource.Color.period_even_stroke);
-        }
-
         return IsOddPeriod(message.DecodeTimeUtc)
             ? (Resource.Color.period_odd_fill, Resource.Color.period_odd_stroke)
             : (Resource.Color.period_even_fill, Resource.Color.period_even_stroke);
@@ -490,21 +473,6 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
         return drawable;
     }
 
-    private static bool IsAnyMessageHighlightEnabled(AppSettings settings)
-    {
-        return settings.NotifyOnAnyMessage || settings.VibrateOnAnyMessage;
-    }
-
-    private static bool IsWatchedCallsignHighlightEnabled(AppSettings settings)
-    {
-        return settings.NotifyOnMyCall || settings.VibrateOnMyCall;
-    }
-
-    private static bool IsDxccHighlightEnabled(AppSettings settings)
-    {
-        return settings.NotifyOnSelectedDxcc || settings.VibrateOnSelectedDxcc;
-    }
-
     private static int GetModeColor(string mode)
     {
         return mode switch
@@ -573,24 +541,8 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
 
     private static int? ResolveMessageHighlightColor(DecodedRadioMessage message, AppSettings settings)
     {
-        var matchesWatchedCallsign = message.MatchesWatchedCallsignPattern && IsWatchedCallsignHighlightEnabled(settings);
-        var matchesDxcc = message.MatchesSelectedDxcc && IsDxccHighlightEnabled(settings);
-        if (matchesWatchedCallsign && matchesDxcc)
-        {
-            return Resource.Color.match_multi_fill;
-        }
-
-        if (matchesWatchedCallsign)
-        {
-            return Resource.Color.match_callsign_fill;
-        }
-
-        if (matchesDxcc)
-        {
-            return Resource.Color.match_dxcc_fill;
-        }
-
-        if (IsAnyMessageHighlightEnabled(settings))
+        _ = settings;
+        if (message.MatchesAlertRule)
         {
             return Resource.Color.match_any_fill;
         }

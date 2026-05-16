@@ -1,14 +1,11 @@
-using Android;
 using Android.App;
 using Android.Content;
-using Android.Content.PM;
 using Android.Graphics;
 using Android.OS;
 using Android.Views;
 using Android.Widget;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Runtime.Versioning;
 using Serilog;
 using WsjtxWatcher.App;
 using WsjtxWatcher.Core.Contracts;
@@ -20,27 +17,7 @@ namespace WsjtxWatcher.UI.Activities;
 [Activity(Label = "@string/settings", Exported = false)]
 public sealed class SettingsActivity : LocalizedActivity
 {
-    private const int NotificationPermissionRequestCode = 2001;
     private const string RepositoryUrl = "https://github.com/sydneyowl/wsjtxwatcher";
-    private readonly IgnoredCallsignMatchTarget[] _ignoredCallsignMatchTargets =
-    [
-        IgnoredCallsignMatchTarget.Disabled,
-        IgnoredCallsignMatchTarget.TransmitterOnly,
-        IgnoredCallsignMatchTarget.ReceiverOnly,
-        IgnoredCallsignMatchTarget.ReceiverOrTransmitter
-    ];
-    private readonly WatchedCallsignMatchTarget[] _watchedCallsignMatchTargets =
-    [
-        WatchedCallsignMatchTarget.TransmitterOnly,
-        WatchedCallsignMatchTarget.ReceiverOnly,
-        WatchedCallsignMatchTarget.ReceiverOrTransmitter
-    ];
-    private readonly SelectedDxccMatchTarget[] _selectedDxccMatchTargets =
-    [
-        SelectedDxccMatchTarget.TransmitterOnly,
-        SelectedDxccMatchTarget.ReceiverOnly,
-        SelectedDxccMatchTarget.ReceiverOrTransmitter
-    ];
     private readonly DataSourceType[] _dataSourceTypes = [DataSourceType.Udp, DataSourceType.Relay];
     private readonly AppLanguage[] _supportedLanguages = [AppLanguage.SimplifiedChinese, AppLanguage.English];
     private readonly AppTheme[] _themeTypes = [AppTheme.FollowSystem, AppTheme.Light, AppTheme.Dark];
@@ -53,11 +30,8 @@ public sealed class SettingsActivity : LocalizedActivity
     private EditText _callsignValue = null!;
     private Spinner _dataSourceSpinner = null!;
     private TextView _ipAddressValue = null!;
-    private Spinner _ignoredCallsignMatchTargetSpinner = null!;
-    private Spinner _watchedCallsignMatchTargetSpinner = null!;
-    private Spinner _selectedDxccMatchTargetSpinner = null!;
+    private Button _configureAlertRulesButton = null!;
     private Button _manageIgnoredCallsignsButton = null!;
-    private Button _manageCallsignPatternsButton = null!;
     private Button _openNotificationSettingsButton = null!;
     private Button _openLogButton = null!;
     private EditText _locationValue = null!;
@@ -78,21 +52,9 @@ public sealed class SettingsActivity : LocalizedActivity
     private Button _resetAllButton = null!;
     private Button _resetDatabaseButton = null!;
     private Button _addTestDataButton = null!;
-    private CheckBox _sendNotificationAllCheckbox = null!;
-    private CheckBox _sendNotificationCheckbox = null!;
-    private CheckBox _sendNotificationDxccCheckbox = null!;
-    private CheckBox _sendNotificationLoggedQsoCheckbox = null!;
-    private Button _setDxccButton = null!;
     private TextView _versionValue = null!;
     private CheckBox _autoIgnoreLoggedQsoCheckbox = null!;
-    private CheckBox _vibrationAllCheckbox = null!;
-    private CheckBox _vibrationCheckbox = null!;
-    private CheckBox _vibrationDxccCheckbox = null!;
-    private CheckBox _vibrationLoggedQsoCheckbox = null!;
     private INotificationService _notificationService = null!;
-    private CheckBox? _pendingNotificationCheckbox;
-    private Action<bool>? _pendingNotificationSetter;
-    private bool _suppressNotificationToggleEvents;
     private bool _isExitingApplication;
     private readonly SemaphoreSlim _pauseSaveLock = new(1, 1);
 
@@ -109,9 +71,6 @@ public sealed class SettingsActivity : LocalizedActivity
         InitializeDataSourceSpinner();
         InitializeLanguageSpinner();
         InitializeThemeSpinner();
-        InitializeIgnoredCallsignMatchTargetSpinner();
-        InitializeWatchedCallsignMatchTargetSpinner();
-        InitializeSelectedDxccMatchTargetSpinner();
         BindEvents();
         _viewModel.RelayRuntimeState.PropertyChanged += OnRelayRuntimeStateChanged;
         _viewModel.RelayRuntimeState.Sources.CollectionChanged += OnRelaySourcesChanged;
@@ -167,27 +126,15 @@ public sealed class SettingsActivity : LocalizedActivity
         _versionValue = FindViewById<TextView>(Resource.Id.version_value)!;
         _languageSpinner = FindViewById<Spinner>(Resource.Id.language_spinner)!;
         _themeSpinner = FindViewById<Spinner>(Resource.Id.theme_spinner)!;
-        _ignoredCallsignMatchTargetSpinner = FindViewById<Spinner>(Resource.Id.ignored_callsign_match_target_spinner)!;
-        _watchedCallsignMatchTargetSpinner = FindViewById<Spinner>(Resource.Id.watched_callsign_match_target_spinner)!;
-        _selectedDxccMatchTargetSpinner = FindViewById<Spinner>(Resource.Id.selected_dxcc_match_target_spinner)!;
-        _manageCallsignPatternsButton = FindViewById<Button>(Resource.Id.manage_callsign_patterns)!;
         _manageIgnoredCallsignsButton = FindViewById<Button>(Resource.Id.manage_ignored_callsigns)!;
         _openNotificationSettingsButton = FindViewById<Button>(Resource.Id.open_notification_settings)!;
-        _sendNotificationCheckbox = FindViewById<CheckBox>(Resource.Id.send_notification_checkbox)!;
-        _vibrationCheckbox = FindViewById<CheckBox>(Resource.Id.vibration_checkbox)!;
-        _sendNotificationAllCheckbox = FindViewById<CheckBox>(Resource.Id.send_notification_all_checkbox)!;
-        _vibrationAllCheckbox = FindViewById<CheckBox>(Resource.Id.vibration_all_checkbox)!;
-        _sendNotificationDxccCheckbox = FindViewById<CheckBox>(Resource.Id.send_notification_dxcc_checkbox)!;
-        _sendNotificationLoggedQsoCheckbox = FindViewById<CheckBox>(Resource.Id.send_notification_logged_qso_checkbox)!;
-        _vibrationDxccCheckbox = FindViewById<CheckBox>(Resource.Id.vibration_dxcc_checkbox)!;
-        _vibrationLoggedQsoCheckbox = FindViewById<CheckBox>(Resource.Id.vibration_logged_qso_checkbox)!;
+        _configureAlertRulesButton = FindViewById<Button>(Resource.Id.configure_alert_rules)!;
         _resetDatabaseButton = FindViewById<Button>(Resource.Id.reset_database)!;
         _resetAllButton = FindViewById<Button>(Resource.Id.reset_all)!;
         _addTestDataButton = FindViewById<Button>(Resource.Id.add_test_data)!;
         _openLogButton = FindViewById<Button>(Resource.Id.open_log)!;
         _addWhitelistButton = FindViewById<Button>(Resource.Id.add_white_list)!;
         _addBackgroundButton = FindViewById<Button>(Resource.Id.add_background)!;
-        _setDxccButton = FindViewById<Button>(Resource.Id.set_dxcc)!;
         _autoIgnoreLoggedQsoCheckbox = FindViewById<CheckBox>(Resource.Id.auto_ignore_logged_qso_checkbox)!;
     }
 
@@ -213,30 +160,6 @@ public sealed class SettingsActivity : LocalizedActivity
         var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, labels);
         adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
         _themeSpinner.Adapter = adapter;
-    }
-
-    private void InitializeIgnoredCallsignMatchTargetSpinner()
-    {
-        var labels = _ignoredCallsignMatchTargets.Select(GetIgnoredCallsignMatchTargetLabel).ToArray();
-        var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, labels);
-        adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
-        _ignoredCallsignMatchTargetSpinner.Adapter = adapter;
-    }
-
-    private void InitializeWatchedCallsignMatchTargetSpinner()
-    {
-        var labels = _watchedCallsignMatchTargets.Select(GetWatchedCallsignMatchTargetLabel).ToArray();
-        var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, labels);
-        adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
-        _watchedCallsignMatchTargetSpinner.Adapter = adapter;
-    }
-
-    private void InitializeSelectedDxccMatchTargetSpinner()
-    {
-        var labels = _selectedDxccMatchTargets.Select(GetSelectedDxccMatchTargetLabel).ToArray();
-        var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, labels);
-        adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
-        _selectedDxccMatchTargetSpinner.Adapter = adapter;
     }
 
     private void BindEvents()
@@ -287,16 +210,6 @@ public sealed class SettingsActivity : LocalizedActivity
             }
         };
 
-        _ignoredCallsignMatchTargetSpinner.ItemSelected += (_, args) =>
-        {
-            if (_isBinding)
-            {
-                return;
-            }
-
-            _viewModel.IgnoredCallsignMatchTarget = _ignoredCallsignMatchTargets[Math.Clamp(args.Position, 0, _ignoredCallsignMatchTargets.Length - 1)];
-        };
-
         _themeSpinner.ItemSelected += (_, args) =>
         {
             if (_isBinding)
@@ -307,26 +220,6 @@ public sealed class SettingsActivity : LocalizedActivity
             var selectedTheme = _themeTypes[Math.Clamp(args.Position, 0, _themeTypes.Length - 1)];
             _viewModel.SelectedTheme = selectedTheme;
             _themeService.ApplyTheme(selectedTheme);
-        };
-
-        _watchedCallsignMatchTargetSpinner.ItemSelected += (_, args) =>
-        {
-            if (_isBinding)
-            {
-                return;
-            }
-
-            _viewModel.WatchedCallsignMatchTarget = _watchedCallsignMatchTargets[Math.Clamp(args.Position, 0, _watchedCallsignMatchTargets.Length - 1)];
-        };
-
-        _selectedDxccMatchTargetSpinner.ItemSelected += (_, args) =>
-        {
-            if (_isBinding)
-            {
-                return;
-            }
-
-            _viewModel.SelectedDxccMatchTarget = _selectedDxccMatchTargets[Math.Clamp(args.Position, 0, _selectedDxccMatchTargets.Length - 1)];
         };
 
         _portValue.TextChanged += (_, _) =>
@@ -374,50 +267,6 @@ public sealed class SettingsActivity : LocalizedActivity
             if (!_isBinding)
             {
                 _viewModel.MyGrid = _locationValue.Text ?? string.Empty;
-            }
-        };
-
-        _sendNotificationCheckbox.CheckedChange += (_, args) =>
-            HandleNotificationToggle(_sendNotificationCheckbox, value => _viewModel.NotifyOnMyCall = value, args.IsChecked);
-
-        _vibrationCheckbox.CheckedChange += (_, args) =>
-        {
-            if (!_isBinding)
-            {
-                _viewModel.VibrateOnMyCall = args.IsChecked;
-            }
-        };
-
-        _sendNotificationAllCheckbox.CheckedChange += (_, args) =>
-            HandleNotificationToggle(_sendNotificationAllCheckbox, value => _viewModel.NotifyOnAnyMessage = value, args.IsChecked);
-
-        _vibrationAllCheckbox.CheckedChange += (_, args) =>
-        {
-            if (!_isBinding)
-            {
-                _viewModel.VibrateOnAnyMessage = args.IsChecked;
-            }
-        };
-
-        _sendNotificationDxccCheckbox.CheckedChange += (_, args) =>
-            HandleNotificationToggle(_sendNotificationDxccCheckbox, value => _viewModel.NotifyOnSelectedDxcc = value, args.IsChecked);
-
-        _sendNotificationLoggedQsoCheckbox.CheckedChange += (_, args) =>
-            HandleNotificationToggle(_sendNotificationLoggedQsoCheckbox, value => _viewModel.NotifyOnLoggedQso = value, args.IsChecked);
-
-        _vibrationDxccCheckbox.CheckedChange += (_, args) =>
-        {
-            if (!_isBinding)
-            {
-                _viewModel.VibrateOnSelectedDxcc = args.IsChecked;
-            }
-        };
-
-        _vibrationLoggedQsoCheckbox.CheckedChange += (_, args) =>
-        {
-            if (!_isBinding)
-            {
-                _viewModel.VibrateOnLoggedQso = args.IsChecked;
             }
         };
 
@@ -482,6 +331,7 @@ public sealed class SettingsActivity : LocalizedActivity
         };
 
         _openNotificationSettingsButton.Click += (_, _) => _notificationService.OpenNotificationSettings();
+        _configureAlertRulesButton.Click += (_, _) => StartActivity(typeof(AlertRulesActivity));
         _relayTestConnectionButton.Click += async (_, _) => await TestRelayConnectionAsync().ConfigureAwait(false);
         _relaySelectedSourceButton.Click += async (_, _) =>
         {
@@ -502,8 +352,6 @@ public sealed class SettingsActivity : LocalizedActivity
             RunOnUiThread(() => ShowSaveResultToast(saveResult));
         };
         _manageIgnoredCallsignsButton.Click += (_, _) => StartActivity(typeof(IgnoredCallsignActivity));
-        _manageCallsignPatternsButton.Click += (_, _) => StartActivity(typeof(CallsignPatternActivity));
-        _setDxccButton.Click += (_, _) => StartActivity(typeof(DxccSelectionActivity));
         _versionValue.Click += (_, _) =>
         {
             try
@@ -537,53 +385,15 @@ public sealed class SettingsActivity : LocalizedActivity
             _versionValue.PaintFlags |= PaintFlags.UnderlineText;
             _languageSpinner.SetSelection(GetLanguageIndex(_viewModel.SelectedLanguage));
             _themeSpinner.SetSelection(GetThemeIndex(_viewModel.SelectedTheme));
-            _ignoredCallsignMatchTargetSpinner.SetSelection(GetIgnoredCallsignMatchTargetIndex(_viewModel.IgnoredCallsignMatchTarget));
-            _watchedCallsignMatchTargetSpinner.SetSelection(GetWatchedCallsignMatchTargetIndex(_viewModel.WatchedCallsignMatchTarget));
-            _selectedDxccMatchTargetSpinner.SetSelection(GetSelectedDxccMatchTargetIndex(_viewModel.SelectedDxccMatchTarget));
-            _manageCallsignPatternsButton.Text = $"{GetString(Resource.String.manage_callsign_patterns)} ({_viewModel.WatchedCallsignPatternCount})";
             _manageIgnoredCallsignsButton.Text = $"{GetString(Resource.String.manage_ignored_callsigns)} ({_viewModel.IgnoredCallsignCount})";
-            _sendNotificationCheckbox.Checked = _viewModel.NotifyOnMyCall;
-            _vibrationCheckbox.Checked = _viewModel.VibrateOnMyCall;
-            _sendNotificationAllCheckbox.Checked = _viewModel.NotifyOnAnyMessage;
-            _vibrationAllCheckbox.Checked = _viewModel.VibrateOnAnyMessage;
-            _sendNotificationDxccCheckbox.Checked = _viewModel.NotifyOnSelectedDxcc;
-            _vibrationDxccCheckbox.Checked = _viewModel.VibrateOnSelectedDxcc;
-            _sendNotificationLoggedQsoCheckbox.Checked = _viewModel.NotifyOnLoggedQso;
-            _vibrationLoggedQsoCheckbox.Checked = _viewModel.VibrateOnLoggedQso;
             _autoIgnoreLoggedQsoCheckbox.Checked = _viewModel.AutoIgnoreLoggedQso;
-            UpdateNotificationSettingsButtonVisibility();
             UpdateDataSourceSectionVisibility();
             UpdateRelaySection();
+            UpdateNotificationSettingsButtonVisibility();
             _addWhitelistButton.Enabled = !_viewModel.IsIgnoringBatteryOptimizations;
-            _setDxccButton.Text = $"{GetString(Resource.String.set_dxcc_entity)} ({_viewModel.SelectedDxccCount})";
+            _configureAlertRulesButton.Text = GetString(Resource.String.configure_alert_rules);
             _isBinding = false;
         });
-    }
-
-    public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
-    {
-        base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode != NotificationPermissionRequestCode)
-        {
-            return;
-        }
-
-        var granted = grantResults.Length > 0 && grantResults[0] == Permission.Granted;
-        if (granted)
-        {
-            _pendingNotificationSetter?.Invoke(true);
-        }
-        else if (_pendingNotificationCheckbox is not null)
-        {
-            _pendingNotificationSetter?.Invoke(false);
-            SetNotificationCheckboxChecked(_pendingNotificationCheckbox, false);
-            Toast.MakeText(this, GetString(Resource.String.denied_notification), ToastLength.Long)?.Show();
-        }
-
-        _pendingNotificationCheckbox = null;
-        _pendingNotificationSetter = null;
-        UpdateNotificationSettingsButtonVisibility();
     }
 
     private int GetDataSourceIndex(DataSourceType dataSourceType)
@@ -630,55 +440,6 @@ public sealed class SettingsActivity : LocalizedActivity
         };
     }
 
-    private int GetIgnoredCallsignMatchTargetIndex(IgnoredCallsignMatchTarget matchTarget)
-    {
-        var index = Array.IndexOf(_ignoredCallsignMatchTargets, matchTarget);
-        return index >= 0 ? index : 0;
-    }
-
-    private int GetWatchedCallsignMatchTargetIndex(WatchedCallsignMatchTarget matchTarget)
-    {
-        var index = Array.IndexOf(_watchedCallsignMatchTargets, matchTarget);
-        return index >= 0 ? index : 0;
-    }
-
-    private int GetSelectedDxccMatchTargetIndex(SelectedDxccMatchTarget matchTarget)
-    {
-        var index = Array.IndexOf(_selectedDxccMatchTargets, matchTarget);
-        return index >= 0 ? index : 0;
-    }
-
-    private string GetIgnoredCallsignMatchTargetLabel(IgnoredCallsignMatchTarget matchTarget)
-    {
-        return matchTarget switch
-        {
-            IgnoredCallsignMatchTarget.Disabled => GetString(Resource.String.ignored_callsign_match_target_disabled),
-            IgnoredCallsignMatchTarget.ReceiverOnly => GetString(Resource.String.ignored_callsign_match_target_receiver),
-            IgnoredCallsignMatchTarget.ReceiverOrTransmitter => GetString(Resource.String.ignored_callsign_match_target_both),
-            _ => GetString(Resource.String.ignored_callsign_match_target_transmitter)
-        };
-    }
-
-    private string GetWatchedCallsignMatchTargetLabel(WatchedCallsignMatchTarget matchTarget)
-    {
-        return matchTarget switch
-        {
-            WatchedCallsignMatchTarget.ReceiverOnly => GetString(Resource.String.watched_callsign_match_target_receiver),
-            WatchedCallsignMatchTarget.ReceiverOrTransmitter => GetString(Resource.String.watched_callsign_match_target_both),
-            _ => GetString(Resource.String.watched_callsign_match_target_transmitter)
-        };
-    }
-
-    private string GetSelectedDxccMatchTargetLabel(SelectedDxccMatchTarget matchTarget)
-    {
-        return matchTarget switch
-        {
-            SelectedDxccMatchTarget.ReceiverOnly => GetString(Resource.String.selected_dxcc_match_target_receiver),
-            SelectedDxccMatchTarget.ReceiverOrTransmitter => GetString(Resource.String.selected_dxcc_match_target_both),
-            _ => GetString(Resource.String.selected_dxcc_match_target_transmitter)
-        };
-    }
-
     private Task<bool> ConfirmAsync(int titleResId, int messageResId)
     {
         var tcs = new TaskCompletionSource<bool>();
@@ -696,50 +457,11 @@ public sealed class SettingsActivity : LocalizedActivity
         return tcs.Task;
     }
 
-    private void HandleNotificationToggle(CheckBox checkBox, Action<bool> setter, bool isChecked)
+    private void UpdateDataSourceSectionVisibility()
     {
-        if (_isBinding || _suppressNotificationToggleEvents)
-        {
-            return;
-        }
-
-        if (!isChecked)
-        {
-            setter(false);
-            UpdateNotificationSettingsButtonVisibility();
-            return;
-        }
-
-        if (!RequiresNotificationPermissionRequest())
-        {
-            setter(true);
-            UpdateNotificationSettingsButtonVisibility();
-            return;
-        }
-
-        _pendingNotificationCheckbox = checkBox;
-        _pendingNotificationSetter = setter;
-        RequestNotificationPermission();
-    }
-
-    [SupportedOSPlatformGuard("android33.0")]
-    private bool RequiresNotificationPermissionRequest()
-    {
-        return OperatingSystem.IsAndroidVersionAtLeast(33) &&
-               CheckSelfPermission(Manifest.Permission.PostNotifications) != Permission.Granted;
-    }
-
-    [SupportedOSPlatform("android33.0")]
-    private void RequestNotificationPermission()
-    {
-        RequestPermissions([Manifest.Permission.PostNotifications], NotificationPermissionRequestCode);
-    }
-
-    private void SetNotificationCheckboxChecked(CheckBox checkBox, bool isChecked)
-    {
-        _suppressNotificationToggleEvents = true;
-        checkBox.Checked = isChecked;
-        _suppressNotificationToggleEvents = false;
+        var isRelay = _viewModel.SelectedDataSourceType == DataSourceType.Relay;
+        _udpSection.Visibility = isRelay ? ViewStates.Gone : ViewStates.Visible;
+        _relaySection.Visibility = isRelay ? ViewStates.Visible : ViewStates.Gone;
     }
 
     private void UpdateNotificationSettingsButtonVisibility()
@@ -747,13 +469,6 @@ public sealed class SettingsActivity : LocalizedActivity
         _openNotificationSettingsButton.Visibility = _notificationService.AreNotificationsEnabled()
             ? ViewStates.Gone
             : ViewStates.Visible;
-    }
-
-    private void UpdateDataSourceSectionVisibility()
-    {
-        var isRelay = _viewModel.SelectedDataSourceType == DataSourceType.Relay;
-        _udpSection.Visibility = isRelay ? ViewStates.Gone : ViewStates.Visible;
-        _relaySection.Visibility = isRelay ? ViewStates.Visible : ViewStates.Gone;
     }
 
     private void UpdateRelaySection()

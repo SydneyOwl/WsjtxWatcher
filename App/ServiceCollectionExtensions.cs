@@ -39,14 +39,18 @@ internal static class ServiceCollectionExtensions
         services.AddSingleton<RelayWsjtGateway>();
         services.AddSingleton<IWsjtGateway, WsjtGateway>();
         services.AddSingleton<ICloudlogIgnoredCallsignImportService, CloudlogIgnoredCallsignImportService>();
+        services.AddSingleton<RuleFieldValueResolver>();
+        services.AddSingleton<RuleNamedSetResolver>();
+        services.AddSingleton<AlertRuleEvaluator>();
+        services.AddSingleton<AlertRuleCooldownGate>();
         services.AddSingleton<DecodedMessageFactory>();
         services.AddSingleton<WatcherController>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<SettingsViewModel>();
+        services.AddSingleton<AlertRulesViewModel>();
+        services.AddTransient<AlertRuleEditorViewModel>();
         services.AddTransient<RelaySourceSelectionViewModel>();
-        services.AddSingleton<CallsignPatternViewModel>();
         services.AddSingleton<IgnoredCallsignViewModel>();
-        services.AddTransient<DxccSelectionViewModel>();
         return services;
     }
 }

@@ -3,13 +3,13 @@ using Android.Content;
 using System.Text.Json;
 using WsjtxWatcher.Core.Contracts;
 using WsjtxWatcher.Core.Models;
-using WsjtxWatcher.Core.Utilities;
 
 namespace WsjtxWatcher.Infrastructure.Platform;
 
 public sealed class AndroidSettingsStore : ISettingsStore
 {
     private const string StorageKey = "8fdad8ad";
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly ISharedPreferences _sharedPreferences;
 
     public AndroidSettingsStore(Application application)
@@ -19,29 +19,6 @@ public sealed class AndroidSettingsStore : ISettingsStore
 
     public Task<AppSettings> LoadAsync(CancellationToken cancellationToken = default)
     {
-        var preferredDxcc = _sharedPreferences.GetStringSet("preferred_dxcc", AppSettings.DefaultPreferredDxccIds.Select(id => id.ToString()).ToHashSet())
-                            ?? AppSettings.DefaultPreferredDxccIds.Select(id => id.ToString()).ToHashSet();
-        var callsign = _sharedPreferences.GetString("callsign", string.Empty) ?? string.Empty;
-        var watchedPatterns = LoadWatchedCallsignPatterns(callsign);
-        var ignoredCallsignMatchTargetValue = _sharedPreferences.GetInt(
-            "ignored_callsign_match_target",
-            (int)IgnoredCallsignMatchTarget.TransmitterOnly);
-        var ignoredCallsignMatchTarget = Enum.IsDefined(typeof(IgnoredCallsignMatchTarget), ignoredCallsignMatchTargetValue)
-            ? (IgnoredCallsignMatchTarget)ignoredCallsignMatchTargetValue
-            : IgnoredCallsignMatchTarget.TransmitterOnly;
-        var watchedCallsignMatchTargetValue = _sharedPreferences.GetInt(
-            "watched_callsign_match_target",
-            (int)WatchedCallsignMatchTarget.TransmitterOnly);
-        var watchedCallsignMatchTarget = Enum.IsDefined(typeof(WatchedCallsignMatchTarget), watchedCallsignMatchTargetValue)
-            ? (WatchedCallsignMatchTarget)watchedCallsignMatchTargetValue
-            : WatchedCallsignMatchTarget.TransmitterOnly;
-        var selectedDxccMatchTargetValue = _sharedPreferences.GetInt(
-            "selected_dxcc_match_target",
-            (int)SelectedDxccMatchTarget.TransmitterOnly);
-        var selectedDxccMatchTarget = Enum.IsDefined(typeof(SelectedDxccMatchTarget), selectedDxccMatchTargetValue)
-            ? (SelectedDxccMatchTarget)selectedDxccMatchTargetValue
-            : SelectedDxccMatchTarget.TransmitterOnly;
-
         var settings = new AppSettings
         {
             DataSourceType = ParseDataSourceType(_sharedPreferences.GetInt("data_source_type", (int)DataSourceType.Udp)),
@@ -52,23 +29,11 @@ public sealed class AndroidSettingsStore : ISettingsStore
             RelayPreferredSourceName = _sharedPreferences.GetString("relay_preferred_source_name", string.Empty) ?? string.Empty,
             RelayTrustedFingerprint = _sharedPreferences.GetString("relay_trusted_fingerprint", string.Empty) ?? string.Empty,
             Language = _sharedPreferences.GetString("language", string.Empty) ?? string.Empty,
-            MyCallsign = callsign,
+            MyCallsign = _sharedPreferences.GetString("callsign", string.Empty) ?? string.Empty,
             MyGrid = _sharedPreferences.GetString("grid", string.Empty) ?? string.Empty,
-            WatchedCallsignPatterns = [.. watchedPatterns],
-            NotifyOnMyCall = _sharedPreferences.GetBoolean("notify_on_my_call", false),
-            NotifyOnAnyMessage = _sharedPreferences.GetBoolean("notify_on_any", false),
-            NotifyOnSelectedDxcc = _sharedPreferences.GetBoolean("notify_on_dxcc", false),
-            NotifyOnLoggedQso = _sharedPreferences.GetBoolean("notify_on_logged_qso", false),
-            VibrateOnMyCall = _sharedPreferences.GetBoolean("vibrate_on_my_call", false),
-            VibrateOnAnyMessage = _sharedPreferences.GetBoolean("vibrate_on_any", false),
-            VibrateOnSelectedDxcc = _sharedPreferences.GetBoolean("vibrate_on_dxcc", false),
-            VibrateOnLoggedQso = _sharedPreferences.GetBoolean("vibrate_on_logged_qso", false),
+            AlertRules = LoadAlertRules(),
             AutoIgnoreLoggedQso = _sharedPreferences.GetBoolean("auto_ignore_logged_qso", true),
-            Theme = ParseTheme(_sharedPreferences.GetInt("theme", 0)),
-            IgnoredCallsignMatchTarget = ignoredCallsignMatchTarget,
-            WatchedCallsignMatchTarget = watchedCallsignMatchTarget,
-            SelectedDxccMatchTarget = selectedDxccMatchTarget,
-            PreferredDxccIds = new HashSet<int>(preferredDxcc.Select(value => int.TryParse(value, out var id) ? id : 0).Where(id => id > 0))
+            Theme = ParseTheme(_sharedPreferences.GetInt("theme", 0))
         };
 
         return Task.FromResult(settings);
@@ -87,21 +52,9 @@ public sealed class AndroidSettingsStore : ISettingsStore
         editor.PutString("language", settings.Language);
         editor.PutString("callsign", settings.MyCallsign);
         editor.PutString("grid", settings.MyGrid);
-        editor.PutString("callsign_patterns", JsonSerializer.Serialize(CallsignPatternMatcher.NormalizePatterns(settings.WatchedCallsignPatterns)));
-        editor.PutBoolean("notify_on_my_call", settings.NotifyOnMyCall);
-        editor.PutBoolean("notify_on_any", settings.NotifyOnAnyMessage);
-        editor.PutBoolean("notify_on_dxcc", settings.NotifyOnSelectedDxcc);
-        editor.PutBoolean("notify_on_logged_qso", settings.NotifyOnLoggedQso);
-        editor.PutBoolean("vibrate_on_my_call", settings.VibrateOnMyCall);
-        editor.PutBoolean("vibrate_on_any", settings.VibrateOnAnyMessage);
-        editor.PutBoolean("vibrate_on_dxcc", settings.VibrateOnSelectedDxcc);
-        editor.PutBoolean("vibrate_on_logged_qso", settings.VibrateOnLoggedQso);
+        editor.PutString("alert_rules", JsonSerializer.Serialize(AlertRuleCatalog.NormalizeCustomRules(settings.AlertRules), JsonOptions));
         editor.PutBoolean("auto_ignore_logged_qso", settings.AutoIgnoreLoggedQso);
         editor.PutInt("theme", (int)settings.Theme);
-        editor.PutInt("ignored_callsign_match_target", (int)settings.IgnoredCallsignMatchTarget);
-        editor.PutInt("watched_callsign_match_target", (int)settings.WatchedCallsignMatchTarget);
-        editor.PutInt("selected_dxcc_match_target", (int)settings.SelectedDxccMatchTarget);
-        editor.PutStringSet("preferred_dxcc", settings.PreferredDxccIds.Select(id => id.ToString()).ToHashSet());
         if (!editor.Commit())
         {
             throw new InvalidOperationException("Failed to persist application settings.");
@@ -118,30 +71,26 @@ public sealed class AndroidSettingsStore : ISettingsStore
         {
             throw new InvalidOperationException("Failed to clear application settings.");
         }
+
         return SaveAsync(new AppSettings(), cancellationToken);
     }
 
-    private List<string> LoadWatchedCallsignPatterns(string callsign)
+    private List<AlertRule> LoadAlertRules()
     {
-        var json = _sharedPreferences.GetString("callsign_patterns", string.Empty) ?? string.Empty;
+        var json = _sharedPreferences.GetString("alert_rules", string.Empty) ?? string.Empty;
         if (!string.IsNullOrWhiteSpace(json))
         {
             try
             {
-                var patterns = JsonSerializer.Deserialize<List<string>>(json);
-                return [.. CallsignPatternMatcher.NormalizePatterns(patterns)];
+                var rules = JsonSerializer.Deserialize<List<AlertRule>>(json, JsonOptions);
+                return AlertRuleCatalog.NormalizeCustomRules(rules);
             }
             catch (JsonException)
             {
             }
         }
 
-        if (string.IsNullOrWhiteSpace(callsign))
-        {
-            return [];
-        }
-
-        return [CallsignPatternMatcher.CreateDefaultPattern(callsign)];
+        return [];
     }
 
     private static AppTheme ParseTheme(int value)
