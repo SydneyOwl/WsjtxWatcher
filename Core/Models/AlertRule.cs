@@ -17,7 +17,7 @@ public sealed class AlertRule
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     [JsonIgnore]
-    public bool IsReadOnly => Source == RuleSource.SystemPreset;
+    public bool IsReadOnly => false;
 
     public AlertRule Clone()
     {

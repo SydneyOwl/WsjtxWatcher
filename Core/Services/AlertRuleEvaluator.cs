@@ -48,7 +48,6 @@ public sealed class AlertRuleEvaluator
         string band)
     {
         return rules
-            .Where(rule => rule.Source == RuleSource.UserDefined)
             .Where(rule => rule.IsEnabled)
             .Where(rule => rule.TriggerType == context.TriggerType)
             .Where(rule => rule.Actions.SendNotification || rule.Actions.Vibrate)

@@ -231,7 +231,7 @@ public partial class SettingsViewModel : ObservableObject
             Language = SelectedLanguage.ToStorageValue(),
             MyCallsign = (MyCallsign ?? string.Empty).Trim().ToUpperInvariant(),
             MyGrid = (MyGrid ?? string.Empty).Trim().ToUpperInvariant(),
-            AlertRules = AlertRuleCatalog.NormalizeCustomRules(alertRules),
+            AlertRules = AlertRuleCatalog.NormalizeRules(alertRules),
             AutoIgnoreLoggedQso = AutoIgnoreLoggedQso,
             Theme = SelectedTheme
         };

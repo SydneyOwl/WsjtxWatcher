@@ -172,7 +172,7 @@
     <string name="create_rule_title">Choose trigger type</string>
     <string name="create_rule_decode">Decode message rule</string>
     <string name="create_rule_logged_qso">Logged QSO rule</string>
-    <string name="delete_rule_confirm">Delete this custom rule?</string>
+    <string name="delete_rule_confirm">Delete this rule?</string>
     <string name="invalid_rule_number">Please enter a valid number.</string>
     <string name="invalid_rule_regex">Please enter a valid regular expression.</string>
     <string name="invalid_rule_name">Please enter a rule name.</string>

@@ -172,7 +172,7 @@
     <string name="create_rule_title">选择规则触发类型</string>
     <string name="create_rule_decode">消息解码规则</string>
     <string name="create_rule_logged_qso">QSO 完成规则</string>
-    <string name="delete_rule_confirm">删除这条自定义规则？</string>
+    <string name="delete_rule_confirm">删除这条规则？</string>
     <string name="invalid_rule_number">请输入有效数字。</string>
     <string name="invalid_rule_regex">请输入有效的正则表达式。</string>
     <string name="invalid_rule_name">请输入规则名称。</string>

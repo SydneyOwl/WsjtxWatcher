@@ -42,6 +42,7 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
     private CheckBox? _pendingNotificationCheckbox;
     private Action<bool>? _pendingNotificationSetter;
     private bool _suppressNotificationToggleEvents;
+    private bool _skipAutoSave;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -57,7 +58,7 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
 
     protected override void OnPause()
     {
-        if (!_isBinding && _rule is not null && !_rule.IsReadOnly)
+        if (!_skipAutoSave && !_isBinding && _rule is not null)
         {
             _ = _viewModel.SaveAsync(_rule);
         }
@@ -763,17 +764,13 @@ public sealed class AlertRuleEditorActivity : LocalizedActivity
 
     private async Task DeleteRuleAsync()
     {
-        if (_rule.IsReadOnly)
-        {
-            return;
-        }
-
         var confirmed = await ConfirmAsync(Resource.String.delete_rule, Resource.String.delete_rule_confirm).ConfigureAwait(false);
         if (!confirmed)
         {
             return;
         }
 
+        _skipAutoSave = true;
         await _viewModel.DeleteAsync(_rule.Id).ConfigureAwait(false);
         RunOnUiThread(Finish);
     }

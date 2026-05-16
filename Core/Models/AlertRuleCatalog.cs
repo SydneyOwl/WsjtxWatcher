@@ -16,33 +16,33 @@ public static class AlertRuleCatalog
         [
             CreateSystemRule(
                 SystemMyCallsignRuleId,
-                "我的呼号",
+                "My callsign",
                 RuleTriggerType.DecodeMessage,
                 RuleConditionGroup.CreateAny(
                     RulePredicate.Create(RuleField.TransmitterCallsign, RuleOperator.Equals, RuleOperand.ForContextRef(RuleContextRef.MyCallsign)),
                     RulePredicate.Create(RuleField.ReceiverCallsign, RuleOperator.Equals, RuleOperand.ForContextRef(RuleContextRef.MyCallsign)))),
             CreateSystemRule(
                 SystemWatchedCallsignRuleId,
-                "指定呼号",
+                "Watched callsign",
                 RuleTriggerType.DecodeMessage,
                 RuleConditionGroup.CreateAny(
                     RulePredicate.Create(RuleField.TransmitterCallsign, RuleOperator.Regex, RuleOperand.ForString("^JA")),
                     RulePredicate.Create(RuleField.ReceiverCallsign, RuleOperator.Regex, RuleOperand.ForString("^JA")))),
             CreateSystemRule(
                 SystemAnyMessageRuleId,
-                "任意消息",
+                "Any message",
                 RuleTriggerType.DecodeMessage,
                 RuleConditionGroup.CreateAll(new RuleConstantPredicate { Value = true })),
             CreateSystemRule(
                 SystemDxccRuleId,
-                "指定 DXCC",
+                "Selected DXCC",
                 RuleTriggerType.DecodeMessage,
                 RuleConditionGroup.CreateAny(
                     RulePredicate.Create(RuleField.FromCountryId, RuleOperator.In, RuleOperand.ForNumberList(DefaultSelectedDxccIds.Select(id => (double)id))),
                     RulePredicate.Create(RuleField.ToCountryId, RuleOperator.In, RuleOperand.ForNumberList(DefaultSelectedDxccIds.Select(id => (double)id))))),
             CreateSystemRule(
                 SystemLoggedQsoRuleId,
-                "QSO 完成",
+                "Logged QSO",
                 RuleTriggerType.LoggedQso,
                 RuleConditionGroup.CreateAll(new RuleConstantPredicate { Value = true }))
         ];
@@ -62,20 +62,28 @@ public static class AlertRuleCatalog
         16
     ];
 
-    public static List<AlertRule> NormalizeCustomRules(IEnumerable<AlertRule>? rules)
+    public static List<AlertRule> NormalizeRules(IEnumerable<AlertRule>? rules)
     {
         return (rules ?? [])
             .Where(rule => rule is not null && !string.IsNullOrWhiteSpace(rule.Id))
-            .Select(rule => SanitizeCustomRule(rule.Clone()))
-            .OrderBy(rule => rule.SortOrder)
+            .Select(rule => SanitizeRule(rule.Clone()))
+            .GroupBy(rule => rule.Id, StringComparer.Ordinal)
+            .Select(group => group.OrderByDescending(rule => rule.Source == RuleSource.SystemPreset).First())
+            .OrderBy(rule => rule.Source == RuleSource.SystemPreset ? 0 : 1)
+            .ThenBy(rule => rule.SortOrder)
             .ThenBy(rule => rule.CreatedAtUtc)
             .ThenBy(rule => rule.Id, StringComparer.Ordinal)
             .ToList();
     }
 
+    public static List<AlertRule> NormalizeCustomRules(IEnumerable<AlertRule>? rules)
+    {
+        return NormalizeRules(rules);
+    }
+
     public static IReadOnlyList<AlertRule> GetAllRules(AppSettings settings)
     {
-        return [.. CreateSystemRules(), .. NormalizeCustomRules(settings.AlertRules)];
+        return NormalizeRules(settings.AlertRules);
     }
 
     public static AlertRule GetRequiredRule(AppSettings settings, string ruleId)
@@ -91,15 +99,7 @@ public static class AlertRuleCatalog
 
     public static AlertRule? FindRule(AppSettings settings, string ruleId)
     {
-        foreach (var systemRule in CreateSystemRules())
-        {
-            if (string.Equals(systemRule.Id, ruleId, StringComparison.Ordinal))
-            {
-                return systemRule.Clone();
-            }
-        }
-
-        return NormalizeCustomRules(settings.AlertRules)
+        return NormalizeRules(settings.AlertRules)
             .FirstOrDefault(rule => string.Equals(rule.Id, ruleId, StringComparison.Ordinal))?
             .Clone();
     }
@@ -109,7 +109,7 @@ public static class AlertRuleCatalog
         return new AlertRule
         {
             Id = $"rule_{Guid.NewGuid():N}",
-            Name = triggerType == RuleTriggerType.LoggedQso ? "新建 QSO 规则" : "新建消息规则",
+            Name = triggerType == RuleTriggerType.LoggedQso ? "New QSO rule" : "New message rule",
             Source = RuleSource.UserDefined,
             IsEnabled = true,
             TriggerType = triggerType,
@@ -122,15 +122,10 @@ public static class AlertRuleCatalog
         };
     }
 
-    public static void UpsertCustomRule(AppSettings settings, AlertRule rule)
+    public static void UpsertRule(AppSettings settings, AlertRule rule)
     {
-        if (rule.Source == RuleSource.SystemPreset)
-        {
-            throw new InvalidOperationException("System preset rules are read-only.");
-        }
-
-        var normalized = NormalizeCustomRules(settings.AlertRules);
-        var sanitized = SanitizeCustomRule(rule.Clone());
+        var normalized = NormalizeRules(settings.AlertRules);
+        var sanitized = SanitizeRule(rule.Clone());
         var index = normalized.FindIndex(candidate => string.Equals(candidate.Id, sanitized.Id, StringComparison.Ordinal));
         if (index >= 0)
         {
@@ -141,14 +136,14 @@ public static class AlertRuleCatalog
             normalized.Add(sanitized);
         }
 
-        settings.AlertRules = NormalizeCustomRules(normalized);
+        settings.AlertRules = NormalizeRules(normalized);
     }
 
-    public static bool RemoveCustomRule(AppSettings settings, string ruleId)
+    public static bool RemoveRule(AppSettings settings, string ruleId)
     {
-        var normalized = NormalizeCustomRules(settings.AlertRules);
+        var normalized = NormalizeRules(settings.AlertRules);
         var removed = normalized.RemoveAll(rule => string.Equals(rule.Id, ruleId, StringComparison.Ordinal)) > 0;
-        settings.AlertRules = NormalizeCustomRules(normalized);
+        settings.AlertRules = NormalizeRules(normalized);
         return removed;
     }
 
@@ -179,11 +174,11 @@ public static class AlertRuleCatalog
         };
     }
 
-    private static AlertRule SanitizeCustomRule(AlertRule rule)
+    private static AlertRule SanitizeRule(AlertRule rule)
     {
         rule.Id = (rule.Id ?? string.Empty).Trim();
-        rule.Name = string.IsNullOrWhiteSpace(rule.Name) ? "未命名规则" : rule.Name.Trim();
-        rule.Source = RuleSource.UserDefined;
+        rule.Name = string.IsNullOrWhiteSpace(rule.Name) ? "Unnamed rule" : rule.Name.Trim();
+        rule.Source = rule.Source == RuleSource.SystemPreset ? RuleSource.SystemPreset : RuleSource.UserDefined;
         rule.CooldownSeconds = Math.Max(0, rule.CooldownSeconds);
         rule.Priority = Math.Max(0, rule.Priority);
         rule.RootCondition = rule.RootCondition?.Clone() ?? RuleConditionGroup.CreateAll();

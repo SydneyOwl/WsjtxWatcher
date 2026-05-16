@@ -23,7 +23,8 @@ public sealed class AlertRuleEditorViewModel
     public async Task<AlertRule> CreateAsync(RuleTriggerType triggerType, CancellationToken cancellationToken = default)
     {
         var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-        var nextSortOrder = AlertRuleCatalog.NormalizeCustomRules(settings.AlertRules)
+        var nextSortOrder = AlertRuleCatalog.NormalizeRules(settings.AlertRules)
+            .Where(rule => rule.Source == RuleSource.UserDefined)
             .Select(rule => rule.SortOrder)
             .DefaultIfEmpty(-1)
             .Max() + 1;
@@ -32,13 +33,8 @@ public sealed class AlertRuleEditorViewModel
 
     public async Task SaveAsync(AlertRule rule, CancellationToken cancellationToken = default)
     {
-        if (rule.IsReadOnly)
-        {
-            return;
-        }
-
         var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-        AlertRuleCatalog.UpsertCustomRule(settings, rule);
+        AlertRuleCatalog.UpsertRule(settings, rule);
         await _settingsStore.SaveAsync(settings, cancellationToken).ConfigureAwait(false);
         await _watcherController.ReloadSettingsAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -46,7 +42,7 @@ public sealed class AlertRuleEditorViewModel
     public async Task DeleteAsync(string ruleId, CancellationToken cancellationToken = default)
     {
         var settings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-        if (!AlertRuleCatalog.RemoveCustomRule(settings, ruleId))
+        if (!AlertRuleCatalog.RemoveRule(settings, ruleId))
         {
             return;
         }

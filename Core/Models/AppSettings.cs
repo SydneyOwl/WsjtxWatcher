@@ -30,7 +30,7 @@ public sealed class AppSettings
             Language = Language,
             MyCallsign = MyCallsign,
             MyGrid = MyGrid,
-            AlertRules = AlertRuleCatalog.NormalizeCustomRules(AlertRules),
+            AlertRules = AlertRuleCatalog.NormalizeRules(AlertRules),
             Theme = Theme,
             AutoIgnoreLoggedQso = AutoIgnoreLoggedQso
         };

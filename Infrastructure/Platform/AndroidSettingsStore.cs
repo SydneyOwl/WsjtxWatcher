@@ -52,7 +52,7 @@ public sealed class AndroidSettingsStore : ISettingsStore
         editor.PutString("language", settings.Language);
         editor.PutString("callsign", settings.MyCallsign);
         editor.PutString("grid", settings.MyGrid);
-        editor.PutString("alert_rules", JsonSerializer.Serialize(AlertRuleCatalog.NormalizeCustomRules(settings.AlertRules), JsonOptions));
+        editor.PutString("alert_rules", JsonSerializer.Serialize(AlertRuleCatalog.NormalizeRules(settings.AlertRules), JsonOptions));
         editor.PutBoolean("auto_ignore_logged_qso", settings.AutoIgnoreLoggedQso);
         editor.PutInt("theme", (int)settings.Theme);
         if (!editor.Commit())
@@ -83,14 +83,14 @@ public sealed class AndroidSettingsStore : ISettingsStore
             try
             {
                 var rules = JsonSerializer.Deserialize<List<AlertRule>>(json, JsonOptions);
-                return AlertRuleCatalog.NormalizeCustomRules(rules);
+                return AlertRuleCatalog.NormalizeRules(rules);
             }
             catch (JsonException)
             {
             }
         }
 
-        return [];
+        return AlertRuleCatalog.CreateSystemRules().Select(rule => rule.Clone()).ToList();
     }
 
     private static AppTheme ParseTheme(int value)
