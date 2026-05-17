@@ -497,6 +497,7 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
             {
                 var evaluations = _alertRuleEvaluator.Evaluate(message, item.SettingsSnapshot);
                 message.MatchesAlertRule = evaluations.Count > 0;
+                message.IsIgnored = IsIgnoredMessage(message);
                 acceptedMessages.Add((message, item.SettingsSnapshot, evaluations));
             }
         }
@@ -756,10 +757,22 @@ public sealed class WatcherController : IWsjtEventSink, IDisposable
             foreach (var message in messages)
             {
                 message.MatchesAlertRule = _alertRuleEvaluator.Evaluate(message, settingsSnapshot).Count > 0;
+                message.IsIgnored = IsIgnoredMessage(message);
             }
 
             State.RefreshMessagePresentation();
         }).ConfigureAwait(false);
+    }
+
+    private bool IsIgnoredMessage(DecodedRadioMessage message)
+    {
+        if (message.IsSystemNotice || message.IsUserTransmit)
+        {
+            return false;
+        }
+
+        return _ruleNamedSetResolver.ContainsIgnoredCallsign(message.Transmitter, message.CurrentBand)
+               || _ruleNamedSetResolver.ContainsIgnoredCallsign(message.Receiver, message.CurrentBand);
     }
 
     private void ResetRuntimeState()

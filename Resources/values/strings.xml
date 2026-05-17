@@ -10,7 +10,7 @@
     <string name="server_port">Server Port</string>
     <string name="relay_server_url">Server URL</string>
     <string name="relay_server_url_hint">wss://example.com:8443</string>
-    <string name="relay_setup_help">Fill in the relay server address, shared secret, and tenant ID provided by your relay service. Test the connection first, then choose which source you want this device to follow.</string>
+    <string name="relay_setup_help">Fill in the relay server address, shared secret, and tenant ID provided by your relay service. After the connection test succeeds, you can choose which source this device should follow without starting the service first.</string>
     <string name="relay_shared_secret">Shared Secret</string>
     <string name="relay_tenant_id">Tenant ID</string>
     <string name="relay_connection_status">Relay status</string>
@@ -284,7 +284,7 @@
     <string name="add_test_data">Add test data</string>
     <string name="test_data_added">Test data added.</string>
     <string name="start_service_failed">Failed to start service. See logs for more...</string>
-    <string name="relay_test_success_manual_start">Connection test succeeded. The configuration is valid; go back to the main screen and tap "Start service" to receive relay data.</string>
+    <string name="relay_test_success_manual_start">Connection test succeeded. You can select a source now; when ready to receive relay data, go back to the main screen and tap "Start service".</string>
     <string name="stop_service_failed">Failed to stop service. See logs for more...</string>
     <string name="no_app_found">There\'s no suitable app found to open log!</string>
     <string name="unknown_band">Unknown</string>

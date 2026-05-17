@@ -121,6 +121,157 @@ public sealed class RelayConnectionProbe : IRelayConnectionProbe
         }
     }
 
+    public async Task<RelaySourceCatalogResult> GetWatchSourceCatalogAsync(
+        RelayConnectionProbeOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedError = Normalize(options);
+        if (normalizedError is not null)
+        {
+            return new RelaySourceCatalogResult(
+                false,
+                normalizedError.Message,
+                Array.Empty<RelaySourceDescriptor>(),
+                ObservedFingerprint: normalizedError.ObservedFingerprint);
+        }
+
+        var state = new ProbeState((options.TrustedFingerprint ?? string.Empty).Trim());
+        using var webSocket = CreateWebSocket(state);
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCts.CancelAfter(ProbeTimeout);
+        var probeToken = timeoutCts.Token;
+        long outgoingSeq = 0;
+        var instanceId = Guid.NewGuid().ToString("N");
+
+        try
+        {
+            var serverUri = new Uri($"{options.ServerUrl.TrimEnd('/')}/v1/watch", UriKind.Absolute);
+            await webSocket.ConnectAsync(serverUri, probeToken).ConfigureAwait(false);
+
+            await SendEnvelopeAsync(webSocket, new Envelope
+            {
+                ClientHello = new ClientHello
+                {
+                    Role = "watch",
+                    TenantId = options.TenantId,
+                    InstanceId = instanceId,
+                    ClientName = "wsjtxwatcher-test",
+                    ClientVersion = "0.1.0"
+                }
+            }, NextSeq(ref outgoingSeq), probeToken).ConfigureAwait(false);
+
+            var serverHelloEnvelope = await ReceiveEnvelopeAsync(webSocket, probeToken).ConfigureAwait(false);
+            var serverHello = serverHelloEnvelope.ServerHello
+                              ?? throw new InvalidOperationException(GetFormattedString(
+                                  Resource.String.relay_expected_message,
+                                  "server_hello",
+                                  serverHelloEnvelope.BodyCase));
+
+            var timestampUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            await SendEnvelopeAsync(webSocket, new Envelope
+            {
+                AuthRequest = new AuthRequest
+                {
+                    TimestampUnix = timestampUnix,
+                    Proof = ByteString.CopyFrom(BuildProof(
+                        options.SharedSecret,
+                        serverHello.Nonce.ToByteArray(),
+                        "watch",
+                        options.TenantId,
+                        string.Empty,
+                        instanceId,
+                        timestampUnix))
+                }
+            }, NextSeq(ref outgoingSeq), probeToken).ConfigureAwait(false);
+
+            var authEnvelope = await ReceiveEnvelopeAsync(webSocket, probeToken).ConfigureAwait(false);
+            var authResult = authEnvelope.AuthResult
+                             ?? throw new InvalidOperationException(GetFormattedString(
+                                 Resource.String.relay_expected_message,
+                                 "auth_result",
+                                 authEnvelope.BodyCase));
+            if (!authResult.Ok)
+            {
+                var message = string.IsNullOrWhiteSpace(authResult.Message)
+                    ? authResult.ErrorCode
+                    : authResult.Message;
+                return new RelaySourceCatalogResult(
+                    false,
+                    GetFormattedString(Resource.String.relay_auth_failed, message),
+                    Array.Empty<RelaySourceDescriptor>(),
+                    ObservedFingerprint: state.ObservedFingerprint);
+            }
+
+            while (true)
+            {
+                var envelope = await ReceiveEnvelopeAsync(webSocket, probeToken).ConfigureAwait(false);
+                switch (envelope.BodyCase)
+                {
+                    case Envelope.BodyOneofCase.Ping:
+                        await SendEnvelopeAsync(webSocket, new Envelope
+                        {
+                            Pong = new Pong { TimestampUnixMs = envelope.Ping.TimestampUnixMs }
+                        }, NextSeq(ref outgoingSeq), probeToken).ConfigureAwait(false);
+                        break;
+                    case Envelope.BodyOneofCase.Pong:
+                        break;
+                    case Envelope.BodyOneofCase.SourceCatalog:
+                        var sources = envelope.SourceCatalog.Sources
+                            .Select(source => new RelaySourceDescriptor
+                            {
+                                SourceName = source.SourceName,
+                                DisplayName = source.DisplayName,
+                                Online = source.Online,
+                                LastSeenUnixMs = source.LastSeenUnixMs
+                            })
+                            .ToArray();
+
+                        return new RelaySourceCatalogResult(
+                            true,
+                            GetString(Resource.String.relay_connected),
+                            sources,
+                            envelope.SourceCatalog.CurrentSourceName,
+                            state.ObservedFingerprint);
+                    case Envelope.BodyOneofCase.ServerNotice:
+                        if (!string.IsNullOrWhiteSpace(envelope.ServerNotice.Message))
+                        {
+                            return new RelaySourceCatalogResult(
+                                false,
+                                envelope.ServerNotice.Message,
+                                Array.Empty<RelaySourceDescriptor>(),
+                                ObservedFingerprint: state.ObservedFingerprint);
+                        }
+                        break;
+                }
+            }
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return new RelaySourceCatalogResult(
+                false,
+                GetString(Resource.String.relay_probe_timeout),
+                Array.Empty<RelaySourceDescriptor>(),
+                ObservedFingerprint: state.ObservedFingerprint);
+        }
+        catch (Exception exception)
+        {
+            if (!string.IsNullOrWhiteSpace(state.ValidationError))
+            {
+                return new RelaySourceCatalogResult(
+                    false,
+                    state.ValidationError,
+                    Array.Empty<RelaySourceDescriptor>(),
+                    ObservedFingerprint: state.ObservedFingerprint);
+            }
+
+            return new RelaySourceCatalogResult(
+                false,
+                exception.Message,
+                Array.Empty<RelaySourceDescriptor>(),
+                ObservedFingerprint: state.ObservedFingerprint);
+        }
+    }
+
     private RelayConnectionTestResult? Normalize(RelayConnectionProbeOptions options)
     {
         var serverUrl = (options.ServerUrl ?? string.Empty).Trim().TrimEnd('/');

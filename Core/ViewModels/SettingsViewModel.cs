@@ -17,6 +17,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly INetworkInfoService _networkInfoService;
     private readonly IRelayConnectionProbe _relayConnectionProbe;
     private readonly ISettingsStore _settingsStore;
+    private readonly IUiDispatcher _uiDispatcher;
     private readonly Services.WatcherController _watcherController;
     private readonly RelayRuntimeState _relayRuntimeState;
 
@@ -73,6 +74,7 @@ public partial class SettingsViewModel : ObservableObject
         IRelayConnectionProbe relayConnectionProbe,
         IAppInfoService appInfoService,
         IAppLanguageService appLanguageService,
+        IUiDispatcher uiDispatcher,
         RelayRuntimeState relayRuntimeState,
         Services.WatcherController watcherController)
     {
@@ -86,6 +88,7 @@ public partial class SettingsViewModel : ObservableObject
         _relayConnectionProbe = relayConnectionProbe;
         _appInfoService = appInfoService;
         _appLanguageService = appLanguageService;
+        _uiDispatcher = uiDispatcher;
         _relayRuntimeState = relayRuntimeState;
         _watcherController = watcherController;
     }
@@ -200,18 +203,40 @@ public partial class SettingsViewModel : ObservableObject
         _backgroundAccessService.OpenBackgroundSettings();
     }
 
-    public Task RefreshRelaySourcesAsync(CancellationToken cancellationToken = default)
+    public async Task RefreshRelaySourcesAsync(CancellationToken cancellationToken = default)
     {
-        return _watcherController.RefreshGatewayAsync(cancellationToken);
+        if (IsWatcherServiceRunning)
+        {
+            await _watcherController.RefreshGatewayAsync(cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        var result = await _relayConnectionProbe
+            .GetWatchSourceCatalogAsync(CreateRelayProbeOptions(), cancellationToken)
+            .ConfigureAwait(false);
+
+        if (result.Success
+            && string.IsNullOrWhiteSpace(RelayTrustedFingerprint)
+            && !string.IsNullOrWhiteSpace(result.ObservedFingerprint))
+        {
+            RelayTrustedFingerprint = result.ObservedFingerprint;
+        }
+
+        await _uiDispatcher.InvokeAsync(() =>
+        {
+            _relayRuntimeState.SetFingerprint(RelayTrustedFingerprint);
+            _relayRuntimeState.SetConnectionState(connecting: false, connected: result.Success, status: result.Message);
+            _relayRuntimeState.UpdateCatalog(result.Sources, result.CurrentSourceName);
+            if (!result.Success)
+            {
+                _relayRuntimeState.LastNotice = result.Message;
+            }
+        }).ConfigureAwait(false);
     }
 
     public Task<RelayConnectionTestResult> TestRelayConnectionAsync(CancellationToken cancellationToken = default)
     {
-        return _relayConnectionProbe.TestWatchConnectionAsync(new RelayConnectionProbeOptions(
-            NormalizeUrl(RelayServerUrl),
-            (RelaySharedSecret ?? string.Empty).Trim(),
-            (RelayTenantId ?? string.Empty).Trim(),
-            (RelayTrustedFingerprint ?? string.Empty).Trim()), cancellationToken);
+        return _relayConnectionProbe.TestWatchConnectionAsync(CreateRelayProbeOptions(), cancellationToken);
     }
 
 #if DEBUG
@@ -249,6 +274,15 @@ public partial class SettingsViewModel : ObservableObject
     private static string NormalizeUrl(string? value)
     {
         return (value ?? string.Empty).Trim().TrimEnd('/');
+    }
+
+    private RelayConnectionProbeOptions CreateRelayProbeOptions()
+    {
+        return new RelayConnectionProbeOptions(
+            NormalizeUrl(RelayServerUrl),
+            (RelaySharedSecret ?? string.Empty).Trim(),
+            (RelayTenantId ?? string.Empty).Trim(),
+            (RelayTrustedFingerprint ?? string.Empty).Trim());
     }
 
     private static bool RequiresGatewayRestart(AppSettings existingSettings, AppSettings normalizedSettings)

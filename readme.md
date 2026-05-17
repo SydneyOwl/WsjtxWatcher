@@ -1,303 +1,341 @@
 # WsjtxWatcher
 
-`WsjtxWatcher` is an Android companion app for `WSJT-X` and `JTDX`.
+`WsjtxWatcher` is an Android companion app for `WSJT-X` and `JTDX`. It lets you watch live decode traffic on your phone and receive notifications or vibration alerts when a message or logged QSO matches your configured rules.
 
-It lets you watch live decode traffic on your phone and receive alerts when a message or a logged QSO matches the rules you configured. 
-It is designed for daily station monitoring, remote watching, DX hunting, and VHF-style activity watching.
+Use cases:
 
-Currently supported languages:
+- Daily station monitoring without staying glued to the computer screen
+- Remote watching of off-site stations
+- DX entity tracking and filtering
+- VHF / 6m and other scenarios requiring continuous band activity awareness
 
-- Simplified Chinese
-- English
+Supported languages: Simplified Chinese, English
 
-Suggested screenshot:
+## Features
 
-- Main screen with live decode list
+- Receive `WSJT-X` / `JTDX` decode data over local UDP, or from a remote station via `wsjtx-relay`
+- Real-time decode message list
+- Custom rule system: match decoded messages or logged QSOs against conditions, trigger notifications or vibration
+- Maintain an ignored-callsign list, with manual entry or import from Cloudlog / Wavelog
+- Auto-add worked callsigns to the ignored list after a logged QSO (with optional per-band matching)
+- Maintain a reusable DXCC watch list that multiple rules can reference
 
-## What The App Can Do
+## Requirements
 
-- Receive live WSJT-X / JTDX traffic over local UDP
-- Receive live traffic from a remote relay source
-- Show decoded messages in real time
-- Highlight and notify on messages that match alert rules
-- Alert on selected DXCC entities
-- Alert on logged QSOs
-- Maintain an ignored-callsign list
-- Auto-ignore worked stations after a logged QSO
-- Keep running in the background when Android permissions allow it
+- Android 8.0 or later
 
-## Android Support
+## Data Sources
 
-- Android 8.0 and above
+The app supports two data source modes, switchable in Settings.
 
-## Data Source Modes
+### Local UDP
 
-The app supports two ways to receive data.
+Use this when your phone and the computer running `WSJT-X` / `JTDX` are on the same local network.
 
-### 1. UDP
+In this mode (similar to GridTracker), the app starts a UDP server on the phone and listens on a specified port. `WSJT-X` / `JTDX` sends decode data directly to the phone's IP and port. Default port is `2237`.
 
-Use this mode when your phone and the computer running `WSJT-X` / `JTDX` are on the same local network.
+### Relay Mode
 
-In this mode the app listens on the phone's local IP and UDP port and `WSJT-X` or `JTDX` sends UDP packets directly to the phone
+Use this for remote stations, when direct LAN access is unavailable, or when data needs to traverse a public network. See [wsjtx-relay](https://github.com/SydneyOwl/wsjtx-relay) for the relay protocol stack.
 
-Suggested screenshot:
+Deployment:
 
-- Settings page showing UDP mode
+1. Deploy `wsjtx-relay-server` on a server with a public IP
+2. Run `wsjtx-relay-client` on the computer that runs `WSJT-X` / `JTDX` to upload data to the relay server
+3. Connect `WsjtxWatcher` on your phone to the relay server and select a source to follow
 
-### 2. Third-party Data Source
-
-See: [wsjtx-relay](https://github.com/SydneyOwl/wsjtx-relay)
-
-Use this mode when the source station is remote, or when direct LAN UDP is not possible.
-
-In this mode:
-
-- a remote `wsjtx-relay-server` accepts watcher connections
-- a `wsjtx-relay-client` runs near `WSJT-X` / `JTDX`
-- `wsjtx-relay-client` uploads live events to the relay server
-- `WsjtxWatcher` connects as a watcher and follows one selected source
-
-Suggested screenshot:
-
-- Settings page showing relay mode
-- Source selection page
+On the first successful connection, the app stores the server certificate fingerprint. If the server certificate changes later (e.g. the relay server was redeployed), use the **Re-pair server** function and test the connection again.
 
 ## Quick Start
 
 ### Option A: Local UDP
 
-1. Open `Settings`.
-2. Set `Data source` to `UDP`.
-3. Return to the main page and tap `Start Service`.
-4. In `WSJT-X` or `JTDX`, set the UDP destination to the phone's displayed LAN IP and server port.
+1. Open the app and go to **Settings**
+2. Set **Data source** to `UDP`
+3. Confirm the **Server port** (default `2237`)
+4. Return to the main screen and tap **Start Service**
+5. In `WSJT-X` or `JTDX`, set the UDP destination to the phone's displayed **LAN IP:Port**
 
-Make sure your computer and your phone are on the same LAN.
+> The phone and computer must be on the same LAN. The phone's IP may change when switching networks.
 
-Suggested screenshot:
+### Option B: Relay
 
-- Main page showing service controls
-- WSJT-X UDP settings example
-
-### Option B: Relay / Third-party Data Source
-
-**please see https://github.com/SydneyOwl/wsjtx-relay for more**
-
-1. Deploy and start `wsjtx-relay-server` on your own server(public ip needed).
-2. Run `wsjtx-relay-client` on the computer that runs jtdx/wsjtx.
-3. Open `Settings` in `WsjtxWatcher` and set `Data source` to `Third-party data source`.
-4. Fill configs and tap `Test connection`. if succeed you can click `Select source` to select the client your configured before.
-5. Return to the main page and tap `Start Service`.
-
-On the first successful relay connection, the app stores the server fingerprint automatically. 
-if the server certificate changes later(e.g. redeployed wsjtx-relay-server), use `Re-pair server` and test again
-
-Suggested screenshot:
-
-- Relay settings form
-- Test connection success state
-- Relay source selection dialog
+1. Deploy and start `wsjtx-relay-server` and `wsjtx-relay-client` (see [wsjtx-relay](https://github.com/SydneyOwl/wsjtx-relay))
+2. Open the app and go to **Settings**
+3. Set **Data source** to `Third-party data source`
+4. Fill in **Server URL**, **Shared Secret**, and **Tenant ID**
+5. Tap **Test connection**
+6. After the test succeeds, tap **Select source** and pick the target source. You do not need to start the service before selecting the source.
+7. Return to the main screen and tap **Start Service**
 
 ## Main Screen
 
-The main screen is used for live monitoring.
+The main screen shows live monitoring status:
 
-Suggested screenshot:
+- Service state (running / stopped)
+- Current data source type (UDP / Relay)
+- Relay connection state (connected / waiting / timed out, etc.)
+- Current frequency and transmit status
+- Live decode message list (up to 3000 messages retained)
+- Message counters (total messages / messages mentioning your callsign)
 
-- Main monitoring screen
+## Settings
 
-## Settings Guide
+### Common
 
-### Common Settings
+| Setting | Description |
+|---------|-------------|
+| My Callsign | Your callsign, used by built-in rules |
+| My Grid | Maidenhead grid square, e.g. `OM89` |
+| Language | UI language |
+| Theme | Follow system / Light / Dark |
+| Auto-ignore after QSO | Automatically add the worked callsign to the ignored list after a logged QSO |
+
+Filling in **My Callsign** correctly is important — the built-in **My callsign** rule depends on it to detect when someone is calling you.
 
 ### UDP Settings
 
-- `LAN IP` / `Server Port` is the **local** UDP endpoint that `WSJT-X` / `JTDX` should send to
+| Setting | Description |
+|---------|-------------|
+| LAN IP | Phone's current LAN IP (display only) |
+| Server Port | UDP port the app listens on, default `2237` |
 
-### Third-party Data Source Settings
+This shows the phone's listening address. The computer running `WSJT-X` / `JTDX` should send UDP data to this address.
 
-- `Server URL`: relay server base URL. e.g. `wss://example.com:8443`
-- `Shared Secret`: relay authentication secret
-- `Tenant ID`: private shared identifier used by both the uploader side and the watcher side
-- `Relay status`: current relay connection state
-- `Test connection`:validates URL, certificate trust, and shared-secret authentication
-- `Select source`: opens the relay source picker
-- `Refresh source list`:reloads the relay source catalog
-- `Re-pair server`: clears the stored trusted fingerprint so the app can pair again
+### Relay Settings
 
-Suggested screenshot:
+| Setting | Description |
+|---------|-------------|
+| Server URL | Relay server address, e.g. `wss://example.com:8443` |
+| Shared Secret | Authentication secret for the relay connection |
+| Tenant ID | Shared isolation identifier used by both the uploader and watcher |
+| Relay status | Current relay connection state |
+| Test connection | Validate the URL, certificate, and authentication |
+| Select source | Choose which data source to follow |
+| Refresh source list | Reload the source catalog |
+| Re-pair server | Clear the stored certificate fingerprint and re-establish trust |
 
-- Relay settings block with buttons
+## Rule System
 
-## Alert Basics
+The rule system is the core of the app. Access it via **Settings → Configure alert rules**.
 
-- `Settings -> Configure alert rules`
+Each rule defines a condition → action flow: when a decoded message or QSO log satisfies the conditions, the specified actions (notification / vibration) are performed.
 
-From there you can view/edit built-in rules or create your own rules
+### Trigger Types
 
-**please note that When multiple rules match at the same time only the highest-priority rule triggers(lower `Priority` number means higher priority)**
+- **Decode message rule**: checked each time a new decoded message arrives
+- **Logged QSO rule**: checked each time `WSJT-X` / `JTDX` reports a logged QSO
 
-Suggested screenshot:
+### Actions
 
-- Rule list page
-- Rule card with `Edit rule` button and enable switch
+Each rule can enable one or both of:
 
-### Configure alert rules
+- Send notification
+- Vibration
 
-#### Rule Trigger Types
+At least one action must be enabled for the rule to produce a noticeable alert.
 
-There are two trigger types:
+### Priority
 
-- `Decode message rule`is checked every time a new decoded message arrives
-- `Logged QSO rule` is checked every time `WSJT-X` reports a logged QSO
+When multiple rules match at the same time, only the highest-priority rule (lowest `Priority` number) triggers.
 
-#### Rule Actions
+### Cooldown
 
-Each rule can do one or both of the following:
+Prevents the same rule from firing repeatedly within a short window. For example, a cooldown of `10` seconds means the rule will not trigger again for 10 seconds after it fires.
 
-- `Send notification`
-- `Vibration`
+### Condition Tree
 
-#### Cooldown
+Rule conditions are composed of **condition groups** and **predicates**, with support for nesting to express complex filtering logic.
 
-`Cooldown` prevents the same rule from repeatedly notifying within a short time window.
+#### Predicates
 
-for example if a rule has `Cooldown = 10`  and it already triggered once then the same rule will not trigger again for the next 10 seconds
+A predicate is a `field + operator + value` combination. For example:
 
-#### Condition Tree
+| Field | Operator | Value |
+|-------|----------|-------|
+| Mode | Equals | FT8 |
 
-Each rule contains a condition tree.
+This matches only when the decoded message mode is FT8.
 
-It is made of groups and predicates. one group can have multiple predicates.
+#### Condition Groups
 
-##### Predicates
+A group determines how its child conditions are combined:
 
-A predicate is `field + operator + value`
+- **Match all**: every child condition must be true (AND)
+- **Match any**: at least one child condition must be true (OR)
 
-For example we have following predicate:
+Groups can be nested, enabling complex logic such as `(A AND B) OR (C AND D)`.
 
-- field: `Transmitter callsign`
-- operator: `Regex`
-- value: `^BA1`
+### Decode Message Rule Fields
 
-this Means transmitter callsign begins with `BA1` will be matched (e.g. CQ BA1xxx)
+| Field | Description |
+|-------|-------------|
+| Message text | Full text of the decoded message |
+| Transmitter callsign | Callsign of the transmitting station |
+| Receiver callsign | Callsign of the receiving station |
+| Mode | e.g. FT8, FT4 |
+| SNR | Signal-to-noise ratio (dB) |
+| Offset frequency | Frequency offset (Hz) |
+| Offset time | Time offset (seconds) |
+| Dial frequency | Radio dial frequency (Hz) |
+| Current band | e.g. 20m, 40m |
+| Transmitter grid | Maidenhead grid square |
+| From country ID | DXCC entity number of the transmitter |
+| To country ID | DXCC entity number of the receiver |
+| Is low confidence | Decode has low confidence |
+| Is off air | Signal not received over the air (e.g. from a local audio file) |
+| Is user transmit | Message transmitted by the local station |
+| Is system notice | WSJT-X system message |
 
-Suggested screenshot:
+### Logged QSO Rule Fields
 
-- Rule editor page
-- Condition tree with one group and several predicates
+| Field | Description |
+|-------|-------------|
+| Logged QSO callsign | Callsign of the worked station |
+| Logged QSO band | Band of the QSO |
 
-##### Groups
+### Common Operators
 
-A group controls how its child conditions are combined.
+| Operator | Description |
+|----------|-------------|
+| Equals / NotEquals | Exact match |
+| Contains / NotContains | Substring match |
+| StartsWith / EndsWith | Prefix / suffix match |
+| Regex | Regular expression match |
+| GreaterThan / LessThan | Numeric comparison |
+| In / NotIn | Set membership match |
+| InNamedSet / NotInNamedSet | Reference the DXCC list or Ignored callsigns list |
+| Exists / NotExists | Check whether a field has a value |
 
-- `Match all`
-  - all child conditions must be true
-  - equivalent to logical `AND`
-- `Match any`
-  - any child condition may be true
-  - equivalent to logical `OR`
+## Named Sets
 
-Groups can be nested, so more advanced matching logic is possible.
+Named sets are reusable global lists that multiple rules can reference — maintain in one place, use everywhere. Two types are supported:
 
-Example:
+### Ignored Callsigns
 
-```
-`(Transmitter callsign starts with JA OR Receiver callsign starts with JA) AND Mode = FT8`
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^
-              predicate 1                           predicate 2                predicate 3
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^
-                                    group 1                                       group 2
-```
+Access via **Settings → Ignored callsigns**. Essentially a "don't alert me about these stations again" list.
 
-##### Named Sets
+Maintenance:
 
-Named sets are reusable global lists that a rule can reference.
+- Manually add callsigns and bands
+- Import historical QSO data from Cloudlog / Wavelog
 
-This is useful when you want to maintain one shared list and let multiple rules use it.
+Matching modes:
 
-Currently supported named sets:
+- **Match by band**: only ignore the station on the specific band worked; alerts on other bands still fire
+- **Ignore regardless of band**: suppress alerts for the callsign on all bands
 
-- `Ignored callsigns`
-- `DXCC list`
+Combined with the **Auto-ignore after QSO** option, the ignored list can be maintained automatically as you log QSOs.
 
-###### Ignored Callsigns
+### DXCC Watch List
 
-Open:`Settings -> Ignored callsigns`
+Select the DXCC entities you care about in Settings, then reference them in rules via `InNamedSet → DXCC list`. No need to duplicate the same entity conditions across multiple rules.
 
-From there you can modify entries manually or import ignored callsigns from `Cloudlog` / `Wavelog`
+## Built-in Rules
 
-There is also `Auto-ignore the callsign after a logged QSO`. When enabled, the app automatically adds the worked DX callsign on that band to the ignored list after a logged QSO.
+The app ships with five system rules that you can use as-is or modify:
 
-later you can use `Ignored Callsigns` as predicate values.
+| Rule | Condition | Default |
+|------|-----------|---------|
+| My callsign | Receiver callsign equals your callsign | Enabled |
+| Watched callsign | Transmitter or receiver callsign matches watched criteria | Enabled |
+| Selected DXCC | Transmitter or receiver country is in the DXCC list | Enabled |
+| Logged QSO | A QSO has been logged | Enabled |
+| Any message | Any decoded message | Disabled |
 
-Suggested screenshot:
+## Rule Configuration Examples
 
-- Ignored callsign import page
+### Alert me when someone calls me
 
-###### DXCC List
+Use the built-in **My callsign** rule directly. Make sure **My Callsign** is correctly set in Settings.
 
+### Alert only for Japanese stations
 
-##### Built-in Rule Ideas
+1. Open the DXCC list in Settings and add `Japan`
+2. Use the built-in **Selected DXCC** rule, or create a new rule with: `From country ID InNamedSet DXCC list`
 
-The exact defaults may change over time, but the built-in rule set is designed around these common scenarios:
+This matches by DXCC entity, which is more accurate than matching the `JA` prefix.
 
-- my callsign appears
-- watched callsign logic
-- any message
-- selected DXCC appears
-- logged QSO
+### Watch FT8 only
 
-These rules are intended as ready-made starting points. You can keep them as-is, edit them, or disable the ones you do not want.
+Add condition: `Mode Equals FT8`. Combine with other conditions, e.g. "FT8 signals at or above 0 dB."
 
-## Matching Notes
+### Alert only for strong signals
 
-- Watched-callsign matching works on parsed `de` / `dx` callsigns, not on the full decoded message text.
-- `Contains my callsign` style logic uses the full decoded message text.
-- Ignored-callsign matching can be configured by target and can optionally include band.
-- DXCC matching can be configured against transmitter, receiver, or both, depending on the rule structure you build.
-- If multiple rules match the same event, only the highest-priority rule triggers.
+Add condition: `SNR GreaterThanOrEqual -5`. To restrict to a specific band, add: `Current band Equals 6m`.
 
-## Relay Notes
+### Alert only for unworked stations
 
-- `Third-party data source` is implemented through the `wsjtx-relay` stack.
-- The first successful relay connection stores the server fingerprint automatically.
-- If the relay server certificate changes, use `Re-pair server` before reconnecting.
-- After relay reconnect, the app receives current source state and snapshot data, but not historical replay.
+1. Enable **Auto-ignore after QSO**
+2. Add condition: `Transmitter callsign NotInNamedSet Ignored callsigns`
 
+Use per-band matching if you still want alerts for the same callsign on different bands; use band-agnostic matching for a complete block.
+
+### Notify on QSO logged
+
+1. Create a new rule and set **Trigger type** to `Logged QSO`
+2. Add additional conditions (e.g. band) if needed
+3. Enable **Send notification** or **Vibration**
+
+## Importing from Cloudlog / Wavelog
+
+The ignored callsign list supports importing historical QSOs from Cloudlog or Wavelog.
+
+Required information:
+
+- Site URL
+- Station ID
+- Username
+- Password
+- Lookback days
+
+The import downloads ADIF data for the specified time range, extracts `CALL` and `BAND` fields, and generates per-band ignored entries.
+
+Example configuration:
+
+| Field | Example |
+|-------|---------|
+| URL | `https://log.example.com` |
+| Station ID | `1` |
+| Username | `bg7xxx` |
+| Lookback days | `3650` |
+
+## Notes
+
+- When multiple rules match simultaneously, only the highest-priority rule triggers
+- A rule must have at least one action enabled to produce an alert
+- After relay reconnect, the app receives current state and a snapshot — historical messages are not replayed
+- Android background restrictions may affect continuous operation; disabling battery optimization is recommended
+- If the relay server certificate changes, use **Re-pair server** and test the connection again
+
+## Development & Build
+
+| Item | Detail |
+|------|--------|
+| Framework | .NET 8 + Android |
+| Target | net8.0-android34.0 |
+| Min SDK | Android 8.0 (API 26) |
+| JDK | 17 |
+| MVVM | CommunityToolkit.Mvvm |
+| Logging | Serilog |
+| Local storage | SQLite (sqlite-net-pcl) |
+| UDP protocol | WsjtxUtils |
+| Relay protocol | gRPC (Google.Protobuf) |
+
+Build requirements:
+
+- .NET 8 SDK
+- Android workload
+- Android SDK
+- JDK 17
+
+The project includes the `wsjtx-relay-proto` submodule. Clone with `--recurse-submodules`.
 
 ## Acknowledgments
 
-- Thanks to the [ft8cn](https://github.com/N0BOY/FT8CN) project, from which some interface configurations and utility classes were borrowed
-- WsjtxUtils (https://github.com/KC3PIB/WsjtxUtils) for WSJT-X UDP message handling libraries
-- Codex: extensive refactoring was performed on the legacy codebase using Codex
+- [ft8cn](https://github.com/N0BOY/FT8CN) — some UI configurations and utility classes were adapted from this project
+- [WsjtxUtils](https://github.com/KC3PIB/WsjtxUtils) — WSJT-X UDP message handling library
 
 ## License
 
-This project is licensed under `The Unlicense`.
-
-``````
-This is free and unencumbered software released into the public domain.
-
-Anyone is free to copy, modify, publish, use, compile, sell, or
-distribute this software, either in source code form or as a compiled
-binary, for any purpose, commercial or non-commercial, and by any
-means.
-
-In jurisdictions that recognize copyright laws, the author or authors
-of this software dedicate any and all copyright interest in the
-software to the public domain. We make this dedication for the benefit
-of the public at large and to the detriment of our heirs and
-successors. We intend this dedication to be an overt act of
-relinquishment in perpetuity of all present and future rights to this
-software under copyright law.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-
-For more information, please refer to <https://unlicense.org>
-``````
+This project is released under [The Unlicense](https://unlicense.org). It is free and unencumbered software released into the public domain — anyone is free to copy, modify, publish, use, compile, sell, or distribute it for any purpose.

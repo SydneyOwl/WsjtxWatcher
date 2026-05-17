@@ -135,6 +135,7 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
     {
         var settings = _settingsProvider();
         var languageCode = Java.Util.Locale.Default?.Language ?? "en";
+        var isIgnored = message.IsIgnored;
         var isCompactMessage = message.IsUserTransmit || message.IsSystemNotice;
         var displayMessage = message.IsUserTransmit
             ? FormatTransmitMessage(message)
@@ -150,8 +151,12 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
         holder.Distance.Visibility = isCompactMessage ? ViewStates.Gone : ViewStates.Visible;
 
         holder.Message.PaintFlags = PaintFlags.LinearText;
-        holder.Message.SetTextColor(GetColor(Resource.Color.m3_on_surface_variant));
-        holder.Message.TextFormatted = BuildMessageText(displayMessage, message, settings);
+        holder.Message.SetTextColor(GetColor(isIgnored
+            ? Resource.Color.m3_outline
+            : Resource.Color.m3_on_surface_variant));
+        holder.Message.TextFormatted = isIgnored
+            ? new Java.Lang.String(displayMessage)
+            : BuildMessageText(displayMessage, message, settings);
 
         if (!isCompactMessage)
         {
@@ -166,7 +171,10 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
             holder.Distance.Text = message.DistanceText;
             ApplyModeStatus(holder.LowConfidence, message);
             holder.Band.Text = FormatFrequency(message);
-            holder.Message.SetTextColor(GetColor(Resource.Color.m3_on_surface_variant));
+            if (isIgnored)
+            {
+                holder.Message.PaintFlags |= PaintFlags.StrikeThruText;
+            }
         }
         else
         {
@@ -542,7 +550,7 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
     private static int? ResolveMessageHighlightColor(DecodedRadioMessage message, AppSettings settings)
     {
         _ = settings;
-        if (message.MatchesAlertRule)
+        if (!message.IsIgnored && message.MatchesAlertRule)
         {
             return Resource.Color.match_any_fill;
         }

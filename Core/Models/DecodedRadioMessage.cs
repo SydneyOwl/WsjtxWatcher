@@ -26,6 +26,7 @@ public sealed class DecodedRadioMessage
     public double DialFrequencyHz { get; init; }
     public string CurrentBand { get; init; } = string.Empty;
     public bool MatchesAlertRule { get; set; }
+    public bool IsIgnored { get; set; }
 
     public static DecodedRadioMessage CreateUserTransmit(string message, string mode)
     {

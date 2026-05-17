@@ -399,6 +399,13 @@ public sealed class MainActivity : LocalizedActivity
                 .AddAsync(ignoredCallsign, band)
                 .ConfigureAwait(false);
 
+            if (added)
+            {
+                await AppHost.Current.GetRequiredService<WatcherController>()
+                    .ReloadSettingsAsync()
+                    .ConfigureAwait(false);
+            }
+
             RunOnUiThread(() =>
             {
                 Toast.MakeText(

@@ -11,7 +11,7 @@
     <string name="server_port">端口</string>
     <string name="relay_server_url">服务器地址</string>
     <string name="relay_server_url_hint">wss://example.com:8443</string>
-    <string name="relay_setup_help">填写第三方数据源提供的服务器地址、共享密钥和 Tenant ID。先测试连接，确认可用后，再选择当前设备要跟随的推送端。</string>
+    <string name="relay_setup_help">填写第三方数据源提供的服务器地址、共享密钥和 Tenant ID。测试连接成功后，无需先开启服务，就可以选择当前设备要跟随的推送端。</string>
     <string name="relay_shared_secret">共享密钥</string>
     <string name="relay_tenant_id">Tenant ID</string>
     <string name="relay_connection_status">Relay 状态</string>
@@ -281,7 +281,7 @@
     <string name="add_test_data">添加测试数据</string>
     <string name="test_data_added">测试数据已添加。</string>
     <string name="start_service_failed">服务启动失败，请查看日志...</string>
-    <string name="relay_test_success_manual_start">连接测试成功。配置可用；要正式接收，请返回主界面点“开启服务”。</string>
+    <string name="relay_test_success_manual_start">连接测试成功。现在就可以选择推送端；要正式接收，请返回主界面点“开启服务”。</string>
     <string name="stop_service_failed">服务停止失败，请查看日志...</string>
     <string name="no_app_found">没有能够打开日志的软件...</string>
     <string name="unknown_band">未知</string>

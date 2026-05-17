@@ -62,6 +62,15 @@ public sealed class RuleNamedSetResolver
         };
     }
 
+    public bool ContainsIgnoredCallsign(string? fieldValue, string? currentBand)
+    {
+        var callsign = IgnoredCallsignMatcher.NormalizeCallsign(fieldValue);
+        var band = IgnoredCallsignMatcher.NormalizeBand(currentBand);
+        return !string.IsNullOrWhiteSpace(callsign)
+               && !string.IsNullOrWhiteSpace(band)
+               && _ignoredLookupKeys.Contains(IgnoredCallsignMatcher.CreateLookupKey(callsign, band));
+    }
+
     private bool ContainsIgnoredCallsign(string? fieldValue, RuleEvaluationContext context, NamedSetBandMatchMode bandMatchMode)
     {
         var callsign = IgnoredCallsignMatcher.NormalizeCallsign(fieldValue);
