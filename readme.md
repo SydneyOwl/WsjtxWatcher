@@ -65,6 +65,8 @@ On the first successful connection, the app stores the server certificate finger
 
 > The phone and computer must be on the same LAN. The phone's IP may change when switching networks.
 
+![](md_assets/page4.png)
+
 ### Option B: Relay
 
 1. Deploy and start `wsjtx-relay-server` and `wsjtx-relay-client` (see [wsjtx-relay](https://github.com/SydneyOwl/wsjtx-relay))
