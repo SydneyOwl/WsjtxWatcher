@@ -44,6 +44,8 @@
     <color name="period_odd_fill">#101820</color>
     <color name="period_odd_stroke">#2F5F7A</color>
     <color name="period_odd_indicator">#4EA3D8</color>
+    <color name="period_alert_indicator">#B388FF</color>
+    <color name="period_ignored_indicator">#81C784</color>
     <color name="period_even_fill">#242017</color>
     <color name="period_even_stroke">#7A6330</color>
     <color name="period_even_indicator">#D19A32</color>
@@ -55,14 +57,14 @@
     <color name="period_system_indicator">#7EA5D8</color>
 
     <!-- Match highlight fill colors (dark) -->
-    <color name="match_any_fill">#1E2E44</color>
-    <color name="match_any_stroke">#4A7098</color>
-    <color name="match_callsign_fill">#3E3020</color>
-    <color name="match_callsign_stroke">#8A7020</color>
-    <color name="match_dxcc_fill">#1E3A30</color>
-    <color name="match_dxcc_stroke">#3A7058</color>
-    <color name="match_multi_fill">#3E2518</color>
-    <color name="match_multi_stroke">#8A5038</color>
+    <color name="match_any_fill">#5B4718</color>
+    <color name="match_any_stroke">#E0A800</color>
+    <color name="match_callsign_fill">#6A4A12</color>
+    <color name="match_callsign_stroke">#FFCA28</color>
+    <color name="match_dxcc_fill">#6A3F16</color>
+    <color name="match_dxcc_stroke">#FFB74D</color>
+    <color name="match_multi_fill">#4A2F72</color>
+    <color name="match_multi_stroke">#B388FF</color>
 
     <!-- Calling list (dark) -->
     <color name="calling_list_start_color">#1A3A5060</color>

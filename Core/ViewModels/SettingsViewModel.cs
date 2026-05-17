@@ -142,7 +142,7 @@ public partial class SettingsViewModel : ObservableObject
     public async Task<SettingsSaveResult> SaveAsync(CancellationToken cancellationToken = default)
     {
         var existingSettings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-        var normalizedSettings = CreateSettings(existingSettings.AlertRules);
+        var normalizedSettings = CreateSettings(existingSettings);
         var restartRequired = RequiresGatewayRestart(existingSettings, normalizedSettings);
         var sourceSwitchRequired = RequiresRelaySourceSwitch(existingSettings, normalizedSettings);
         var serviceWasRunning = _watcherController.State.IsServiceRunning;
@@ -168,7 +168,7 @@ public partial class SettingsViewModel : ObservableObject
     public async Task SaveAndStopAsync(CancellationToken cancellationToken = default)
     {
         var existingSettings = await _settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-        var normalizedSettings = CreateSettings(existingSettings.AlertRules);
+        var normalizedSettings = CreateSettings(existingSettings);
 
         await _settingsStore.SaveAsync(normalizedSettings, cancellationToken).ConfigureAwait(false);
         await _watcherController.StopAsync(cancellationToken).ConfigureAwait(false);
@@ -246,24 +246,22 @@ public partial class SettingsViewModel : ObservableObject
     }
 #endif
 
-    private AppSettings CreateSettings(IReadOnlyCollection<AlertRule> alertRules)
+    private AppSettings CreateSettings(AppSettings existingSettings)
     {
-        return new AppSettings
-        {
-            DataSourceType = SelectedDataSourceType,
-            Port = NormalizePort(Port),
-            RelayServerUrl = NormalizeUrl(RelayServerUrl),
-            RelaySharedSecret = (RelaySharedSecret ?? string.Empty).Trim(),
-            RelayTenantId = (RelayTenantId ?? string.Empty).Trim(),
-            RelayPreferredSourceName = (RelayPreferredSourceName ?? string.Empty).Trim(),
-            RelayTrustedFingerprint = (RelayTrustedFingerprint ?? string.Empty).Trim(),
-            Language = SelectedLanguage.ToStorageValue(),
-            MyCallsign = (MyCallsign ?? string.Empty).Trim().ToUpperInvariant(),
-            MyGrid = (MyGrid ?? string.Empty).Trim().ToUpperInvariant(),
-            AlertRules = AlertRuleCatalog.NormalizeRules(alertRules),
-            AutoIgnoreLoggedQso = AutoIgnoreLoggedQso,
-            Theme = SelectedTheme
-        };
+        var settings = existingSettings.Clone();
+        settings.DataSourceType = SelectedDataSourceType;
+        settings.Port = NormalizePort(Port);
+        settings.RelayServerUrl = NormalizeUrl(RelayServerUrl);
+        settings.RelaySharedSecret = (RelaySharedSecret ?? string.Empty).Trim();
+        settings.RelayTenantId = (RelayTenantId ?? string.Empty).Trim();
+        settings.RelayPreferredSourceName = (RelayPreferredSourceName ?? string.Empty).Trim();
+        settings.RelayTrustedFingerprint = (RelayTrustedFingerprint ?? string.Empty).Trim();
+        settings.Language = SelectedLanguage.ToStorageValue();
+        settings.MyCallsign = (MyCallsign ?? string.Empty).Trim().ToUpperInvariant();
+        settings.MyGrid = (MyGrid ?? string.Empty).Trim().ToUpperInvariant();
+        settings.AutoIgnoreLoggedQso = AutoIgnoreLoggedQso;
+        settings.Theme = SelectedTheme;
+        return settings;
     }
 
     private static string NormalizePort(string? value)

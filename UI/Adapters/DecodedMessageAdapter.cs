@@ -411,6 +411,16 @@ public sealed class DecodedMessageAdapter : RecyclerView.Adapter
             return Resource.Color.period_my_tx_indicator;
         }
 
+        if (message.MatchesAlertRule)
+        {
+            return Resource.Color.period_alert_indicator;
+        }
+
+        if (message.IsIgnored)
+        {
+            return Resource.Color.period_ignored_indicator;
+        }
+
         return IsOddPeriod(message.DecodeTimeUtc)
             ? Resource.Color.period_odd_indicator
             : Resource.Color.period_even_indicator;

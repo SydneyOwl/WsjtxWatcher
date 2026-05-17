@@ -18,7 +18,7 @@ public static class AlertRuleCatalog
                 SystemMyCallsignRuleId,
                 "My callsign",
                 1,
-                true,
+                false,
                 RuleTriggerType.DecodeMessage,
                 RuleConditionGroup.CreateAny(RulePredicate.Create(RuleField.ReceiverCallsign, RuleOperator.Equals, RuleOperand.ForContextRef(RuleContextRef.MyCallsign))),
                 new RuleActionConfig()),
@@ -45,7 +45,10 @@ public static class AlertRuleCatalog
                 RuleConditionGroup.CreateAny(
                     RulePredicate.Create(RuleField.FromCountryId, RuleOperator.InNamedSet, RuleOperand.ForNamedSet(RuleNamedSetRef.DxccList)),
                     RulePredicate.Create(RuleField.ToCountryId, RuleOperator.InNamedSet, RuleOperand.ForNamedSet(RuleNamedSetRef.DxccList))),
-                new RuleActionConfig()),
+                new RuleActionConfig()  {
+                    SendNotification = true,
+                    Vibrate = true
+                }),
             CreateSystemRule(
                 SystemLoggedQsoRuleId,
                 "Logged QSO",
