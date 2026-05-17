@@ -9,6 +9,9 @@ Use cases:
 - DX entity tracking and filtering
 - VHF / 6m and other scenarios requiring continuous band activity awareness
 
+<img src="./md_assets/image-20260517112341493.png" alt="image-20260517112341493" style="zoom:50%;" />
+
+
 Supported languages: Simplified Chinese, English
 
 ## Features
@@ -34,6 +37,8 @@ Use this when your phone and the computer running `WSJT-X` / `JTDX` are on the s
 
 In this mode (similar to GridTracker), the app starts a UDP server on the phone and listens on a specified port. `WSJT-X` / `JTDX` sends decode data directly to the phone's IP and port. Default port is `2237`.
 
+![image-20260517112529982](./md_assets/image-20260517112529982.png)
+
 ### Relay Mode
 
 Use this for remote stations, when direct LAN access is unavailable, or when data needs to traverse a public network. See [wsjtx-relay](https://github.com/SydneyOwl/wsjtx-relay) for the relay protocol stack.
@@ -45,6 +50,8 @@ Deployment:
 3. Connect `WsjtxWatcher` on your phone to the relay server and select a source to follow
 
 On the first successful connection, the app stores the server certificate fingerprint. If the server certificate changes later (e.g. the relay server was redeployed), use the **Re-pair server** function and test the connection again.
+
+![image-20260517112622238](./md_assets/image-20260517112622238.png)
 
 ## Quick Start
 
@@ -70,14 +77,15 @@ On the first successful connection, the app stores the server certificate finger
 
 ## Main Screen
 
-The main screen shows live monitoring status:
+The main screen shows live monitoring status. Please note that we have following color logics:
 
-- Service state (running / stopped)
-- Current data source type (UDP / Relay)
-- Relay connection state (connected / waiting / timed out, etc.)
-- Current frequency and transmit status
-- Live decode message list (up to 3000 messages retained)
-- Message counters (total messages / messages mentioning your callsign)
+- Row background color: separates alternating decode periods and distinguishes system / transmit entries
+- Message-text highlight: indicates records that matched alert rules without recoloring the whole row
+- Left indicator bar: provides quick status scanning, such as alert-rule matches or ignored callsigns
+
+<img src="./md_assets/image-20260517113443384.png" alt="image-20260517113443384" style="zoom: 33%;" />
+
+
 
 ## Settings
 
@@ -121,6 +129,14 @@ The rule system is the core of the app. Access it via **Settings → Configure a
 
 Each rule defines a condition → action flow: when a decoded message or QSO log satisfies the conditions, the specified actions (notification / vibration) are performed.
 
+for example following picture shows a preset rule which sends notification and vibrates when a message is decoded and has a transmitter callsign equals to BG5TEST (DE callsign, e.g. `JA1AAA BG5TEST OL12` )
+
+**see `Rule Configuration Examples`  for more.**
+
+<img src="./md_assets/image-20260517114142368.png" alt="image-20260517114142368" style="zoom:25%;" />
+
+
+
 ### Trigger Types
 
 - **Decode message rule**: checked each time a new decoded message arrives
@@ -150,6 +166,8 @@ Rule conditions are composed of **condition groups** and **predicates**, with su
 #### Predicates
 
 A predicate is a `field + operator + value` combination. For example:
+
+<img src="./md_assets/image-20260517114455122.png" alt="image-20260517114455122" style="zoom: 67%;" />
 
 | Field | Operator | Value |
 |-------|----------|-------|
@@ -245,37 +263,26 @@ The app ships with five system rules that you can use as-is or modify:
 
 ## Rule Configuration Examples
 
-### Alert me when someone calls me
+### VHF DX Alert
 
-Use the built-in **My callsign** rule directly. Make sure **My Callsign** is correctly set in Settings.
+We plan to achieve the following goals: we will focus only on FT8/FT4 modes on the 6-meter band, and the other station must be a target in my DXCC list, not a callsign you have already worked and ignored. Additionally, they must either be calling CQ or calling you, and the signal should not be too weak.
 
-### Alert only for Japanese stations
+our goal should be equal to this:
 
-1. Open the DXCC list in Settings and add `Japan`
-2. Use the built-in **Selected DXCC** rule, or create a new rule with: `From country ID InNamedSet DXCC list`
+``````bash
+CurrentBand == "6m"
+  && (Mode == "FT8" || Mode == "FT4")
+  && TransmitterCallsign NOT IN IgnoredCallsigns
+  && TransmitterDXCC IN DxccList
+  && (MessageText STARTS_WITH "CQ" || ReceiverCallsign == MyCallsign)
+  && SNR >= -18
+``````
 
-This matches by DXCC entity, which is more accurate than matching the `JA` prefix.
+Condition tree is supposed to be like this:
 
-### Watch FT8 only
+![image-20260517120041394](./md_assets/image-20260517120041394.png)
 
-Add condition: `Mode Equals FT8`. Combine with other conditions, e.g. "FT8 signals at or above 0 dB."
 
-### Alert only for strong signals
-
-Add condition: `SNR GreaterThanOrEqual -5`. To restrict to a specific band, add: `Current band Equals 6m`.
-
-### Alert only for unworked stations
-
-1. Enable **Auto-ignore after QSO**
-2. Add condition: `Transmitter callsign NotInNamedSet Ignored callsigns`
-
-Use per-band matching if you still want alerts for the same callsign on different bands; use band-agnostic matching for a complete block.
-
-### Notify on QSO logged
-
-1. Create a new rule and set **Trigger type** to `Logged QSO`
-2. Add additional conditions (e.g. band) if needed
-3. Enable **Send notification** or **Vibration**
 
 ## Importing from Cloudlog / Wavelog
 
@@ -307,29 +314,6 @@ Example configuration:
 - After relay reconnect, the app receives current state and a snapshot — historical messages are not replayed
 - Android background restrictions may affect continuous operation; disabling battery optimization is recommended
 - If the relay server certificate changes, use **Re-pair server** and test the connection again
-
-## Development & Build
-
-| Item | Detail |
-|------|--------|
-| Framework | .NET 8 + Android |
-| Target | net8.0-android34.0 |
-| Min SDK | Android 8.0 (API 26) |
-| JDK | 17 |
-| MVVM | CommunityToolkit.Mvvm |
-| Logging | Serilog |
-| Local storage | SQLite (sqlite-net-pcl) |
-| UDP protocol | WsjtxUtils |
-| Relay protocol | gRPC (Google.Protobuf) |
-
-Build requirements:
-
-- .NET 8 SDK
-- Android workload
-- Android SDK
-- JDK 17
-
-The project includes the `wsjtx-relay-proto` submodule. Clone with `--recurse-submodules`.
 
 ## Acknowledgments
 
